@@ -633,6 +633,19 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
   .palette.grouped{grid-template-columns:repeat(var(--nt,4),minmax(0,1fr))}
   .palette.grouped .blk.offtab{display:none}
 }
+
+/* ---- hard mode ---- */
+.hardbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hardbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:0;border-radius:8px;padding:0 14px;background:#2A1F4A;color:var(--text);font:800 15px var(--ui);cursor:pointer;box-shadow:inset 0 0 0 2px #B57BFF}
+.hardbtn[aria-pressed="true"]{background:#7A3FD0;box-shadow:inset 0 -4px 0 rgba(0,0,0,.3)}
+.hardbtn .pi{width:18px;height:18px}
+.mapbox.hardmap{box-shadow:0 0 0 6px #fff,0 0 0 10px #B57BFF,0 10px 30px rgba(0,0,0,.4)}
+.mapbox.hardmap .node.done{background:#7A3FD0}
+.hardlvl .rink{box-shadow:0 0 0 4px #B57BFF,0 10px 30px rgba(0,0,0,.4)}
+.hardlvl .chip{color:#CFA8FF}
+#scr-level.hardlvl .lvtitle .chip{display:block}
+@media (max-width:600px),(max-height:500px){#scr-level.hardlvl .lvtitle .chip{font-size:10px;letter-spacing:.05em}}
+#toast{width:max-content;max-width:calc(100vw - 32px)}
 </style>
 </head><body>
 <div id="app">
@@ -665,12 +678,13 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
       <div class="xp"><div class="xp-bar"><i id="xpFill"></i></div><span id="xpTxt"></span></div>
       <span class="stat" id="statStars"></span>
       <span class="stat" id="statPy" hidden></span>
+      <span class="stat" id="statHard" hidden></span>
       <span class="stat" id="statStreak"></span>
       <button class="iconbtn mute" aria-label="Sound on or off"></button>
     </header>
     <section class="daily" id="daily"></section>
     <div class="wtabs" id="wtabs" role="tablist"></div>
-    <div class="world-head"><span class="eyebrow" id="worldEyebrow"></span><div id="worldTitle"></div><p id="worldBlurb"></p></div>
+    <div class="world-head"><span class="eyebrow" id="worldEyebrow"></span><div id="worldTitle"></div><p id="worldBlurb"></p><div class="hardbox" id="hardBox" hidden></div></div>
     <div class="mapbox" id="mapBox"><canvas id="mapCanvas"></canvas><div id="mapNodes"></div></div>
     <span class="eyebrow">Coming later</span>
     <div class="worlds" id="worldList"></div>
@@ -1410,6 +1424,36 @@ const WORLDS=[
  ]},
 ];
 
+/* ===================== HARD MODE (Worlds 2 and 3, opt-in) ===================== */
+const HARD_WORLDS=[2,3],HARD_RUNS=3,PURPLE='#B57BFF';
+const HARD={};
+function worldDone(n){const ls=LEVELS.filter(l=>l.world===n);return ls.length&&ls.every(l=>S.lv[l.key]&&S.lv[l.key].done);}
+function hardOn(n){return HARD_WORLDS.includes(n)&&worldDone(n)&&!!(S.hard&&S.hard[n]);}
+function purpleCount(){return Object.keys(S.lv).filter(k=>k.endsWith('!H')).reduce((a,k)=>a+(S.lv[k].stars||0),0);}
+function solvesWith(L,map){const T=Object.assign({},L,{map});let w;try{w=parseWorld(T);}catch(e){return false;}
+  if(L.solution){const p=parsePy(L.solution,L.blocks);if(p.err)return false;const sim=simulate(w,expand(p.lines).acts);if(sim.result!=='goal')return false;if(L.obj&&!objMet(w,sim.final,T,p.lines))return false;return true;}
+  if(L.obj)return !!bfsObj(w,T,L.blocks,120000);
+  return !!(bfs(w,startState(w),L.blocks,!!w.fishAt,120000));}
+function bestPath(L){const w=parseWorld(L);let acts;
+  if(L.solution){const p=parsePy(L.solution,L.blocks);acts=expand(p.lines).acts.map(a=>a.act);}
+  else acts=(L.obj?bfsObj(w,L,L.blocks,120000):bfs(w,startState(w),L.blocks,!!w.fishAt,120000))||[];
+  const sim=simulate(w,acts.map(a=>({act:a,line:0,loops:[]})));const cells=new Set([w.start.x+','+w.start.y]);
+  sim.events.forEach(e=>(e.path||[]).forEach(p=>cells.add(p.x+','+p.y)));return {w,cells};}
+function hardVariant(L){if(HARD[L.key])return HARD[L.key];const H=JSON.parse(JSON.stringify(L));H.key=L.key+'!H';H.hard=true;delete H.demo;delete H.newBlocks;H.world=L.world;H.base=L.key;
+  H.mission='Hard mode! '+L.mission;
+  if(L.mode==='speed'){H.speed=Object.assign({},L.speed,{secs:45,stars:L.speed.stars.map(x=>x+2)});H.mission=H.mission.replace(/\d+ seconds/,'45 seconds');}
+  else if(L.mode!=='predict'){
+    try{const {w,cells}=bestPath(L);const R=rng32(hashStr(L.key+':hard'));const near=[];
+      for(let y=0;y<w.rows;y++)for(let x=0;x<w.cols;x++){const ch=L.map[y][x];if(ch!=='.'&&ch!==',')continue;if(cells.has(x+','+y))continue;
+        if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>cells.has((x+dx)+','+(y+dy))))near.push([x,y]);}
+      for(let i=near.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[near[i],near[j]]=[near[j],near[i]];}
+      let map=L.map.slice(),added=0;
+      for(const [x,y] of near){if(added>=2)break;const m2=map.slice();m2[y]=m2[y].slice(0,x)+'W'+m2[y].slice(x+1);if(solvesWith(L,m2)){map=m2;added++;}}
+      H.map=map;H.hazards=added;}catch(e){}}
+  HARD[L.key]=H;return H;}
+function hardList(n){return LEVELS.filter(l=>l.world===n).map(hardVariant);}
+function hardChip(L,n){return L.mode==='speed'?`Hard · ${L.speed.secs}s, higher targets`:L.mode==='predict'?'Hard · no Step button':`Hard · ${n} run${n===1?'':'s'} left`;}
+
 'use strict';
 /* ===================== DATA ===================== */
 const LEVELS=[];WORLDS.forEach(W=>W.levels.forEach(L=>{L.world=W.n;L.key=L.id;if(L.target&&!L.solution)L.solution=L.target;LEVELS.push(L);}));
@@ -1461,6 +1505,9 @@ const BADGES=[
  {id:'speedster',name:'Speed Demon',desc:'Get 3 stars in a Speed Shift'},
  {id:'pythonista',name:'Pythonista',desc:'Earn 10 blue Python stars'},
  {id:'playmaker',name:'Playmaker',desc:'Score off a pass to a teammate'},
+ {id:'hardcore',name:'Hardcore',desc:'Finish a level in hard mode'},
+ {id:'hard2',name:'Lagoon Legend+',desc:'Finish World 2 in hard mode'},
+ {id:'hard3',name:'Power Player+',desc:'Finish World 3 in hard mode'},
  {id:'world3',name:'Power Player',desc:'Finish every level in World 3'},
 ];
 const CHARS={
@@ -1478,6 +1525,7 @@ const COSTUMES=[
  {id:'purple',name:'Daily Helmet',color:'#8A63D2',req:{badge:'dailyhat'}},
  {id:'crystal',name:'Crystal Helmet',color:'#6FE3EA',req:{badge:'perfect1'}},
  {id:'python',name:'Python Helmet',color:'#3776AB',req:{py:5}},
+ {id:'hardhat',name:'Hard Hat',color:'#7A3FD0',req:{badge:'hardcore'}},
 ];
 const TILE_INFO={
  'N':'Net: shoot the puck in, or skate in holding the puck for a tap-in.',
@@ -1527,7 +1575,8 @@ function parOf(L){if(L.par)return L.par;if(PAR[L.key]!=null)return PAR[L.key];le
   else if(L.mode!=='predict'){const w=parseWorld(L);const s=bfs(w,startState(w),L.blocks,!!w.fishAt)||bfs(w,startState(w),L.blocks,false);p=s?s.length:0;}
   return PAR[L.key]=p;}
 function worldOpen(n){const u=WORLD_UNLOCK[n];if(!u)return true;return LEVELS.filter(L=>L.world===u.world&&S.lv[L.key]&&S.lv[L.key].done).length>=u.count;}
-function levelOpen(L){if(!worldOpen(L.world))return false;const list=LEVELS.filter(x=>x.world===L.world);const i=list.indexOf(L);return i===0||!!(S.lv[list[i-1].key]&&S.lv[list[i-1].key].done);}
+function levelOpen(L){if(L.hard){if(!hardOn(L.world))return false;const hl=hardList(L.world);const i=hl.findIndex(h=>h.key===L.key);return i===0||!!(S.lv[hl[i-1].key]&&S.lv[hl[i-1].key].done);}
+  if(!worldOpen(L.world))return false;const list=LEVELS.filter(x=>x.world===L.world);const i=list.indexOf(L);return i===0||!!(S.lv[list[i-1].key]&&S.lv[list[i-1].key].done);}
 function typingUnlocked(){return !!(S.lv['1-12']&&S.lv['1-12'].done);}
 
 /* ===================== PIXEL FONT + ICONS ===================== */
@@ -1735,6 +1784,7 @@ function renderMap(){
   $('#xpFill').style.width=(max?100:Math.min(100,inRank/XP_PER_RANK*100))+'%';
   $('#xpTxt').textContent=max?`${S.xp} XP · top rank!`:`${S.xp} XP · ${XP_PER_RANK-inRank} XP to ${RANKS[ri+1]}`;
   $('#statStars').innerHTML=icon('star','#F6C445')+`<span>${allStars()}</span>`;$('#statStars').title='Stars collected';
+  const hc=purpleCount();$('#statHard').hidden=!hc;$('#statHard').innerHTML=icon('star',PURPLE)+`<span>${hc}</span>`;$('#statHard').title='Purple hard-mode stars';
   const pc=pyCount();$('#statPy').hidden=!pc&&!typingUnlocked();$('#statPy').innerHTML=icon('star','#6CC4FF')+`<span>${pc}</span>`;$('#statPy').title='Blue Python stars';
   const st=streakNow();$('#statStreak').innerHTML=icon('flame',st?'#FF8A3D':'#6D7F9E')+`<span>${st} day${st===1?'':'s'}</span>`;
   avatarTo($('#meAvatar'));renderDaily();
@@ -1745,13 +1795,17 @@ function renderMap(){
   const done=W.levels.filter(L=>S.lv[L.key]&&S.lv[L.key].done).length;const stars=W.levels.reduce((a,L)=>a+((S.lv[L.key]&&S.lv[L.key].stars)||0),0);
   $('#worldEyebrow').textContent=`World ${W.n} · ${W.idea} · ${done} of ${W.levels.length} levels · ${stars} of ${W.levels.length*3} stars`;
   $('#worldTitle').innerHTML=pixelText(W.name);$('#worldBlurb').textContent=W.blurb;
+  const hb=$('#hardBox');if(HARD_WORLDS.includes(W.n)){hb.hidden=false;const ok=worldDone(W.n),on=hardOn(W.n);
+    hb.innerHTML=ok?`<button class="hardbtn" id="hardBtn" aria-pressed="${on}">${icon('flame',on?'#fff':PURPLE)}<span>Hard mode: <b>${on?'ON':'OFF'}</b></span></button><span class="tiny">${on?'Extra hazards, no Step button, 1 hint, 3 runs. Earn purple stars!':'Finished this world? Try it on hard for purple stars.'}</span>`:`<span class="tiny">${icon('lock')} Finish every level in this world to unlock <b>hard mode</b>.</span>`;
+    const b=$('#hardBtn');if(b)b.onclick=()=>{S.hard=S.hard||{};S.hard[W.n]=!S.hard[W.n];save();SFX.toggle();renderMap();};}else hb.hidden=true;
+  const HON=hardOn(W.n);const LIST=HON?hardList(W.n):W.levels;$('#mapBox').classList.toggle('hardmap',HON);
   let firstOpen=-1;
-  $('#mapNodes').innerHTML=W.levels.map((L,i)=>{const r=S.lv[L.key];const open=levelOpen(L);const isDone=r&&r.done;if(open&&!isDone&&firstOpen<0)firstOpen=i;
+  $('#mapNodes').innerHTML=LIST.map((L,i)=>{const r=S.lv[L.key];const open=levelOpen(L);const isDone=r&&r.done;if(open&&!isDone&&firstOpen<0)firstOpen=i;
     const cls=isDone?'done':(open?'open':'locked');const [cx,cy]=NODEPOS[i];const st=r?r.stars:0;const ki=kindIcon(L);
-    const inner=open?pixelText(String(i+1))+`<span class="ns">${[0,1,2].map(k=>icon('star',k<st?'#F6C445':'rgba(0,0,0,.35)')).join('')}</span>`:icon('lock','#C9D3E3');
-    const py=r&&r.py?`<span class="pyst">${icon('star','#6CC4FF')}</span>`:'';
+    const inner=open?pixelText(String(i+1))+`<span class="ns">${[0,1,2].map(k=>icon('star',k<st?(HON?PURPLE:'#F6C445'):'rgba(0,0,0,.35)')).join('')}</span>`:icon('lock','#C9D3E3');
+    const py=!HON&&r&&r.py?`<span class="pyst">${icon('star','#6CC4FF')}</span>`:'';
     return `<button class="node ${cls}" data-key="${L.key}" style="left:${(cx+.5)/11*100}%;top:${(cy+.5)/9*100}%" aria-label="Level ${i+1}, ${esc(L.title)}${open?`, ${st} stars`:', locked'}">${inner}${open&&ki?`<span class="kind">${icon(ki)}</span>`:''}${open?py:''}</button>`;}).join('');
-  if(firstOpen>=0)$(`#mapNodes .node[data-key="${W.levels[firstOpen].key}"]`).classList.add('next');
+  if(firstOpen>=0)$(`#mapNodes .node[data-key="${LIST[firstOpen].key}"]`).classList.add('next');
   $('#worldList').innerHTML=FUTURE.map(f=>`<div class="wcard">${icon('lock','#8FA3C4')}<div><b>${f.n==='S'?'Sandbox':'World '+f.n} · ${esc(f.name)}</b><span>${esc(f.idea)}: ${esc(f.blurb)}</span></div></div>`).join('');
   drawMapCanvas();}
 function drawMapCanvas(){const box=$('#mapBox'),cv=$('#mapCanvas');const w=box.clientWidth,h=box.clientHeight;if(!w)return;const dpr=Math.min(3,devicePixelRatio||1);
@@ -1760,12 +1814,13 @@ function drawMapCanvas(){const box=$('#mapBox'),cv=$('#mapCanvas');const w=box.c
   g.forEach((row,y)=>row.forEach((ch,x)=>drawTile(c,ch,x,y,x*t,y*t,Math.ceil(t)+1)));}
 
 /* ===================== LEVEL ===================== */
-function findLevel(key){if(key.includes('#')){const L=dailyLevels().find(l=>l.key===key);return L;}return LEVELS.find(L=>L.key===key);}
+function findLevel(key){if(key.endsWith('!H')){const b=LEVELS.find(L=>L.key===key.slice(0,-2));return b?hardVariant(b):null;}if(key.includes('#')){const L=dailyLevels().find(l=>l.key===key);return L;}return LEVELS.find(L=>L.key===key);}
 function openLevel(L){
-  cur.L=L;cur.w=parseWorld(L);cur.par=parOf(L);cur.failCount=0;cur.failedThisVisit=false;cur.hintsShown=0;cur.reveal=0;cur.undo=null;cur.guess=null;cur.guessTries=0;cur.dirty=false;cur.revealErr=L.mode!=='type';cur.edits=0;speedStop();
+  cur.L=L;cur.w=parseWorld(L);cur.par=parOf(L);cur.failCount=0;cur.failedThisVisit=false;cur.hintsShown=0;cur.reveal=0;cur.undo=null;cur.guess=null;cur.guessTries=0;cur.dirty=false;cur.revealErr=L.mode!=='type';cur.edits=0;cur.runsLeft=HARD_RUNS;speedStop();
   const r=lvRec(L.key);
   $('#lvTitle').innerHTML=pixelText(L.daily!=null?`Today · ${L.title}`:`${L.id} ${L.title}`);
-  $('#lvIdea').textContent=L.daily!=null?"Today's Rink":`World ${L.world} · ${WORLDS.find(w=>w.n===L.world).idea}${L.debug?' · Bug hunt':''}${L.mode==='predict'?' · Read the code':''}`;
+  $('#scr-level').classList.toggle('hardlvl',!!L.hard);
+  $('#lvIdea').textContent=L.hard?hardChip(L,HARD_RUNS):L.daily!=null?"Today's Rink":`World ${L.world} · ${WORLDS.find(w=>w.n===L.world).idea}${L.debug?' · Bug hunt':''}${L.mode==='predict'?' · Read the code':''}`;
   $('#lvMission').textContent=L.mission;$('#btnHint').classList.remove('nudge');
   if(L.mode==='predict')cur.mode='predict';else if(L.mode==='speed')cur.mode='speed';else if(L.mode==='type')cur.mode='type';else cur.mode=(S.typePref&&typingUnlocked())?'type':'blocks';
   // load saved program (stored as Python text so it works in both modes)
@@ -1794,8 +1849,8 @@ function switchMode(m){if(m===cur.mode||cur.running||cur.busy)return;
   if(m==='type'){cur.text=toPy(cur.lines)+(cur.lines.length?'\n':'');}
   else{const p=parsePy(cur.text,cur.L.blocks);if(p.err){toast('Fix the red line first, then switch to blocks.');return;}cur.lines=p.lines.map(x=>({b:x.b,n:x.n,d:x.d}));cur.cursor={at:cur.lines.length,d:0};}
   cur.mode=m;S.typePref=m==='type';save();setupMode();progChanged();}
-function renderGoals(){const L=cur.L,r=lvRec(L.key);const g=starGoals(L);
-  $('#goals').innerHTML=g.map((t,i)=>`<span class="goal">${icon('star',r.stars>i?'#F6C445':'#4E6389')}<span>${t}</span></span>`).join('');}
+function renderGoals(){const L=cur.L,r=lvRec(L.key);const g=starGoals(L);const gold=L.hard?PURPLE:'#F6C445';
+  $('#goals').innerHTML=g.map((t,i)=>`<span class="goal">${icon('star',r.stars>i?gold:'#4E6389')}<span>${t}</span></span>`).join('');}
 function setStatus(t){const m=$('#lvMission');if(m&&cur.L&&matchMedia('(max-width:600px)').matches){if(t){m.textContent=t;m.classList.add('st');}else{m.textContent=cur.L.mission;m.classList.remove('st');}}
   $('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='speed'?'Press Start when you are ready.':cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
 function chipHTML(L,edit,i){
@@ -2030,13 +2085,13 @@ function miniLamp(){const l=$('#lamp');l.className='lamp small';l.innerHTML=pixe
 function shake(){const r=$('#rink');r.classList.remove('shake');void r.offsetWidth;r.classList.add('shake');}
 function setRunningUI(on){const pred=cur.mode==='predict';
   $('#btnRun').innerHTML=on?icon('stop')+'Stop':(pred?icon('check')+'Check':icon('play')+'Play');$('#btnRun').classList.toggle('red',on);$('#btnRun').classList.toggle('go',!on);
-  $('#btnRun').disabled=!on&&pred&&!cur.guess;$('#btnStep').disabled=on||pred;$('#codePane').classList.toggle('locked',on);$('#codeText').readOnly=on;}
+  $('#btnRun').disabled=!on&&pred&&!cur.guess;$('#btnStep').disabled=on||pred;$('#btnStep').hidden=!!(cur.L&&cur.L.hard);$('#codePane').classList.toggle('locked',on);$('#codeText').readOnly=on;}
 function checkProgram(){if(cur.mode==='predict')return cur.lines;const lines=getLines();
   if(lines===null){SFX.fail();if(cur.mode==='type'){cur.dirty=true;if(!cur.revealErr){cur.revealErr=true;reparse();}}setStatus(cur.mode==='type'?'Python found a problem. Look at the red line.':'Fix the red message under your program first.');return null;}
   if(!lines.length){SFX.fail();setStatus(cur.mode==='type'?'Type a command first, like right()':'Add some blocks first. Tap one of the blocks above.');return null;}
   const ex=expand(lines);if(ex.over){SFX.fail();setStatus('That program runs too many steps. Check your loop numbers.');return null;}return lines;}
 function newRun(lines){touchStreak();const r=lvRec(cur.L.key);r.tries++;save();resetBoard();hideFail();const acts=expand(lines).acts;run={lines,acts,sim:simulate(cur.w,acts),idx:0,done:false};}
-async function play(){if(cur.running){stopRun();return;}if(cur.busy)return;if(cur.mode==='predict'&&!cur.guess)return;const lines=checkProgram();if(!lines)return;
+async function play(mode){if(cur.running){stopRun();return;}cur.replay=(mode==='replay');if(cur.busy)return;if(cur.mode==='predict'&&!cur.guess)return;const lines=checkProgram();if(!lines)return;
   newRun(lines);cur.running=true;setRunningUI(true);const my=++runId;await sleep(150);
   while(run&&run.idx<run.sim.events.length){if(my!==runId)return;await animEvent(run.sim.events[run.idx++],my);if(my!==runId)return;await sleep((SPEEDS[S.speed]||560)*.22);}
   if(my!==runId)return;cur.running=false;setRunningUI(false);finishRun();}
@@ -2070,13 +2125,17 @@ function failText(sim){const ev=sim.events[sim.events.length-1];const n=ev?ev.i+
     case 'sink':return {t:'Plop!',m:`On step ${n}, the puck slid into the water.`};
     case 'zamboni':return {t:'Beep beep!',m:`On step ${n}, Pip got in the Zamboni's way. Try wait() to let it pass.`};}
   return {t:'Not yet',m:'Try again!'};}
-function onFail(sim){if(demoOn){return;}const r=lvRec(cur.L.key);r.fails++;save();cur.failCount++;cur.failedThisVisit=true;SFX.fail();
+function hardRunUsed(){if(!cur.L.hard||cur.replay)return;cur.runsLeft--;
+  if(cur.runsLeft<=0){cur.runsLeft=HARD_RUNS;if(cur.mode==='blocks'){cur.lines=[];cur.cursor={at:0,d:0};}else if(cur.mode==='type'){const t=cur.L.starter||'';$('#codeText').value=t;setText(t,t.length);}
+    setTimeout(()=>{if(cur.mode==='blocks')progChanged();toast(icon('flame',PURPLE)+'Out of runs! The program was cleared. Plan it carefully.',3800);},900);}
+  $('#lvIdea').textContent=hardChip(cur.L,cur.runsLeft);}
+function onFail(sim){if(demoOn){return;}const r=lvRec(cur.L.key);r.fails++;save();cur.failCount++;cur.failedThisVisit=true;SFX.fail();hardRunUsed();
   const ev=sim.events[sim.events.length-1];if(sim.result!=='incomplete'&&ev)setActive(ev,'bad');else clearActive();
   const f=failText(sim);setStatus(f.t+(sim.result==='incomplete'?'':' Look at the red step.'));
   showFailBox(f.t,f.m,true,()=>{resetBoard();if(ev&&sim.result!=='incomplete')setActive(ev,'bad');setStatus('Change the red step, then press Play again.');});
   if(cur.failCount>=2)$('#btnHint').classList.add('nudge');}
 function showFailBox(t,m,slow,onFix){const box=$('#failBox');box.innerHTML=`<b>${esc(t)}</b><span>${esc(m)}</span><div class="row-btns">${slow?`<button class="btn small" id="fSlow">${icon('play')}Watch it slowly</button>`:''}<button class="btn small go" id="fFix">${cur.mode==='predict'?'Guess again':cur.mode==='speed'?'OK':'Fix my code'}</button></div>`;
-  box.hidden=false;const s=$('#fSlow');if(s)s.onclick=()=>{setSpeed('slow');play();};$('#fFix').onclick=()=>{hideFail();onFix();};}
+  box.hidden=false;const s=$('#fSlow');if(s)s.onclick=()=>{setSpeed('slow');play('replay');};$('#fFix').onclick=()=>{hideFail();onFix();};}
 function onPredictMiss(sim){SFX.fail();const f=sim.final;A.marks=[{x:cur.guess.x,y:cur.guess.y,c:'#F6C445',dash:true},{x:f.x,y:f.y,c:'#E23B3F',label:'Here'}];
   lvRec(cur.L.key).fails++;save();
   showFailBox('Not quite!',`Pip stopped at the red square, not your guess. Watch it again slowly, then have another go.`,true,()=>{cur.guess=null;resetBoard();setRunningUI(false);setStatus('Tap the square where you think Pip will stop.');});
@@ -2092,8 +2151,8 @@ function onSuccess(sim){const L=cur.L;if(demoOn){stopRun();return;}const pred=cu
   grantLevel(res);}
 function grantLevel(res){const L=cur.L,r=lvRec(L.key);const sim=res.sim;const stars=res.stars;
   const before=unlockedSet();const oldRank=rankIdx();const first=!r.done;const old=r.stars;const isDaily=L.daily!=null;
-  let xp=first?(isDaily?15:20):5;if(stars>old)xp+=(isDaily?5:10)*(stars-old);
-  const pyNow=cur.mode==='type'&&!r.py;if(pyNow){r.py=true;xp+=10;}
+  let xp=first?(isDaily?15:L.hard?30:20):5;if(stars>old)xp+=(isDaily?5:10)*(stars-old);
+  const pyNow=cur.mode==='type'&&!r.py&&!L.hard;if(pyNow){r.py=true;xp+=10;}
   S.xp+=xp;r.done=true;r.stars=Math.max(old,stars);if(sim&&sim.fish)r.fishEver=true;save();
   const newB=[];const tryB=id=>{if(award(id))newB.push(id)};
   tryB('first');if(stars===3)tryB('hattrick');if(Object.values(S.lv).filter(x=>x.fishEver).length>=5)tryB('fisher');
@@ -2101,6 +2160,7 @@ function grantLevel(res){const L=cur.L,r=lvRec(L.key);const sim=res.sim;const st
   if(run&&run.lines&&res.rule!=='predict'&&run.lines.some(x=>x.b==='repeat'))tryB('looper');
   if(sim&&sim.events.some(e=>e.push&&e.push.fill))tryB('bridge');if(sim&&sim.events.some(e=>e.bounce&&e.net))tryB('bank');
   if(['typed','typos','translate'].includes(res.rule)&&!cur.dirty)tryB('cleancoder');if(res.rule==='typos')tryB('typofixer');if(res.rule==='speed'&&stars===3)tryB('speedster');
+  if(L.hard){tryB('hardcore');for(const n of HARD_WORLDS)if(hardList(n).every(h=>S.lv[h.key]&&S.lv[h.key].done))tryB('hard'+n);}
   if(pyCount()>=10)tryB('pythonista');if(sim&&sim.final&&sim.final.passGoals>0)tryB('playmaker');
   const W3=LEVELS.filter(l=>l.world===3);if(W3.length&&W3.every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('world3');
   if(isDaily){tryB('daily');if(dailyLevels().every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('dailyhat');}
@@ -2113,12 +2173,12 @@ function grantLevel(res){const L=cur.L,r=lvRec(L.key);const sim=res.sim;const st
   SFX.horn();confetti();
   const newWorld=L.world===1&&w2now&&!S.seen.w2open;if(newWorld){S.seen.w2open=true;save();}
   setTimeout(()=>{$('#lamp').hidden=true;showResult(Object.assign(res,{xp,newB,unlocks,rankUp,newWorld,newPy:pyNow}));},reduced?300:1500);}
-function nextLevel(){const L=cur.L;if(L.daily!=null){const d=dailyLevels();return d[L.daily+1]||null;}
+function nextLevel(){const L=cur.L;if(L.hard){const hl=hardList(L.world);const i=hl.findIndex(h=>h.key===L.key);return hl[i+1]||null;}if(L.daily!=null){const d=dailyLevels();return d[L.daily+1]||null;}
   const list=LEVELS.filter(x=>x.world===L.world);const i=list.indexOf(L);if(i+1<list.length)return list[i+1];
   const nw=LEVELS.find(x=>x.world===L.world+1);return nw&&levelOpen(nw)?nw:null;}
 function showResult(o){const next=nextLevel();const labels=o.labels,on=o.on;
   let html=`<div style="align-self:center">${pixelText(o.title||'Goal!','#F6C445')}</div>
-    <div class="res-stars">${labels.map((l,k)=>`<div class="rs ${on[k]?'on':''}" style="--d:${k*.3}s">${icon('star',on[k]?'#F6C445':'#3B5079')}<span>${esc(l)}</span></div>`).join('')}</div>
+    <div class="res-stars">${labels.map((l,k)=>`<div class="rs ${on[k]?'on':''}" style="--d:${k*.3}s">${icon('star',on[k]?(cur.L.hard?PURPLE:'#F6C445'):'#3B5079')}<span>${esc(l)}</span></div>`).join('')}</div>
     ${o.unused>0?`<p style="text-align:center">Pip scored before the end, so ${o.unused} step${o.unused===1?'':'s'} never ran. Can you take ${o.unused===1?'it':'them'} out?</p>`:''}
     ${['normal','typed','objective'].includes(o.rule)&&!o.on[1]?`<p style="text-align:center">Par is <b>${cur.par}</b>. ${cur.L.solution?'Can you make your program shorter?':'Is there a shorter path, or a clever shot?'}</p>`:''}
     ${['typed','typos','translate'].includes(o.rule)&&!o.on[2]?`<p style="text-align:center">For the clean-code star, check your code carefully <b>before</b> you press Play.</p>`:''}
@@ -2143,6 +2203,7 @@ function legendHTML(L){const chars=new Set(L.map.join('').replace(/[P.,]/g,''));
   if(!items.length)return '';return `<div class="legend">${items.map(c=>`<div><canvas width="32" height="32" data-tile="${esc(c)}"></canvas><span>${c==='Z'?'<b>Zamboni</b>: moves one square every step. Don\'t get in its way!':esc(TILE_INFO[c]).replace(/^([^:]+):/,'<b>$1</b>:')}</span></div>`).join('')}</div>`;}
 function showIntro(){const L=cur.L;S.seen[L.key]=true;save();
   let html=`<span class="eyebrow">${L.daily!=null?"Today's Rink":`Level ${esc(L.id)} · ${esc(WORLDS.find(w=>w.n===L.world).idea)}`}</span>${pixelText(L.title)}`;
+  if(L.hard)html+=`<span class="bugtag" style="background:${PURPLE}">HARD MODE</span><p><b>Hard mode rules:</b> ${L.hazards?`${L.hazards} extra water hazard${L.hazards>1?'s':''}, `:''}no Step button, only one hint, and ${HARD_RUNS} runs before your program is cleared. Stars are purple!</p>`;
   if(L.debug)html+=`<span class="bugtag">BUG HUNT</span>`;if(L.mode==='predict')html+=`<span class="bugtag" style="background:#6C4BB5">READ THE CODE</span>`;
   html+=`<p style="color:var(--text)">${esc(L.mission)}</p>`;
   if(L.newBlocks&&L.newBlocks.length)html+=`<div class="newb"><span class="tag">NEW</span>${L.newBlocks.map(b=>chipHTML({b,n:3,d:0},false,0)).join('')}</div><p>${L.newBlocks.map(b=>`<b>${b}</b>: ${BLOCKS[b].say}`).join('<br>')}</p>`;
@@ -2208,6 +2269,7 @@ function openHints(){const L=cur.L;const tiers=[['A nudge',L.hints[0]],['A bigge
   let html=`${pixelText('Hints')}<p>Hints come one at a time. Try each one before asking for the next.</p>`;
   for(let t=0;t<Math.min(cur.hintsShown,2);t++)html+=`<div class="hint"><span class="lvl">${tiers[t][0]}</span><p>${esc(tiers[t][1])}</p></div>`;
   let h=null;if(cur.hintsShown>=3){h=stepHint();html+=`<div class="hint"><span class="lvl">${cur.mode==='predict'?'Show one step':'Show one step'}</span><p>${esc(h.text)}</p>${h.line?`<div class="row-btns" style="justify-content:flex-start"><button class="btn small go" id="hPut">Put it in for me</button></div>`:''}</div>`;}
+  if(L.hard&&cur.hintsShown>=1){html+=`<p><b>Hard mode:</b> only one hint per level.</p><div class="actions"><button class="btn ghost" id="hClose">Back</button></div>`;openModal(html);$('#hClose').onclick=closeModal;return;}
   const nextLabel=cur.hintsShown===0?'Give me a nudge':cur.hintsShown===1?'Bigger clue':cur.hintsShown===2?'Show me one step':'Show the next step';
   html+=`<div class="actions"><button class="btn ghost" id="hClose">Back</button><button class="btn hintbtn" id="hMore">${icon('bulb')}${nextLabel}</button></div>`;
   openModal(html);$('#hClose').onclick=closeModal;
@@ -2249,7 +2311,7 @@ function openParent(){const today=dayKey();let week=0;for(let i=0;i<7;i++){const
     return `<tr><td><b>${esc(L.id)} ${esc(L.title)}</b>${L.debug?' · bug hunt':''}${L.mode==='predict'?' · read the code':''}${L.mode==='type'?' · typed':''}<div class="learn">${esc(L.learn)}</div></td><td>${r.done?'★'.repeat(r.stars)+'☆'.repeat(3-r.stars):(r.tries?'In progress':'Not started')}</td><td>${r.tries||0}</td><td>${r.hints||0}</td><td>${fmtTime(r.timeMs||0)}</td></tr>`;}).join('')}</tbody></table></div>`;
   const daily=[];for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);const k=dayKey(d);const st=[0,1,2].map(j=>S.lv[`${k}#${j}`]).filter(r=>r&&r.done);daily.push(`<tr><td>${d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})}</td><td>${st.length} of 3</td><td>${st.reduce((a,r)=>a+r.stars,0)}</td><td>${fmtTime(S.dayMs[k]||0)}</td></tr>`);}
   const html=`${pixelText('Parent Corner')}
-  <div class="kpis"><div class="kpi"><b>${done}/${LEVELS.length}</b><span>Levels done</span></div><div class="kpi"><b>${allStars()}</b><span>Stars (incl. daily)</span></div>
+  <div class="kpis"><div class="kpi"><b>${done}/${LEVELS.length}</b><span>Levels done</span></div><div class="kpi"><b>${allStars()-purpleCount()}</b><span>Stars (incl. daily)</span></div><div class="kpi"><b>${purpleCount()}</b><span>Purple hard-mode stars</span></div>
    <div class="kpi"><b>${fmtTime(S.dayMs[today]||0)}</b><span>Played today</span></div><div class="kpi"><b>${fmtTime(week)}</b><span>Last 7 days</span></div>
    <div class="kpi"><b>${fmtTime(S.timeMs)}</b><span>Total time</span></div><div class="kpi"><b>${streakNow()} / ${S.streak.best}</b><span>Streak now / best (days)</span></div></div>
   <p><b>What he's learning.</b> World 1 is <b>sequences</b>: planning steps in order, including puzzles where steps change the rink (cracked ice, bridges, switches), timing, robot-style turning, reading code and fixing bugs. World 2 is <b>loops</b>: spotting patterns and repeating them, including loops inside loops, in blocks and typed Python.</p>
