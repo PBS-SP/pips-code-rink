@@ -649,7 +649,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
 
 /* ---- code buttons (write Python by tapping; typing optional) ---- */
 .row-btns .grow{flex:1}
-.inswitch{gap:6px}.inswitch .ic{width:16px;height:16px}
+.inswitch{gap:6px}.inswitch .pi{width:16px;height:16px}
 .cpad,.spad{display:flex;flex-direction:column;gap:6px;flex:none}
 .cpad[hidden],.spad[hidden]{display:none}
 .cpad .ctabs{display:none}
@@ -670,7 +670,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
 .cflow{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .cgrp{display:inline-flex;flex-wrap:wrap;gap:5px;align-items:center;padding:3px 5px 3px 3px;border-radius:9px;box-shadow:inset 0 0 0 2px #E08A2E}
 
-.blk.sm .ic{width:15px;height:15px}
+.blk.sm .pi{width:15px;height:15px}
 .spad{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .pblk{display:flex;justify-content:center}
 .pblk .blk{font-size:20px;min-height:48px}
@@ -701,12 +701,22 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
   .spad{grid-template-columns:repeat(3,minmax(0,1fr))}.spad .cchip{min-height:36px}
 }
 .cflow .blk{height:30px;font-size:13px;padding:0 9px 0 6px;gap:5px;border-radius:4px}
-.cflow .blk .ic{width:15px;height:15px}
+.cflow .blk .pi{width:15px;height:15px}
 @media (max-width:600px){.cflow .blk{height:26px;font-size:12px;padding:0 7px 0 5px;gap:4px}.cflow{gap:4px}.cgrp{gap:4px}}
 .cchips .ctool{min-width:0;min-height:44px;border:0;border-radius:8px;background:#18284A;color:var(--text);font:800 15px var(--ui);cursor:pointer;touch-action:manipulation}
 .cchips .ctool:active{background:#2A3F66}
 @media (max-width:600px){.cchips .ctool{min-height:40px;font-size:14px}#scr-level[data-in="buttons"] #typeHead h3{display:none}}
 @media (orientation:landscape) and (max-height:520px){.cchips .ctool{min-height:34px}}
+
+/* ---- restart + reopen card ---- */
+.reopen{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.reopen .rtitle{margin:0;font:800 20px var(--ui);color:var(--text)}
+.reopen .rstars{display:flex;gap:6px}.reopen .rstars .pi{width:34px;height:34px}
+.reopen p{margin:0;color:var(--text)}
+.reopen-act{flex-wrap:wrap}
+.reopen-act .btn{gap:8px}
+.pkb .k.sym{background:#223556;color:var(--fn)}
+@media (max-width:600px){.lvbar .mute{display:none}.reopen-act{flex-direction:column-reverse;align-items:stretch}}
 </style>
 </head><body>
 <div id="app">
@@ -760,6 +770,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
       <button class="iconbtn" id="btnBack" aria-label="Back to the map"></button>
       <div class="lvtitle"><div id="lvTitle"></div><span class="chip" id="lvIdea"></span></div>
       <button class="btn hintbtn" id="btnHint"></button>
+      <button class="iconbtn" id="btnRestart" aria-label="Restart this level"></button>
       <button class="iconbtn" id="btnInfo" aria-label="Show the mission again"></button>
       <button class="iconbtn mute" aria-label="Sound on or off"></button>
     </header>
@@ -1521,6 +1532,7 @@ function hardChip(L,n){return L.mode==='speed'?`Hard · ${L.speed.secs}s, higher
 
 'use strict';
 /* ===================== DATA ===================== */
+const APP_VERSION='V1.01.00';
 const LEVELS=[];WORLDS.forEach(W=>W.levels.forEach(L=>{L.world=W.n;L.key=L.id;if(L.target&&!L.solution)L.solution=L.target;LEVELS.push(L);}));
 const WORLD_UNLOCK={2:{world:1,count:8},3:{world:2,count:8}};
 const FUTURE=[
@@ -1684,6 +1696,7 @@ const ICONS={
  play:[".#......",".###....",".#####..",".######.",".#####..",".###....",".#......","........"],
  stop:["........",".######.",".######.",".######.",".######.",".######.",".######.","........"],
  step:["#.#.....","#.##....","#.###...","#.####..","#.###...","#.##....","#.#.....","........"],
+ restart:["........","#....#..","#...##..","#..###..","#.####..","#..###..","#...##..","#....#.."],
  reset:["..####..",".#....#.","#......#","#....###","#.....#.",".#......","..####..","........"],
  x:["##....##",".##..##.","..####..","...##...","..####..",".##..##.","##....##","........"],
  check:["........",".......#","......##","#....##.","##..##..",".####...","..##....","........"],
@@ -2219,7 +2232,7 @@ function grantLevel(res){const L=cur.L,r=lvRec(L.key);const sim=res.sim;const st
   const before=unlockedSet();const oldRank=rankIdx();const first=!r.done;const old=r.stars;const isDaily=L.daily!=null;
   let xp=first?(isDaily?15:L.hard?30:20):5;if(stars>old)xp+=(isDaily?5:10)*(stars-old);
   const pyNow=cur.mode==='type'&&!r.py&&!L.hard;if(pyNow){r.py=true;xp+=10;}
-  S.xp+=xp;r.done=true;r.stars=Math.max(old,stars);if(sim&&sim.fish)r.fishEver=true;save();
+  S.xp+=xp;r.done=true;r.stars=Math.max(old,stars);if(res.on)r.on=[0,1,2].map(i=>!!((r.on&&r.on[i])||res.on[i]));if(sim&&sim.fish)r.fishEver=true;save();
   const newB=[];const tryB=id=>{if(award(id))newB.push(id)};
   tryB('first');if(stars===3)tryB('hattrick');if(Object.values(S.lv).filter(x=>x.fishEver).length>=5)tryB('fisher');
   if(cur.failedThisVisit&&sim&&res.rule!=='predict')tryB('debug');if(cur.mode==='type')tryB('typist');if(res.rule==='predict'&&stars===3)tryB('predictor');
@@ -2396,7 +2409,7 @@ function openParent(){const today=dayKey();let week=0;for(let i=0;i<7;i++){const
   <div class="row-btns" style="justify-content:flex-start"><button class="btn small ghost" id="pLock">Lock this iPad again</button></div>
   <div class="danger"><b>Reset everything</b><p>Erases the nickname, stars, badges, streak and time. This can't be undone.</p>
    <div class="row-btns" style="justify-content:flex-start"><button class="btn small red" id="pReset">Reset progress</button></div></div>
-  <div class="actions"><button class="btn go" id="pDone">Done</button></div>`;
+  <p class="tiny" style="text-align:center;margin:4px 0 0">Pip's Code Rink ${APP_VERSION}</p><div class="actions"><button class="btn go" id="pDone">Done</button></div>`;
   openModal(html,true,()=>{if(cur.screen==='scr-map')renderMap();});
   let code='';try{code='RINK2:'+btoa(unescape(encodeURIComponent(JSON.stringify(Object.assign({},S,{dailyCache:null})))));}catch(e){}$('#pCode').value=code;
   $('#pCopy').onclick=()=>{const done=()=>toast(icon('check','#7FE0A5')+'Backup code copied');try{navigator.clipboard.writeText(code).then(done,()=>{$('#pCode').select();toast('Select the code and copy it')});}catch(e){$('#pCode').select();}};
@@ -2416,7 +2429,7 @@ $('#nickIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#btnStart').cl
 $$('.mute').forEach(b=>b.onclick=toggleMute);
 $('#btnLocker').onclick=()=>openLocker();$('#btnLocker2').onclick=()=>openLocker('badges');$('#btnParent').onclick=openGate;
 $('#mapNodes').addEventListener('click',e=>{const n=e.target.closest('.node');if(!n)return;const L=findLevel(n.dataset.key);if(!L)return;
-  if(!levelOpen(L)){SFX.fail();toast(icon('lock')+'Finish the level before to unlock this one.');return;}ac();openLevel(L);});
+  if(!levelOpen(L)){SFX.fail();toast(icon('lock')+'Finish the level before to unlock this one.');return;}ac();if(hasSavedProg(L))reopenCard(L);else openLevel(L);});
 $('#daily').addEventListener('click',e=>{const b=e.target.closest('[data-daily]');if(!b)return;ac();openLevel(dailyLevels()[+b.dataset.daily]);});
 $('#wtabs').addEventListener('click',e=>{const b=e.target.closest('[data-world]');if(!b)return;const n=+b.dataset.world;
   if(!worldOpen(n)){SFX.fail();const u=WORLD_UNLOCK[n];toast(icon('lock')+`Finish ${u.count} levels in World ${u.world} to open this world.`);return;}S.world=n;save();renderMap();});
@@ -2491,6 +2504,21 @@ function tryUnlock(){const v=$('#lockIn').value;if(passOK(v)){try{localStorage.s
 $('#btnUnlock').onclick=tryUnlock;$('#lockIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
 if(isUnlockedDevice())start();else openLock();
 
+/* ===================== RESTART + REOPEN ===================== */
+function hasSavedProg(L){const r=S.lv[L.key];if(!r||!r.done||L.mode==='speed'||L.mode==='predict')return false;return typeof r.prog==='string'&&r.prog.trim()!==''&&r.prog.trim()!==(L.starter||'').trim();}
+function freshStart(L){const r=lvRec(L.key);delete r.prog;delete r.lines;save();}
+function restartLevel(){if(!cur.L)return;const go=()=>{stopRun();speedStop();closePipKb();freshStart(cur.L);closeModal();openLevel(cur.L);toast(icon('restart')+'Fresh start!');};
+  openModal(`${pixelText('Start again')}<p>Your program goes back to how this level started. Your stars are kept.</p><div class="actions"><button class="btn ghost" id="rsNo">Keep going</button><button class="btn go" id="rsYes">${icon('restart','#fff')}Start fresh</button></div>`);
+  $('#rsNo').onclick=closeModal;$('#rsYes').onclick=go;}
+function reopenCard(L){const r=lvRec(L.key);const sv={par:cur.par,w:cur.w,L:cur.L};let goals=[];
+  try{cur.L=L;cur.w=parseWorld(L);cur.par=parOf(L);goals=starGoals(L);}catch(e){}cur.par=sv.par;cur.w=sv.w;cur.L=sv.L;
+  const miss=r.on?goals.filter((g,i)=>!r.on[i]):[];const col=L.hard?PURPLE:'#F6C445';
+  const stars=[0,1,2].map(i=>icon('star',i<r.stars?col:'#3A4A6A')).join('');
+  const msg=r.stars>=3?'All stars! Play it again, or try a new way from scratch.':miss.length?`Missing star${miss.length>1?'s':''}: <b>${miss.map(esc).join('</b> · <b>')}</b>`:`${3-r.stars} more star${3-r.stars>1?'s':''} to get. Can you get them all in one go?`;
+  openModal(`<div class="reopen"><h2 class="rtitle">${esc(L.id)} ${esc(L.title)}</h2><div class="rstars">${stars}</div><p>${msg}</p></div><div class="actions reopen-act"><button class="btn ghost" id="roFresh">${icon('restart')}Start fresh</button><button class="btn go big" id="roKeep">${icon('play','#fff')}Keep my program</button></div>`);
+  $('#roKeep').onclick=()=>{closeModal();openLevel(L);};$('#roFresh').onclick=()=>{freshStart(L);closeModal();openLevel(L);};}
+$('#btnRestart').innerHTML=icon('restart');$('#btnRestart').onclick=()=>{if(cur.running)stopRun();restartLevel();};
+
 /* ===================== TYPING: Pip's Keyboard, star rules, Speed Shift ===================== */
 SFX.key=()=>tone(1150,0,.025,'square',.022);
 function kbPip(){return (S.kb||(matchMedia('(pointer:coarse)').matches?'pip':'native'))==='pip';}
@@ -2551,11 +2579,11 @@ function isPhoneW(){return matchMedia('(max-width:600px)').matches;}
 
 /* ---- Pip's Keyboard ---- */
 function needsDigits(L){return (L.blocks||[]).includes('repeat')||(L.speed&&L.speed.pool.some(x=>/\d/.test(x)));}
-function buildKb(){const L=cur.L;const rows=[['w','e','r','t','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['c','n','m','_','(',')',':','bk']];
+function buildKb(){const L=cur.L;const rows=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','bk'],['(',')','_',':']];
   if(needsDigits(L))rows.push(['1','2','3','4','5','6','7','8','9','0']);
   rows.push(cur.mode==='speed'?['left','space','right','enter']:['pull','push','left','space','right','enter']);
   const lab={bk:'⌫',pull:'⇤ out',push:'in ⇥',left:'◀',right:'▶',space:'space',enter:cur.mode==='speed'?'Enter ⏎':'⏎'};
-  const cls={bk:'w2 fn',pull:'w2 fn',push:'w2 fn',left:'fn',right:'fn',space:'w3 fn',enter:'w2 fn enter'};
+  const cls={'(':'sym','(':'sym',')':'sym','_':'sym',':':'sym',bk:'w2 fn',pull:'w2 fn',push:'w2 fn',left:'fn',right:'fn',space:'w3 fn',enter:'w2 fn enter'};
   $('#pkb').innerHTML=`<div class="sug" id="pkbSug"></div>`+rows.map(r=>`<div class="kr">${r.map(k=>`<button class="k ${cls[k]||''}" data-k="${k}" aria-label="${k==='bk'?'Delete':k}">${esc(lab[k]||k)}</button>`).join('')}</div>`).join('');}
 function buf(){return cur.mode==='speed'?cur.sp:cur;}
 function kbPress(k){if(cur.running||cur.busy)return;const b=buf();if(!b||(cur.mode==='speed'&&!cur.sp.on))return;
