@@ -646,6 +646,67 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
 #scr-level.hardlvl .lvtitle .chip{display:block}
 @media (max-width:600px),(max-height:500px){#scr-level.hardlvl .lvtitle .chip{font-size:10px;letter-spacing:.05em}}
 #toast{width:max-content;max-width:calc(100vw - 32px)}
+
+/* ---- code buttons (write Python by tapping; typing optional) ---- */
+.row-btns .grow{flex:1}
+.inswitch{gap:6px}.inswitch .ic{width:16px;height:16px}
+.cpad,.spad{display:flex;flex-direction:column;gap:6px;flex:none}
+.cpad[hidden],.spad[hidden]{display:none}
+.cpad .ctabs{display:none}
+.cchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
+.cchip{min-width:0;min-height:44px;border:0;border-radius:8px;background:var(--code);color:var(--fn);box-shadow:inset 0 0 0 2px #3C5A8C,0 3px 0 rgba(0,0,0,.35);font:700 16px var(--mono);cursor:pointer;touch-action:manipulation;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-user-select:none;user-select:none}
+.cchip:active{transform:translateY(2px);box-shadow:inset 0 0 0 2px var(--gold)}
+.cchip[disabled]{opacity:.4}
+.cloop{grid-column:1/-1;display:flex;gap:6px}
+.cloop .cchip{flex:1}
+.cstp{width:48px;flex:none;min-height:44px;border:0;border-radius:8px;background:#2A3F66;color:#fff;font:800 24px var(--ui);cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.cstp:active{transform:translateY(2px)}
+.ctools{display:flex;gap:6px}
+.ctools button{flex:1;min-width:0;min-height:40px;border:0;border-radius:8px;background:#18284A;color:var(--text);font:800 15px var(--ui);cursor:pointer;touch-action:manipulation}
+.ctools button:active{background:#2A3F66}
+.cl.sel{background:rgba(246,196,69,.14);box-shadow:inset 4px 0 0 var(--gold)}
+.cl.sel .cn{color:var(--gold)}
+#scr-level[data-in="buttons"] .codeview{cursor:pointer}
+.cflow{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.cgrp{display:inline-flex;flex-wrap:wrap;gap:5px;align-items:center;padding:3px 5px 3px 3px;border-radius:9px;box-shadow:inset 0 0 0 2px #E08A2E}
+
+.blk.sm .ic{width:15px;height:15px}
+.spad{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pblk{display:flex;justify-content:center}
+.pblk .blk{font-size:20px;min-height:48px}
+
+@media (max-width:600px){
+  .cpad.tabbed .ctabs{display:flex;gap:4px;background:var(--night-2);border-radius:8px;padding:3px}
+  .cpad .ctabs button{flex:1;min-width:0;min-height:32px;border:0;border-radius:6px;background:transparent;color:var(--muted);font:800 13px var(--ui);cursor:pointer;padding:0 2px}
+  .cpad .ctabs button[aria-pressed="true"]{background:var(--panel-2);color:var(--text)}
+  .cpad .offtab{display:none}
+  .cpad{gap:5px}
+  .cchips{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .cchip{font-size:13px;min-height:40px;padding:0 3px;letter-spacing:-.02em}
+  .cstp{min-height:40px;width:46px}
+  .ctools button{min-height:36px;font-size:14px}
+  .spad{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  #scr-level[data-in="buttons"] #mirror,#scr-level[data-in="buttons"] #mirrorHead{display:none}
+  .pblk .blk{font-size:17px;min-height:42px}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .cpad.tabbed .ctabs{display:flex;gap:4px;background:var(--night-2);border-radius:8px;padding:3px}
+  .cpad .ctabs button{flex:1;min-width:0;min-height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted);font:800 12px var(--ui);cursor:pointer;padding:0 2px}
+  .cpad .ctabs button[aria-pressed="true"]{background:var(--panel-2);color:var(--text)}
+  .cpad .offtab{display:none}
+  .cchips{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:4px}
+  .cchip{font-size:13px;min-height:34px}.cstp{min-height:34px}
+  .ctools button{min-height:32px}
+  #scr-level[data-in="buttons"] #mirror,#scr-level[data-in="buttons"] #mirrorHead{display:none}
+  .spad{grid-template-columns:repeat(3,minmax(0,1fr))}.spad .cchip{min-height:36px}
+}
+.cflow .blk{height:30px;font-size:13px;padding:0 9px 0 6px;gap:5px;border-radius:4px}
+.cflow .blk .ic{width:15px;height:15px}
+@media (max-width:600px){.cflow .blk{height:26px;font-size:12px;padding:0 7px 0 5px;gap:4px}.cflow{gap:4px}.cgrp{gap:4px}}
+.cchips .ctool{min-width:0;min-height:44px;border:0;border-radius:8px;background:#18284A;color:var(--text);font:800 15px var(--ui);cursor:pointer;touch-action:manipulation}
+.cchips .ctool:active{background:#2A3F66}
+@media (max-width:600px){.cchips .ctool{min-height:40px;font-size:14px}#scr-level[data-in="buttons"] #typeHead h3{display:none}}
+@media (orientation:landscape) and (max-height:520px){.cchips .ctool{min-height:34px}}
 </style>
 </head><body>
 <div id="app">
@@ -730,7 +791,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
           <div class="progerr" id="progErr" hidden></div>
         </div>
         <div id="typeUI" style="display:contents" hidden>
-          <div class="phead" id="typeHead"><h3>Type your program</h3><span class="count" id="count2"></span><span class="grow"></span><button class="btn small go" id="runKb" aria-label="Play">Play</button><button class="btn small ghost" id="kbDone">Done</button><button class="btn small ghost" id="kbSwitch"></button><span class="mode" id="modeSw2"></span></div>
+          <div class="phead" id="typeHead"><h3>Type your program</h3><span class="count" id="count2"></span><span class="grow"></span><button class="btn small go" id="runKb" aria-label="Play">Play</button><button class="btn small ghost" id="kbDone">Done</button><button class="btn small ghost inswitch" id="inSwitch"></button><button class="btn small ghost" id="kbSwitch"></button><span class="mode" id="modeSw2"></span></div>
           <div class="refcard" id="refCard"></div>
           <div class="target" id="targetBox" hidden></div>
           <div class="quick" id="quick" hidden></div>
@@ -738,6 +799,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
             <textarea id="codeText" aria-label="Python code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" wrap="off"></textarea></div>
           <div class="codeview" id="codeView" role="textbox" aria-label="Your Python code. Tap to put the cursor there." hidden></div>
           <div class="err" id="codeErr" hidden></div>
+          <div class="cpad" id="cpad" hidden></div>
           <div class="phead" id="mirrorHead"><h3>Same program as blocks</h3></div>
           <div class="mirror" id="mirror"></div>
         </div>
@@ -745,8 +807,9 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
           <div class="speedbar"><div class="stime"><i id="speedFill"></i></div><span id="speedScore"></span></div>
           <div class="prompt" id="speedPrompt"></div>
           <div class="codeview single" id="speedView"></div>
+          <div class="spad" id="spad" hidden></div>
           <input id="speedIn" class="speedin" type="text" aria-label="Type the line here" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" hidden>
-          <div class="row-btns" style="justify-content:flex-start;align-items:center"><button class="btn go big" id="speedStart">Start</button><span class="tiny" id="speedBest"></span></div>
+          <div class="row-btns" style="justify-content:flex-start;align-items:center"><button class="btn go big" id="speedStart">Start</button><span class="tiny" id="speedBest"></span><span class="grow"></span><button class="btn small ghost inswitch" id="inSwitch2"></button></div>
         </div>
         <div id="predictUI" style="display:contents" hidden>
           <div class="phead"><h3>Read the code</h3></div>
@@ -1106,15 +1169,15 @@ const WORLDS=[
    learn:'Turning and moving are different steps. Think from Pip\'s point of view.',
    hints:['Pip starts facing right. After turn_right() he faces down.','Try: forward, turn_right, forward, forward. Where is Pip facing now?'] },
 
- { id:'1-12', title:'Type It', mode:'type', blocks:[...MOVES,'shoot'],
+ { id:'1-12', title:'Python Time', mode:'type', blocks:[...MOVES,'shoot'],
    map:[',,,,,,',
         ',==*=#',
         'P.#,,,',
         ',,,,,N'],
    starter:'# One command on each line\n',
-   mission:'Now you type the code! Each line is one block.',
+   mission:'Now you write real Python! Tap the code buttons, or type it. Each line is one block.',
    learn:'Typed code and blocks mean exactly the same thing.',
-   hints:['Type one command on each line, like right()','The fish is on glare ice. The fish stops a slide, and so does the stone.'] },
+   hints:['Put one command on each line, like right()','The fish is on glare ice. The fish stops a slide, and so does the stone.'] },
 
  { id:'1-13', title:'Robot Brain', mode:'predict',
    map:[',,,,,',
@@ -1133,7 +1196,7 @@ const WORLDS=[
         ',,,W,#.',
         ',==W*,.',
         'T,,W,,N'],
-   starter:'# Plan it, type it, score!\n',
+   starter:'# Plan it, write it, score!\n',
    mission:'Everything you know: push, plan and bank. There is more than one way. Find the one that also grabs the fish!',
    learn:'Putting many ideas together into one longer program.',
    hints:['First you need a bridge over the water.','Push the block into the water, cross it, then look for a shot that bounces off the corner board.'] },
@@ -1151,9 +1214,9 @@ const WORLDS=[
    map:[',,*,,N',
         ',,,,,,',
         'P,,,,,'],
-   starter:'# Listen to Coach and type the play\n',
+   starter:'# Listen to Coach and write the play\n',
    solution:'up()\nup()\nright()\nright()\nright()\nshoot()',
-   mission:"Coach on the radio: \"Up two. Right three. Then shoot!\" Type exactly that play.",
+   mission:"Coach on the radio: \"Up two. Right three. Then shoot!\" Write exactly that play.",
    learn:'Turning instructions in words into code.',
    hints:['Each thing Coach says is one command. "Up two" is two lines.','up() twice, right() three times, then shoot().'] },
 
@@ -1162,7 +1225,7 @@ const WORLDS=[
         ',*...,',
         ',,,#,N'],
    target:'right()\ndown()\nright()\nright()\nright()\nright()\ndown()',
-   mission:'Here are the blocks for this play. Type the same program in Python.',
+   mission:'Here are the blocks for this play. Write the same program in Python.',
    learn:'Blocks and Python are two ways to write the same program.',
    hints:['Each block becomes one line, in the same order.','A right block is right() in Python.'] },
 
@@ -1181,6 +1244,7 @@ const WORLDS=[
         'P.....N',
         ',,,,,,,'],
    mission:'60 seconds on the clock! Type each command exactly and press Enter. Every correct one is a goal.',
+   missionBtn:'60 seconds on the clock! Tap the Python that matches each block. Every correct one is a goal.',
    learn:'Typing code quickly and accurately.',
    hints:['Accuracy first: every bracket counts.','Watch for the underscore in turn_left().'] },
  ]},
@@ -1272,14 +1336,14 @@ const WORLDS=[
    learn:'Loops with turns make shapes.',
    hints:['Each side is 3 forwards, then a turn.','Repeat "3 forwards, turn right" 3 times, then go forward twice.'] },
 
- { id:'2-9', title:'Type a Loop', mode:'type', blocks:[...MOVES,'repeat'], need:3,
+ { id:'2-9', title:'Python Loop', mode:'type', blocks:[...MOVES,'repeat'], need:3,
    map:[',,,,.,N',
         ',,.*o#,',
         '.,o#,,,',
         'P#,,,,,'],
-   starter:'# Type a loop. Push the lines inside it in with 4 spaces.\nfor i in range(3):\n    ',
+   starter:'# A Python loop. Lines inside it are pushed in.\nfor i in range(3):\n    ',
    solution:'for i in range(3):\n    up()\n    right()\n    right()',
-   mission:'Type a loop! Lines inside the loop start with 4 spaces.',
+   mission:'Write a loop! Lines inside the loop are pushed in by 4 spaces.',
    learn:'In Python, the spaces at the start of a line show what is inside a loop.',
    hints:['Look for the pattern of steps that repeats. It has 3 moves.','Each step of the pattern: up, right, right.'] },
 
@@ -1310,7 +1374,7 @@ const WORLDS=[
         '.*.#,,,',
         ',,...#,',
         ',,,,..N'],
-   starter:'# Listen to Coach and type the play\n',
+   starter:'# Listen to Coach and write the play\n',
    solution:'for i in range(3):\n    down()\n    right()\n    right()',
    mission:"Coach on the radio: \"Three times: down, then right twice.\" Use a loop!",
    learn:'Turning a repeated instruction into a loop.',
@@ -1321,7 +1385,7 @@ const WORLDS=[
         ',#.*.#,,',
         ',,,,..,N'],
    target:'for i in range(2):\n    right()\n    right()\n    down()\nright()\nshoot()',
-   mission:'Type these blocks as Python, loop and all.',
+   mission:'Write these blocks as Python, loop and all.',
    learn:'Writing loops in Python: for, range, colon and push-in.',
    hints:['The repeat block becomes: for i in range(2):','Blocks inside the loop are pushed in with 4 spaces.'] },
 
@@ -1331,6 +1395,7 @@ const WORLDS=[
         'P.....N',
         ',,,,,,,'],
    mission:'60 seconds! Type each line exactly, loops included, and press Enter.',
+   missionBtn:'60 seconds! Tap the Python that matches each block, loops included.',
    learn:'Typing loop lines quickly and accurately.',
    hints:['Every for line ends with a colon.','range needs brackets: range(3)'] },
  ]},
@@ -1407,8 +1472,8 @@ const WORLDS=[
    map:[',,K,,,,',
         'P.....N',
         ',,,,,,,'],
-   starter:'# All the commands are yours. Type the play!\n',
-   mission:'Type it! You have 2 pucks. Score. Bonus: knock down the cone first.',
+   starter:'# All the commands are yours. Write the play!\n',
+   mission:'Write it in Python! You have 2 pucks. Score. Bonus: knock down the cone first.',
    learn:'Writing a plan in Python using the full set of commands.',
    hints:['Face up underneath the cone, then shoot.','Every command works here: dash(), jump(), pass_puck() and the rest.'] },
 
@@ -1440,8 +1505,8 @@ function bestPath(L){const w=parseWorld(L);let acts;
   const sim=simulate(w,acts.map(a=>({act:a,line:0,loops:[]})));const cells=new Set([w.start.x+','+w.start.y]);
   sim.events.forEach(e=>(e.path||[]).forEach(p=>cells.add(p.x+','+p.y)));return {w,cells};}
 function hardVariant(L){if(HARD[L.key])return HARD[L.key];const H=JSON.parse(JSON.stringify(L));H.key=L.key+'!H';H.hard=true;delete H.demo;delete H.newBlocks;H.world=L.world;H.base=L.key;
-  H.mission='Hard mode! '+L.mission;
-  if(L.mode==='speed'){H.speed=Object.assign({},L.speed,{secs:45,stars:L.speed.stars.map(x=>x+2)});H.mission=H.mission.replace(/\d+ seconds/,'45 seconds');}
+  H.mission='Hard mode! '+L.mission;if(L.missionBtn)H.missionBtn='Hard mode! '+L.missionBtn;
+  if(L.mode==='speed'){H.speed=Object.assign({},L.speed,{secs:45,stars:L.speed.stars.map(x=>x+2)});H.mission=H.mission.replace(/\d+ seconds/,'45 seconds');if(H.missionBtn)H.missionBtn='Hard mode! '+L.missionBtn.replace(/\d+ seconds/,'45 seconds');}
   else if(L.mode!=='predict'){
     try{const {w,cells}=bestPath(L);const R=rng32(hashStr(L.key+':hard'));const near=[];
       for(let y=0;y<w.rows;y++)for(let x=0;x<w.cols;x++){const ch=L.map[y][x];if(ch!=='.'&&ch!==',')continue;if(cells.has(x+','+y))continue;
@@ -1816,12 +1881,12 @@ function drawMapCanvas(){const box=$('#mapBox'),cv=$('#mapCanvas');const w=box.c
 /* ===================== LEVEL ===================== */
 function findLevel(key){if(key.endsWith('!H')){const b=LEVELS.find(L=>L.key===key.slice(0,-2));return b?hardVariant(b):null;}if(key.includes('#')){const L=dailyLevels().find(l=>l.key===key);return L;}return LEVELS.find(L=>L.key===key);}
 function openLevel(L){
-  cur.L=L;cur.w=parseWorld(L);cur.par=parOf(L);cur.failCount=0;cur.failedThisVisit=false;cur.hintsShown=0;cur.reveal=0;cur.undo=null;cur.guess=null;cur.guessTries=0;cur.dirty=false;cur.revealErr=L.mode!=='type';cur.edits=0;cur.runsLeft=HARD_RUNS;speedStop();
+  cur.L=L;cur.w=parseWorld(L);cur.par=parOf(L);cur.failCount=0;cur.failedThisVisit=false;cur.hintsShown=0;cur.reveal=0;cur.undo=null;cur.guess=null;cur.guessTries=0;cur.dirty=false;cur.revealErr=L.mode!=='type';cur.edits=0;cur.runsLeft=HARD_RUNS;cur.cbN=3;speedStop();
   const r=lvRec(L.key);
   $('#lvTitle').innerHTML=pixelText(L.daily!=null?`Today · ${L.title}`:`${L.id} ${L.title}`);
   $('#scr-level').classList.toggle('hardlvl',!!L.hard);
   $('#lvIdea').textContent=L.hard?hardChip(L,HARD_RUNS):L.daily!=null?"Today's Rink":`World ${L.world} · ${WORLDS.find(w=>w.n===L.world).idea}${L.debug?' · Bug hunt':''}${L.mode==='predict'?' · Read the code':''}`;
-  $('#lvMission').textContent=L.mission;$('#btnHint').classList.remove('nudge');
+  $('#lvMission').textContent=missionOf(L);$('#btnHint').classList.remove('nudge');
   if(L.mode==='predict')cur.mode='predict';else if(L.mode==='speed')cur.mode='speed';else if(L.mode==='type')cur.mode='type';else cur.mode=(S.typePref&&typingUnlocked())?'type':'blocks';
   // load saved program (stored as Python text so it works in both modes)
   let text=typeof r.prog==='string'?r.prog:(L.starter||'');
@@ -1851,8 +1916,9 @@ function switchMode(m){if(m===cur.mode||cur.running||cur.busy)return;
   cur.mode=m;S.typePref=m==='type';save();setupMode();progChanged();}
 function renderGoals(){const L=cur.L,r=lvRec(L.key);const g=starGoals(L);const gold=L.hard?PURPLE:'#F6C445';
   $('#goals').innerHTML=g.map((t,i)=>`<span class="goal">${icon('star',r.stars>i?gold:'#4E6389')}<span>${t}</span></span>`).join('');}
-function setStatus(t){const m=$('#lvMission');if(m&&cur.L&&matchMedia('(max-width:600px)').matches){if(t){m.textContent=t;m.classList.add('st');}else{m.textContent=cur.L.mission;m.classList.remove('st');}}
-  $('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='speed'?'Press Start when you are ready.':cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
+function missionOf(L){return (btnIn()&&L.missionBtn)||L.mission;}
+function setStatus(t){const m=$('#lvMission');if(m&&cur.L&&matchMedia('(max-width:600px)').matches){if(t){m.textContent=t;m.classList.add('st');}else{m.textContent=missionOf(cur.L);m.classList.remove('st');}}
+  $('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='speed'?'Press Start when you are ready.':cur.mode==='type'?(btnIn()?'Tap code buttons to write Python, then press Play.':'Type your program, then press Play.'):'Build your program, then press Play.');}
 function chipHTML(L,edit,i){
   if(L.b==='repeat')return `<span class="blk" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span class="nm">repeat</span>${edit?`<button class="oval" data-pick="${i}" aria-label="Repeat ${L.n} times. Tap to choose a number.">${L.n}</button>`:`<b class="oval">${L.n}</b>`}<span class="tm">times</span>${edit?`<span class="stepper"><button class="stp" data-dn="${i}" aria-label="One time fewer">−</button><button class="stp" data-up="${i}" aria-label="One time more">+</button></span>`:''}<span class="lap"></span></span>`;
   const B=BLOCKS[L.b];return `<span class="blk" data-kind="${B.kind}" data-b="${L.b}">${icon(B.icon,'#fff')}<span>${L.b}</span></span>`;}
@@ -1983,11 +2049,11 @@ function phoneFit(wrap){
   const stage=$('.stage');const sg=px(getComputedStyle(stage).rowGap);
   [...stage.children].forEach(ch=>{if(ch!==wrap&&ch.offsetParent!==null)used+=ch.offsetHeight+sg;});
   const code=$('#codePane'),cs=getComputedStyle(code),cg=px(cs.rowGap);let fixed=px(cs.paddingTop)+px(cs.paddingBottom);
-  const ui=cur.mode==='type'?'#typeUI':cur.mode==='predict'?'#predictUI':cur.mode==='speed'?'#speedUI':'#blocksUI';const flexEl={'#blocksUI':'prog','#typeUI':kbPip()?'codeView':'editor','#predictUI':'plist','#speedUI':'speedPrompt'}[ui];
+  const ui=cur.mode==='type'?'#typeUI':cur.mode==='predict'?'#predictUI':cur.mode==='speed'?'#speedUI':'#blocksUI';const flexEl={'#blocksUI':'prog','#typeUI':(kbPip()||btnIn())?'codeView':'editor','#predictUI':'plist','#speedUI':'speedPrompt'}[ui];
   let n=0;[...$(ui).children].forEach(ch=>{if(ch.offsetParent===null)return;n++;if(ch.id===flexEl||ch.classList.contains(flexEl))return;fixed+=ch.offsetHeight;});
   fixed+=Math.max(0,n-1)*cg;const flexMin=cur.mode==='type'?(vh<640?90:110):(vh<640?94:138);
   const room=vh-used-fixed-flexMin-4;const ideal=(wrap.clientWidth-8)*(cur.w.rows/cur.w.cols)+16;
-  const h=Math.round(Math.max(130,Math.min(ideal,room)));if(Math.abs(wrap.offsetHeight-h)>1)wrap.style.height=h+'px';}
+  const h=Math.round(Math.max(vh<620?112:130,Math.min(ideal,room)));if(Math.abs(wrap.offsetHeight-h)>1)wrap.style.height=h+'px';}
 function sizeBoard(){if(!cur.w)return;const wrap=$('#boardWrap');wrap.style.setProperty('--ar',(cur.w.rows/cur.w.cols).toFixed(3));if(cur.screen==='scr-level')phoneFit(wrap);const W=wrap.clientWidth-24,H=wrap.clientHeight-24;const {cols,rows}=cur.w;
   const cell=Math.max(24,Math.floor(Math.min(W/cols,H/rows,150)));Bd.cell=cell;Bd.dpr=Math.min(3,devicePixelRatio||1);
   const cv=$('#board');cv.width=cell*cols*Bd.dpr;cv.height=cell*rows*Bd.dpr;cv.style.width=cell*cols+'px';cv.style.height=cell*rows+'px';
@@ -2205,11 +2271,11 @@ function showIntro(){const L=cur.L;S.seen[L.key]=true;save();
   let html=`<span class="eyebrow">${L.daily!=null?"Today's Rink":`Level ${esc(L.id)} · ${esc(WORLDS.find(w=>w.n===L.world).idea)}`}</span>${pixelText(L.title)}`;
   if(L.hard)html+=`<span class="bugtag" style="background:${PURPLE}">HARD MODE</span><p><b>Hard mode rules:</b> ${L.hazards?`${L.hazards} extra water hazard${L.hazards>1?'s':''}, `:''}no Step button, only one hint, and ${HARD_RUNS} runs before your program is cleared. Stars are purple!</p>`;
   if(L.debug)html+=`<span class="bugtag">BUG HUNT</span>`;if(L.mode==='predict')html+=`<span class="bugtag" style="background:#6C4BB5">READ THE CODE</span>`;
-  html+=`<p style="color:var(--text)">${esc(L.mission)}</p>`;
+  html+=`<p style="color:var(--text)">${esc(missionOf(L))}</p>`;
   if(L.newBlocks&&L.newBlocks.length)html+=`<div class="newb"><span class="tag">NEW</span>${L.newBlocks.map(b=>chipHTML({b,n:3,d:0},false,0)).join('')}</div><p>${L.newBlocks.map(b=>`<b>${b}</b>: ${BLOCKS[b].say}`).join('<br>')}</p>`;
   if(L.newBlocks&&L.newBlocks.includes('repeat'))html+=`<div class="equiv">${chipHTML({b:'repeat',n:3,d:0},false,0)}<span class="eq">=</span><code><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span><span class="pn">(</span><span class="num">3</span><span class="pn">):</span></code></div><p>Tap the repeat block, then add blocks. They go <b>inside</b> the loop. Tap <b>+ Add at the end</b> to add blocks after the loop.</p>`;
-  if(L.mode==='type'&&L.id==='1-12')html+=`<p><b>Now you type the code.</b> Each block becomes one line of Python:</p><div class="equiv">${chipHTML({b:'right',d:0},false,0)}<span class="eq">=</span><code><span class="fn">right</span><span class="pn">()</span></code></div><p>After this level, you can switch any level to Python. Solving a level in Python earns a <b>blue star</b>!</p>`;
-  if(L.mode==='type'&&L.id==='2-9')html+=`<p>In Python the lines inside a loop are <b>pushed in with 4 spaces</b>. The "push in" and "pull out" buttons help.</p>`;
+  if(L.mode==='type'&&L.id==='1-12')html+=`<p><b>Now you write real Python.</b> Each block becomes one line of Python:</p><div class="equiv">${chipHTML({b:'right',d:0},false,0)}<span class="eq">=</span><code><span class="fn">right</span><span class="pn">()</span></code></div><p>After this level, you can switch any level to Python. Solving a level in Python earns a <b>blue star</b>!</p><p>Tap the <b>code buttons</b> to add lines. Tap a line to choose it, and <b>⌫ delete</b> clears it. Want to type instead? Press <b>Type it</b>.</p>`;
+  if(L.mode==='type'&&L.id==='2-9')html+=`<p>In Python the lines inside a loop are <b>pushed in with 4 spaces</b>. Use <b>in ⇥</b> and <b>⇤ out</b> to push a line in or pull it out. The <b>− +</b> buttons set the loop number before you add it.</p>`;
   if(L.id==='1-1')html+=`<p><b>How to play:</b> tap blocks to build a program (or drag them). Press <b>Play</b>. Pip does your steps from top to bottom.</p>`;
   html+=legendHTML(L);
   const rl=ruleOf(L);
@@ -2440,7 +2506,7 @@ function levelCommands(L){const c=(L.blocks||[]).filter(b=>b!=='repeat').map(b=>
 function starGoals(L){const par=cur.par;
   switch(ruleOf(L)){
     case 'predict':return ['Guess where Pip stops','Guess right in 2 tries','Guess right first try'];
-    case 'speed':{const s=L.speed.stars;return [`Score ${s[0]} goals`,`Score ${s[1]} goals`,`Score ${s[2]} goals`];}
+    case 'speed':{const s=speedStars(L);return [`Score ${s[0]} goals`,`Score ${s[1]} goals`,`Score ${s[2]} goals`];}
     case 'typed':return [cur.w&&cur.w.fishAt?'Score and grab the fish':'Score a goal',`${par} lines or fewer`,'Clean code: no errors when you press Play'];
     case 'typos':return ['Fix it and score',`Fix it in ${L.editPar} edits or fewer`,'Clean code: no errors when you press Play'];
     case 'translate':return ['Score a goal','Match the blocks exactly','Clean code: no errors when you press Play'];
@@ -2467,13 +2533,15 @@ function hl(t){return esc(t).replace(/(#.*$)|\b(for|in)\b|\b(range)\b|\b([a-z_]+
 /* ---- the code view (Pip's Keyboard mode) ---- */
 function caretOf(b){return (b.caret==null||b.caret>b.text.length)?b.text.length:b.caret;}
 function renderCodeView(){const cv=$('#codeView');if(!cv||cur.mode!=='type')return;const lines=cur.text.split('\n');const p=caretOf(cur);
-  const bad=cur.parsed&&cur.parsed.err&&cur.revealErr?cur.parsed.err.line:-1;let pos=0,h='',caretLine=0;
-  lines.forEach((ln,i)=>{const st=pos,en=pos+ln.length;let inner=hl(ln);if(p>=st&&p<=en&&kbPip()){inner=hl(ln.slice(0,p-st))+'<span class="caret"></span>'+hl(ln.slice(p-st));caretLine=i;}
-    h+=`<div class="cl gut${i===bad?' bad':''}" data-l="${i}"><span class="cn">${i+1}</span><span class="cc">${inner}</span></div>`;pos=en+1;});
+  const bad=cur.parsed&&cur.parsed.err&&cur.revealErr?cur.parsed.err.line:-1;const bi=btnIn(),selL=bi?cbSel():-1;let pos=0,h='',caretLine=Math.max(0,selL);
+  lines.forEach((ln,i)=>{const st=pos,en=pos+ln.length;let inner=hl(ln);if(p>=st&&p<=en&&kbPip()&&!bi){inner=hl(ln.slice(0,p-st))+'<span class="caret"></span>'+hl(ln.slice(p-st));caretLine=i;}
+    h+=`<div class="cl gut${i===bad?' bad':''}${i===selL?' sel':''}" data-l="${i}"><span class="cn">${i+1}</span><span class="cc">${inner}</span></div>`;pos=en+1;});
   cv.innerHTML=h+'<span class="measure" aria-hidden="true">MMMMMMMMMM</span>';
   const cl=cv.querySelector(`.cl[data-l="${caretLine}"]`);if(cl){const r=cl.getBoundingClientRect(),vr=cv.getBoundingClientRect();if(r.bottom>vr.bottom)cv.scrollTop+=r.bottom-vr.bottom+8;else if(r.top<vr.top)cv.scrollTop-=vr.top-r.top+8;}
   renderSug();}
-function codeViewTap(e){if(cur.running||cur.busy)return;const cv=$('#codeView');const lines=cur.text.split('\n');let li=lines.length-1,col=lines[li].length;
+function codeViewTap(e){if(cur.running||cur.busy)return;const cv=$('#codeView');const lines=cur.text.split('\n');
+  if(btnIn()){const c0=e.target.closest('.cl');cbSelect(c0?+c0.dataset.l:lines.length-1);return;}
+ let li=lines.length-1,col=lines[li].length;
   const cl=e.target.closest('.cl');const m=cv.querySelector('.measure');const cw=m?m.getBoundingClientRect().width/10:11;
   if(cl){li=+cl.dataset.l;const cc=cl.querySelector('.cc').getBoundingClientRect();col=Math.max(0,Math.min(lines[li].length,Math.round((e.clientX-cc.left)/cw)));}
   let p=0;for(let k=0;k<li;k++)p+=lines[k].length+1;cur.caret=p+col;renderCodeView();openPipKb();}
@@ -2515,46 +2583,47 @@ function applySug(c){const t=cur.text,p=caretOf(cur);const m=/[a-z_]+$/.exec(t.s
 /* ---- setting up the typing screen ---- */
 function setupTyping(){const L=cur.L,m=cur.mode,pip=kbPip();
   $('#scr-level').dataset.mode=m;
-  const typing=m==='type'||m==='speed';
-  $('#pkb').hidden=!(typing&&pip);if(typing&&pip)buildKb();
-  $('#kbSwitch').hidden=!typing;$('#kbSwitch').textContent=pip?'My keyboard':"Pip's keyboard";
+  const typing=m==='type'||m==='speed',bi=btnIn();$('#scr-level').dataset.in=bi?'buttons':'type';
+  $('#pkb').hidden=!(typing&&pip&&!bi);if(typing&&pip&&!bi)buildKb();
+  $('#kbSwitch').hidden=!typing||bi;renderInSwitch();$('#typeHead h3').textContent=bi?'Write your program':'Type your program';$('#kbSwitch').textContent=pip?'My keyboard':"Pip's keyboard";
   if(m==='type'){
-    $('#nativeEd').hidden=pip;$('#codeView').hidden=!pip;
+    $('#nativeEd').hidden=pip||bi;$('#codeView').hidden=!(pip||bi);$('#cpad').hidden=!bi;$('#refCard').hidden=bi;
     $('#refCard').innerHTML=`<b>Commands</b>`+levelCommands(L).map(c=>`<code>${hl(c)}</code>`).join('');
-    const tb=$('#targetBox');if(L.target&&ruleOf(L)==='translate'){tb.hidden=false;tb.innerHTML=`<b>Type these blocks in Python</b>${rowsHTML(parsePy(L.target,L.blocks).lines,{edit:false,mini:true})}`;}else tb.hidden=true;
+    const tb=$('#targetBox');if(L.target&&ruleOf(L)==='translate'){tb.hidden=false;tb.innerHTML=`<b>${bi?'Write':'Type'} these blocks in Python</b>${compactHTML(parsePy(L.target,L.blocks).lines)}`;}else tb.hidden=true;
     const noM=!!L.noMirror;$('#mirror').hidden=noM;$('#mirrorHead').hidden=noM;
-    renderCodeView();}
+    renderCodeView();renderCpad();}
   const tb2=$('#targetBoxB');if(m==='blocks'&&L.target&&ruleOf(L)==='buildit'){tb2.hidden=false;tb2.innerHTML=`<b>Build this Python with blocks</b><pre>${hl(L.target)}</pre>`;}else tb2.hidden=true;
-  if(m==='speed')setupSpeed();
+  if(m!=='type')$('#cpad').hidden=true;
+  if(m==='speed')setupSpeed();else $('#spad').hidden=true;
   if(!typing)closePipKb();}
 
 /* ---- Speed Shift ---- */
 function setupSpeed(){const L=cur.L,r=lvRec(L.key);cur.sp=cur.sp&&cur.sp.key===L.key&&cur.sp.on?cur.sp:{key:L.key,text:'',caret:0,score:0,miss:0,on:false,prompt:null,left:L.speed.secs};
-  $('#speedIn').hidden=kbPip();$('#speedView').hidden=!kbPip();
-  $('#speedBest').textContent=r.best?`Your best: ${r.best} goals`:`Stars at ${L.speed.stars.join(', ')} goals`;renderSpeed();}
+  $('#speedIn').hidden=kbPip()||btnIn();$('#speedView').hidden=!kbPip()||btnIn();
+  $('#speedBest').textContent=r.best?`Your best: ${r.best} goals`:`Stars at ${speedStars(L).join(', ')} goals`;renderSpeed();}
 function renderSpeed(){const sp=cur.sp,L=cur.L;if(!sp)return;$('#speedScore').textContent=`${sp.score} goals`;
   $('#speedFill').style.width=Math.max(0,sp.left/L.speed.secs*100)+'%';
-  $('#speedPrompt').innerHTML=sp.on?`<small>Type this, then Enter</small><span class="pline">${hl(sp.prompt)}</span>`:`<small>Speed Shift</small><span style="font:800 18px var(--ui);color:var(--text)">${sp.score&&!sp.on?`Time! You scored ${sp.score}.`:`Type each line exactly. ${L.speed.secs} seconds.`}</span>`;
-  $('#speedStart').hidden=sp.on;$('#speedStart').textContent=sp.score?'Go again':'Start';renderSpeedView();}
+  const bi=btnIn();$('#speedPrompt').innerHTML=sp.on?(bi?`<small>Tap the Python for this block</small><span class="pblk">${promptBlock(sp.prompt)}</span>`:`<small>Type this, then Enter</small><span class="pline">${hl(sp.prompt)}</span>`):`<small>Speed Shift</small><span style="font:800 18px var(--ui);color:var(--text)">${sp.score&&!sp.on?`Time! You scored ${sp.score}.`:bi?`Tap the Python that matches each block. ${L.speed.secs} seconds.`:`Type each line exactly. ${L.speed.secs} seconds.`}</span>`;
+  $('#speedStart').hidden=sp.on;$('#speedStart').textContent=sp.score?'Go again':'Start';$$('.inswitch').forEach(b=>b.disabled=!!sp.on);renderSpeedView();renderSpad();}
 function renderSpeedView(){const sp=cur.sp;if(!sp)return;const p=caretOf(sp);
   $('#speedView').innerHTML=`<div class="cl"><span class="cn">›</span><span class="cc">${hl(sp.text.slice(0,p))}<span class="caret"></span>${hl(sp.text.slice(p))}</span></div>`;
   if($('#speedIn').value!==sp.text)$('#speedIn').value=sp.text;}
 function nextPrompt(){const pool=cur.L.speed.pool;let p;do{p=pool[Math.floor(Math.random()*pool.length)];}while(pool.length>1&&p===cur.sp.prompt);cur.sp.prompt=p;}
 function speedStart(){const L=cur.L;touchStreak();lvRec(L.key).tries++;save();hideFail();
   cur.sp={key:L.key,text:'',caret:0,score:0,miss:0,on:true,prompt:null,left:L.speed.secs,t0:performance.now()};nextPrompt();resetBoard();
-  if(kbPip())openPipKb();else{const i=$('#speedIn');i.value='';i.focus();}
+  if(btnIn()){}else if(kbPip())openPipKb();else{const i=$('#speedIn');i.value='';i.focus();}
   cur.sp.timer=setInterval(()=>{const sp=cur.sp;if(!sp||!sp.on)return;sp.left=Math.max(0,L.speed.secs-(performance.now()-sp.t0)/1000);$('#speedFill').style.width=(sp.left/L.speed.secs*100)+'%';
     $('#speedFill').style.background=sp.left<10?'var(--red)':'var(--green)';if(sp.left<=0)speedEnd();},100);
   SFX.badge();renderSpeed();}
 function speedSubmit(){const sp=cur.sp;if(!sp||!sp.on)return;
   if(sp.text.trim()===sp.prompt){sp.score++;speedShot();nextPrompt();sp.text='';sp.caret=0;}
   else{sp.miss++;SFX.fail();const pr=$('#speedPrompt');pr.classList.remove('wrong');void pr.offsetWidth;pr.classList.add('wrong');}
-  renderSpeed();if(!kbPip())$('#speedIn').focus();}
+  renderSpeed();if(!kbPip()&&!btnIn())$('#speedIn').focus();}
 async function speedShot(){const w=cur.w;const s=Object.assign(startState(w),{pucks:1});const r=step(w,s,'shoot');const pts=r.ev.ppath||[];SFX.shoot();
   for(let j=1;j<pts.length;j++){const a=pts[j-1],b=pts[j];const t0=performance.now();await new Promise(res=>{const f=now=>{const k=Math.min(1,(now-t0)/45);A.fly={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k};if(k<1)requestAnimationFrame(f);else res();};requestAnimationFrame(f);});}
   A.fly=null;A.scored=cur.sp?cur.sp.score:0;SFX.goal1();miniLamp();}
 function speedStop(){const sp=cur.sp;if(sp&&sp.timer)clearInterval(sp.timer);if(sp)sp.on=false;}
-function speedEnd(){const sp=cur.sp,L=cur.L;speedStop();closePipKb();$('#speedIn').blur();const th=L.speed.stars;const stars=th.filter(x=>sp.score>=x).length;
+function speedEnd(){const sp=cur.sp,L=cur.L;speedStop();closePipKb();$('#speedIn').blur();const th=speedStars(L);const stars=th.filter(x=>sp.score>=x).length;
   const r=lvRec(L.key);r.best=Math.max(r.best||0,sp.score);save();renderSpeed();setupSpeed();
   if(!stars){SFX.fail();showFailBox('Time!',`You scored ${sp.score}. You need ${th[0]} for a star. Have another go!`,false,()=>{});return;}
   grantLevel({stars,on:[stars>=1,stars>=2,stars>=3],labels:th.map(x=>`${x} goals`),title:`${sp.score} goals!`,sim:null,rule:'speed'});}
@@ -2568,12 +2637,79 @@ $('#kbSwitch').onclick=()=>{S.kb=kbPip()?'native':'pip';save();closePipKb();setu
 $('#speedStart').onclick=speedStart;
 $('#speedIn').addEventListener('input',e=>{if(!cur.sp||!cur.sp.on){e.target.value='';return;}cur.sp.text=e.target.value;cur.sp.caret=e.target.selectionStart;cur.edits++;renderSpeedView();});
 $('#speedIn').addEventListener('keydown',e=>{if(e.key==='Enter'||e.keyCode===13){e.preventDefault();speedSubmit();}});
-document.addEventListener('keydown',e=>{if(cur.screen!=='scr-level'||!$('#modal').hidden||!kbPip())return;if(cur.mode!=='type'&&cur.mode!=='speed')return;
+document.addEventListener('keydown',e=>{if(cur.screen!=='scr-level'||!$('#modal').hidden||!kbPip()||btnIn())return;if(cur.mode!=='type'&&cur.mode!=='speed')return;
   const tag=e.target.tagName;if(tag==='TEXTAREA'||tag==='INPUT')return;
   const map={Backspace:'bk',Enter:'enter',ArrowLeft:'left',ArrowRight:'right',Tab:'push',' ':'space'};
   let k=map[e.key];if(!k&&e.key.length===1&&/[a-z0-9_():]/.test(e.key))k=e.key;if(!k)return;
   if(k==='enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();play();return;}
   e.preventDefault();e.stopImmediatePropagation();kbPress(k);},true);
+
+/* ===================== CODE BUTTONS: write Python by tapping (typing is optional) ===================== */
+function btnIn(){return (S.codeIn||'buttons')==='buttons';}
+const FOR_RE=/^(\s*)for\s+([A-Za-z_]\w*)\s+in\s+range\s*\(\s*(\d+)\s*\)\s*:\s*$/;
+function indOf(s){return s.match(/^ */)[0].length;}
+function cbSel(){const p=caretOf(cur);return cur.text.slice(0,p).split('\n').length-1;}
+function cbCommit(lines,sel){let c=0;for(let k=0;k<sel;k++)c+=lines[k].length+1;c+=lines[sel].length;cur.edits++;const t=lines.join('\n');$('#codeText').value=t;setText(t,c);renderCpad();}
+function cbBusy(){return cur.running||cur.busy;}
+/* tap a code button: fill the chosen line if it is empty, otherwise add a new line under it */
+function cbInsert(code){if(cbBusy())return;const lines=cur.text.split('\n');let s=cbSel();const cl=lines[s];
+  if(code==='for')code=`for i in range(${cur.cbN||3}):`;
+  if(cl.trim()===''){let ind=indOf(cl);
+    if(!ind){let k=s-1;while(k>=0&&lines[k].trim()==='')k--;if(k>=0&&!lines[k].trim().startsWith('#'))ind=indOf(lines[k])+(lines[k].trim().endsWith(':')?4:0);}
+    lines[s]=' '.repeat(ind)+code;}
+  else{const t=cl.trim();const ind=t.startsWith('#')?indOf(cl):indOf(cl)+(t.endsWith(':')?4:0);lines.splice(s+1,0,' '.repeat(ind)+code);s++;}
+  SFX.add();cbCommit(lines,s);}
+/* delete: first clears the line, a second tap removes the empty line */
+function cbBack(){if(cbBusy())return;const lines=cur.text.split('\n');let s=cbSel();const cl=lines[s];
+  if(cl.trim()!=='')lines[s]=' '.repeat(indOf(cl));
+  else{if(lines.length===1&&!cl.length)return;lines.splice(s,1);if(!lines.length)lines.push('');s=Math.max(0,s-1);}
+  SFX.remove();cbCommit(lines,s);}
+function cbShift(dir){if(cbBusy())return;const lines=cur.text.split('\n');const s=cbSel();const cl=lines[s];
+  if(dir>0)lines[s]='    '+cl;else{const n=Math.min(4,indOf(cl));if(!n)return;lines[s]=cl.slice(n);}
+  SFX.add();cbCommit(lines,s);}
+function cbCount(delta){if(cbBusy())return;cur.cbN=Math.max(1,Math.min(20,(cur.cbN||3)+delta));SFX.add();renderCpad();}
+function cbSelect(li){const lines=cur.text.split('\n');li=Math.max(0,Math.min(lines.length-1,li));let c=0;for(let k=0;k<li;k++)c+=lines[k].length+1;cur.caret=c+lines[li].length;
+  SFX.key();renderCodeView();renderCpad();}
+function renderCpad(){const el=$('#cpad');if(!el||el.hidden||!cur.L)return;const L=cur.L,bl=L.blocks||[];const calls=bl.filter(b=>b!=='repeat'),loop=bl.includes('repeat');
+  const groups=PAL_GROUPS.map(([n,bs])=>[n,bs.filter(b=>bl.includes(b))]).filter(g=>g[1].length);
+  const tabs=calls.length+(loop?1:0)>6&&groups.length>1;if(tabs&&!groups.some(g=>g[0]===cur.cpTab))cur.cpTab=groups[0][0];
+  const off=b=>{if(!tabs)return '';const g=groups.find(x=>x[1].includes(b));return g&&g[0]!==cur.cpTab?' offtab':'';};
+  const n=cur.cbN||3;
+  el.classList.toggle('tabbed',tabs);
+  el.innerHTML=(tabs?`<div class="ctabs">${groups.map(([g])=>`<button data-ctab="${g}" aria-pressed="${cur.cpTab===g}">${g}</button>`).join('')}</div>`:'')+
+    `<div class="cchips">${calls.map(b=>`<button class="cchip${off(b)}" data-code="${b}()" aria-label="Add ${b}()">${hl(b+'()')}</button>`).join('')}`+
+    (loop?`<span class="cloop${off('repeat')}"><button class="cchip" data-code="for" aria-label="Add a loop">${hl(`for i in range(${n}):`)}</button><button class="cstp" data-cn="-1" aria-label="Smaller number">−</button><button class="cstp" data-cn="1" aria-label="Bigger number">+</button></span>`:'')+(loop?'':`<button class="ctool" data-ct="back" aria-label="Delete this line">⌫ delete</button>`)+`</div>`+
+    (loop?`<div class="ctools"><button data-ct="out" aria-label="Pull this line out">⇤ out</button><button data-ct="in" aria-label="Push this line in">in ⇥</button><button data-ct="back" aria-label="Delete this line">⌫ delete</button></div>`:'');}
+$('#cpad').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.ctab){cur.cpTab=t.dataset.ctab;SFX.add();renderCpad();return;}
+  if(t.dataset.code){cbInsert(t.dataset.code);return;}
+  if(t.dataset.cn){cbCount(+t.dataset.cn);return;}
+  const k=t.dataset.ct;if(k==='back')cbBack();else if(k==='in')cbShift(1);else if(k==='out')cbShift(-1);});
+
+/* compact picture of a block program, used for "write these blocks in Python" */
+function compactHTML(lines){let i=0;
+  const grp=d=>{let s='';while(i<lines.length&&lines[i].d>=d){const L=lines[i];if(L.d>d){s+=grp(L.d);continue;}i++;
+    if(L.b==='repeat')s+=`<span class="cgrp"><span class="blk sm" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span>repeat ${L.n}</span></span>${grp(d+1)}</span>`;
+    else{const B=BLOCKS[L.b];s+=`<span class="blk sm" data-kind="${B.kind}" data-b="${L.b}">${icon(B.icon,'#fff')}<span>${L.b}</span></span>`;}}return s;};
+  return `<div class="cflow">${grp(0)}</div>`;}
+
+/* ---- Speed Shift with buttons: see a block, tap its Python ---- */
+function speedStars(L){return btnIn()?L.speed.stars.map(x=>x*2):L.speed.stars;}
+function promptBlock(p){const m=p.match(FOR_RE);return chipHTML(m?{b:'repeat',n:+m[3],d:0}:{b:p.replace(/\(\)$/,''),d:0},false,0);}
+function renderSpad(){const el=$('#spad');const sp=cur.sp;if(!el)return;if(!btnIn()||!sp||!sp.on){el.hidden=true;el.innerHTML='';return;}el.hidden=false;
+  if(sp.optFor!==sp.prompt){const o=cur.L.speed.pool.slice();for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}sp.opts=o;sp.optFor=sp.prompt;}
+  el.innerHTML=sp.opts.map(c=>`<button class="cchip" data-sp="${esc(c)}"${sp.lock?' disabled':''}>${hl(c)}</button>`).join('');}
+function spTap(c){const sp=cur.sp;if(!sp||!sp.on||sp.lock)return;
+  if(c===sp.prompt){sp.text=c;speedSubmit();return;}
+  sp.miss++;SFX.fail();const pr=$('#speedPrompt');pr.classList.remove('wrong');void pr.offsetWidth;pr.classList.add('wrong');
+  sp.lock=true;renderSpad();setTimeout(()=>{if(cur.sp===sp){sp.lock=false;renderSpad();}},800);}
+$('#spad').addEventListener('click',e=>{const b=e.target.closest('[data-sp]');if(b)spTap(b.dataset.sp);});
+
+/* ---- switch between code buttons and typing ---- */
+function renderInSwitch(){$$('.inswitch').forEach(b=>{b.innerHTML=btnIn()?`${icon('kbd')}<span>Type it</span>`:`${icon('bolt')}<span>Buttons</span>`;
+  b.setAttribute('aria-label',btnIn()?'Type the code with a keyboard instead':'Use code buttons instead of typing');});}
+$$('.inswitch').forEach(b=>b.onclick=()=>{if(cur.sp&&cur.sp.on)return;S.codeIn=btnIn()?'type':'buttons';save();closePipKb();setupTyping();if(cur.mode==='type')reparse();$('#lvMission').textContent=missionOf(cur.L);requestAnimationFrame(sizeBoard);
+  toast(btnIn()?'Code buttons: tap to build your Python':'Typing mode: type it yourself');});
 </script>
 <script>
 if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
