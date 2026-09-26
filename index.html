@@ -571,6 +571,48 @@ td .learn{color:var(--muted);font-weight:500}
   body.kb #scr-level[data-mode="speed"] .stage{display:none}
 }
 .prompt .pline{white-space:pre}
+
+/* ---- repeat block: Scratch-style number oval + separate stepper ---- */
+.blk .oval{min-width:34px;height:32px;padding:0 9px;border:0;border-radius:999px;background:#fff;color:#5A2E00;font:800 18px var(--ui);display:inline-grid;place-items:center;cursor:pointer;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);touch-action:manipulation}
+b.oval{cursor:default}
+.blk .oval.bump{animation:bump .3s ease-out}
+@keyframes bump{40%{transform:scale(1.3)}}
+.blk .tm{font:700 15px var(--ui)}
+.blk .stepper{display:inline-flex;margin-left:6px;border-radius:8px;background:#FFE7C7;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15);overflow:hidden}
+.blk .stepper .stp{width:38px;height:34px;border:0;border-radius:0;background:transparent;color:#5A2E00;font:800 22px var(--ui);display:grid;place-items:center;cursor:pointer}
+.blk .stepper .stp+.stp{border-left:2px solid rgba(90,46,0,.25)}
+.blk .stepper .stp:active{background:#FFD29A}
+.numpad{position:fixed;z-index:88;background:var(--panel);border-radius:12px;padding:10px;box-shadow:0 0 0 3px var(--k-loop),0 12px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px;animation:pop .15s ease-out}
+.numpad b{font-size:14px;color:var(--text)}
+.numpad .np{display:grid;grid-template-columns:repeat(4,48px);gap:6px}
+.numpad .np button{height:48px;border:0;border-radius:8px;background:var(--panel-2);color:var(--text);font:800 20px var(--ui);cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.3)}
+.numpad .np button.sel{background:var(--k-loop)}
+/* ---- demo ---- */
+.demo-hand{position:fixed;left:0;top:0;z-index:97;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 4px var(--gold),0 6px 16px rgba(0,0,0,.4);pointer-events:none;transition:transform .55s cubic-bezier(.3,.8,.3,1),opacity .3s}
+.demo-hand.tap{animation:tapripple .2s ease-out}
+@keyframes tapripple{50%{transform-origin:center;box-shadow:0 0 0 14px rgba(246,196,69,.5),0 6px 16px rgba(0,0,0,.4)}}
+.demo-cap{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:96;background:var(--night-2);color:var(--text);border-radius:10px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;font-weight:800;box-shadow:0 0 0 3px var(--gold),0 10px 30px rgba(0,0,0,.5);max-width:calc(100% - 24px);width:max-content}
+body.demo #codePane,body.demo .controls{pointer-events:none}
+@media (max-width:600px){
+  .blk .tm{display:none}
+  .blk .oval{min-width:30px;height:28px;font-size:16px;padding:0 7px}
+  .blk .stepper{margin-left:4px}
+  .blk .stepper .stp{width:32px;height:30px;font-size:20px}
+  .demo-cap{font-size:14px;top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+}
+/* repeat block must fit on small screens */
+@media (max-width:600px){
+  .row{grid-template-columns:22px minmax(0,1.4fr) minmax(0,.85fr) 34px}
+  .bcell .blk[data-kind="loop"]{gap:4px;padding:0 6px}
+  .bcell .blk[data-kind="loop"]>.pi{display:none}
+  .blk .stepper .stp{width:28px}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .row{grid-template-columns:24px minmax(0,1.45fr) minmax(0,.9fr) 34px}
+  .bcell .blk[data-kind="loop"] .nm,.bcell .blk[data-kind="loop"] .tm{display:none}
+  .bcell .blk[data-kind="loop"]{gap:4px;padding:0 6px}
+  .blk .stepper .stp{width:28px;height:30px}
+}
 </style>
 </head><body>
 <div id="app">
@@ -1074,8 +1116,9 @@ const WORLDS=[
         ',,,,,,,,,,,'],
    solution:'for i in range(10):\n    right()',
    mission:'That\'s a long way! Put a block inside a repeat to do it many times.',
+   demo:true,
    learn:'A loop repeats the blocks inside it.',
-   hints:['Count the squares to the net.','Use a repeat set to 10 with one right block inside it.'] },
+   hints:['Count the squares to the net. That\'s how many times to repeat.','Tap repeat, then tap + (or tap the number) until it says 10. Then tap right: it goes inside the loop.'] },
 
  { id:'2-2', title:'Staircase', mode:'blocks', blocks:[...MOVES,'repeat'],
    map:[',,,,,,N',
@@ -1592,7 +1635,7 @@ function renderGoals(){const L=cur.L,r=lvRec(L.key);const g=starGoals(L);
 function setStatus(t){const m=$('#lvMission');if(m&&cur.L&&matchMedia('(max-width:600px)').matches){if(t){m.textContent=t;m.classList.add('st');}else{m.textContent=cur.L.mission;m.classList.remove('st');}}
   $('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='speed'?'Press Start when you are ready.':cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
 function chipHTML(L,edit,i){
-  if(L.b==='repeat')return `<span class="blk" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span class="nm">repeat</span>${edit?`<button class="stp" data-dn="${i}" aria-label="Repeat fewer times">−</button>`:''}<b class="cnt">${L.n}</b>${edit?`<button class="stp" data-up="${i}" aria-label="Repeat more times">+</button>`:''}<span class="lap"></span></span>`;
+  if(L.b==='repeat')return `<span class="blk" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span class="nm">repeat</span>${edit?`<button class="oval" data-pick="${i}" aria-label="Repeat ${L.n} times. Tap to choose a number.">${L.n}</button>`:`<b class="oval">${L.n}</b>`}<span class="tm">times</span>${edit?`<span class="stepper"><button class="stp" data-dn="${i}" aria-label="One time fewer">−</button><button class="stp" data-up="${i}" aria-label="One time more">+</button></span>`:''}<span class="lap"></span></span>`;
   const B=BLOCKS[L.b];return `<span class="blk" data-kind="${B.kind}" data-b="${L.b}">${icon(B.icon,'#fff')}<span>${L.b}</span></span>`;}
 function pyLineHTML(L){const ind='    '.repeat(L.d);
   if(L.b==='repeat')return `${ind}<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span><span class="pn">(</span><span class="num">${L.n}</span><span class="pn">):</span>`;
@@ -1619,6 +1662,16 @@ function renderCount(n,sel){const e=$(sel);e.innerHTML=`${n}<span class="lg"> bl
 function progChanged(){if(cur.L.mode!=='predict'){const r=lvRec(cur.L.key);if(cur.mode==='blocks'){r.lines=cur.lines.map(x=>({b:x.b,n:x.n,d:x.d}));r.prog=toPy(cur.lines);}else{r.prog=cur.text;r.lines=null;}save();}
   if(cur.mode==='blocks')renderProg();
   run=null;runId++;cur.running=false;cur.busy=false;setRunningUI(false);hideFail();resetBoard();setStatus();}
+function setLoopCount(i,n){const L=cur.lines[i];if(!L)return;const v=Math.max(2,Math.min(12,n));if(v===L.n){SFX.bump&&SFX.bump();return;}L.n=v;SFX.add();progChanged();
+  const o=$(`#prog .row[data-i="${i}"] .oval`);if(o){o.classList.remove('bump');void o.offsetWidth;o.classList.add('bump');}}
+function closeNumPad(){const p=$('#numpad');if(p)p.remove();}
+function openNumPad(i,anchor){closeNumPad();const L=cur.lines[i];const pad=document.createElement('div');pad.id='numpad';pad.className='numpad';pad.setAttribute('role','dialog');pad.setAttribute('aria-label','How many times?');
+  pad.innerHTML=`<b>How many times?</b><div class="np">${[2,3,4,5,6,7,8,9,10,11,12].map(n=>`<button data-n="${n}" class="${n===L.n?'sel':''}">${n}</button>`).join('')}</div>`;
+  document.body.appendChild(pad);const r=anchor.getBoundingClientRect(),pr=pad.getBoundingClientRect();
+  let x=Math.min(Math.max(8,r.left+r.width/2-pr.width/2),innerWidth-pr.width-8),y=r.bottom+8;if(y+pr.height>innerHeight-8)y=Math.max(8,r.top-pr.height-8);
+  pad.style.left=x+'px';pad.style.top=y+'px';SFX.add();
+  pad.addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(b){closeNumPad();setLoopCount(i,+b.dataset.n);}});}
+addEventListener('pointerdown',e=>{if($('#numpad')&&!e.target.closest('#numpad,[data-pick]'))closeNumPad();},true);
 function blockEnd(i){let j=i+1;if(cur.lines[i].b==='repeat')while(j<cur.lines.length&&cur.lines[j].d>cur.lines[i].d)j++;return j;}
 function insertLine(b,at,d){if(cur.running||cur.busy)return;
   if(cur.lines.length>=MAX_LINES){toast(`That's ${MAX_LINES} lines, the most for a program. Can a loop make it shorter?`);return;}
@@ -1637,7 +1690,7 @@ function moveBlock(i,at,d){const j=blockEnd(i);if(at>i&&at<j)return;const items=
 /* ---- drag and drop (finger, pencil, mouse) ---- */
 let drag=null;
 function killGhosts(){$$('.dragghost').forEach(g=>g.remove());document.body.classList.remove('dragging');clearMarks();$$('#prog .row.dragging').forEach(r=>r.classList.remove('dragging'));}
-function onBlockDown(e,src){if(drag){endDrag();drag=null;}killGhosts();if(cur.running||cur.busy||e.button>0)return;if(e.target.closest('.stp'))return;drag={src,x0:e.clientX,y0:e.clientY,pid:e.pointerId,on:false,gap:null};}
+function onBlockDown(e,src){if(drag){endDrag();drag=null;}killGhosts();if(cur.running||cur.busy||e.button>0)return;if(e.target.closest('.stp,.oval'))return;drag={src,x0:e.clientX,y0:e.clientY,pid:e.pointerId,on:false,gap:null};}
 function beginDrag(){drag.on=true;const g=document.createElement('div');g.className='dragghost';
   const L=drag.src.from==='pal'?{b:drag.src.b,n:3,d:0}:cur.lines[drag.src.i];g.innerHTML=chipHTML(L,false,0);
   if(drag.src.from==='prog'){const j=blockEnd(drag.src.i);drag.src.j=j;if(j-drag.src.i>1)g.innerHTML+=`<span class="more">+ ${j-drag.src.i-1} inside</span>`;
@@ -1835,7 +1888,7 @@ function failText(sim){const ev=sim.events[sim.events.length-1];const n=ev?ev.i+
     case 'sink':return {t:'Plop!',m:`On step ${n}, the puck slid into the water.`};
     case 'zamboni':return {t:'Beep beep!',m:`On step ${n}, Pip got in the Zamboni's way. Try wait() to let it pass.`};}
   return {t:'Not yet',m:'Try again!'};}
-function onFail(sim){const r=lvRec(cur.L.key);r.fails++;save();cur.failCount++;cur.failedThisVisit=true;SFX.fail();
+function onFail(sim){if(demoOn){return;}const r=lvRec(cur.L.key);r.fails++;save();cur.failCount++;cur.failedThisVisit=true;SFX.fail();
   const ev=sim.events[sim.events.length-1];if(sim.result!=='incomplete'&&ev)setActive(ev,'bad');else clearActive();
   const f=failText(sim);setStatus(f.t+(sim.result==='incomplete'?'':' Look at the red step.'));
   showFailBox(f.t,f.m,true,()=>{resetBoard();if(ev&&sim.result!=='incomplete')setActive(ev,'bad');setStatus('Change the red step, then press Play again.');});
@@ -1848,7 +1901,7 @@ function onPredictMiss(sim){SFX.fail();const f=sim.final;A.marks=[{x:cur.guess.x
   $('#btnHint').classList.add('nudge');}
 function hideFail(){$('#failBox').hidden=true;}
 function award(id){if(S.badges[id])return false;S.badges[id]=Date.now();save();SFX.badge();return true;}
-function onSuccess(sim){const L=cur.L;const pred=cur.mode==='predict';let res;
+function onSuccess(sim){const L=cur.L;if(demoOn){stopRun();return;}const pred=cur.mode==='predict';let res;
   if(pred){const st=cur.guessTries<=1?3:cur.guessTries===2?2:1;res={stars:st,on:[true,st>=2,st===3],labels:['You read it!',st>=2?'Within 2 tries':'Took 3+ tries',st===3?'First try!':'Not first try'],title:'Mind reader!',rule:'predict'};}
   else{res=computeStars(sim);res.title='Goal!';}
   res.sim=sim;res.unused=pred?0:Math.max(0,run.acts.length-sim.events.length);
@@ -1922,7 +1975,26 @@ function showIntro(){const L=cur.L;S.seen[L.key]=true;save();
   if(L.mode==='type'||L.mode==='speed')html+=`<p>Use <b>Pip's keyboard</b> to type, or switch to your own keyboard.</p>`;
   if(L.mode!=='predict')html+=`<ul class="goal-list">${starGoals(L).map(g=>`<li>${icon('star','#F6C445')}${esc(g)}</li>`).join('')}</ul>`;
   html+=`<div class="actions"><button class="btn go big" id="iGo">Let's go!</button></div>`;
-  openModal(html,true);$$('#card canvas[data-tile]').forEach(cv=>tileTo(cv,cv.dataset.tile));$('#iGo').onclick=closeModal;}
+  if(L.demo)html=html.replace('<div class="actions"><button class="btn go big" id="iGo">',`<div class="actions"><button class="btn" id="iDemo">${icon('play')}Watch the demo</button><button class="btn go big" id="iGo">`);
+  openModal(html,true);$$('#card canvas[data-tile]').forEach(cv=>tileTo(cv,cv.dataset.tile));
+  const firstDemo=L.demo&&!S.seen[L.key+':demo'];$('#iGo').onclick=()=>{closeModal();if(firstDemo)runLoopDemo();};const dm=$('#iDemo');if(dm)dm.onclick=()=>{closeModal();runLoopDemo();};}
+/* ---- a short guided demo: how to use the repeat block ---- */
+let demoOn=0;
+function demoHand(){let h=$('#demoHand');if(!h){h=document.createElement('div');h.id='demoHand';h.className='demo-hand';document.body.appendChild(h);}return h;}
+function demoCap(t){let c=$('#demoCap');if(!c){c=document.createElement('div');c.id='demoCap';c.className='demo-cap';c.innerHTML='<span></span><button class="btn small" id="demoSkip">Skip</button>';document.body.appendChild(c);$('#demoSkip').onclick=()=>endDemo();}c.querySelector('span').textContent=t;}
+function endDemo(){demoOn=0;['#demoHand','#demoCap'].forEach(s=>{const e=$(s);if(e)e.remove();});document.body.classList.remove('demo');closeNumPad();
+  if(cur.L){S.seen[cur.L.key+':demo']=true;save();cur.lines=[];cur.cursor={at:0,d:0};progChanged();setStatus('Your turn! Build it with repeat.');}}
+async function demoTap(el,my){if(!el||demoOn!==my)return false;el.scrollIntoView({block:'nearest'});await sleep(60);const r=el.getBoundingClientRect(),h=demoHand();
+  h.style.transform=`translate(${r.left+r.width/2-18}px,${r.top+r.height/2-18}px)`;await sleep(650);if(demoOn!==my)return false;h.classList.add('tap');await sleep(180);h.classList.remove('tap');return true;}
+async function runLoopDemo(){if(cur.mode!=='blocks'||!cur.L.blocks.includes('repeat'))return;const my=++demoOn;stopRun();document.body.classList.add('demo');
+  cur.lines=[];cur.cursor={at:0,d:0};progChanged();const h=demoHand();h.style.transform=`translate(${innerWidth/2}px,${innerHeight/2}px)`;await sleep(300);
+  demoCap('1. Tap repeat to add a loop.');if(!await demoTap($('#palette .blk[data-b="repeat"]'),my))return;addAtCursor('repeat');await sleep(500);
+  demoCap('2. Tap + to repeat more times. Or tap the number to pick one.');
+  for(let k=0;k<3;k++){if(!await demoTap($('#prog .row[data-i="0"] [data-up]'),my))return;setLoopCount(0,cur.lines[0].n+1);await sleep(250);}
+  demoCap('3. Tap right. It goes inside the loop!');await sleep(400);if(!await demoTap($('#palette .blk[data-b="right"]'),my))return;addAtCursor('right');await sleep(700);
+  demoCap('4. Press Play: Pip repeats right() 6 times.');if(!await demoTap($('#btnRun'),my))return;document.body.classList.remove('demo');$('#demoHand').style.opacity='0';
+  await play();if(demoOn!==my)return;closeModal();await sleep(200);
+  demoCap('Now you try! How many times does Pip need to skate right?');$('#demoSkip').textContent='OK';await sleep(4500);if(demoOn===my)endDemo();}
 function stepHint(){const L=cur.L,w=cur.w;
   if(cur.mode==='speed')return {text:'Go for accuracy: check every letter and bracket before Enter. Speed comes with practice.'};
   if(cur.mode==='predict'){const sim=simulate(w,expand(cur.lines).acts);cur.reveal=Math.max(1,Math.min(cur.reveal,Math.max(1,sim.events.length-1)));
@@ -2051,7 +2123,8 @@ $('#prog').addEventListener('pointerdown',e=>{const chip=e.target.closest('.row 
 $('#prog').addEventListener('click',e=>{if(cur.running||cur.busy)return;
   const x=e.target.closest('[data-del]');if(x){deleteLine(+x.dataset.del);return;}
   const up=e.target.closest('[data-up]'),dn=e.target.closest('[data-dn]');
-  if(up||dn){const i=+(up||dn).dataset[up?'up':'dn'];const L=cur.lines[i];L.n=Math.max(2,Math.min(12,L.n+(up?1:-1)));SFX.add();progChanged();return;}
+  if(up||dn){const i=+(up||dn).dataset[up?'up':'dn'];setLoopCount(i,cur.lines[i].n+(up?1:-1));return;}
+  const ov=e.target.closest('[data-pick]');if(ov){openNumPad(+ov.dataset.pick,ov);return;}
   const slot=e.target.closest('.slot');if(slot){cur.cursor={at:+slot.dataset.at,d:+slot.dataset.d};SFX.add();markCursor();return;}
   const row=e.target.closest('.row');if(row&&!e.target.closest('.blk')){const i=+row.dataset.i;const L=cur.lines[i];cur.cursor={at:i+1,d:L.b==='repeat'?L.d+1:L.d};markCursor();}});
 $('#btnClear').onclick=()=>{if(!cur.lines.length||cur.running)return;cur.undo=cur.lines.map(x=>({...x}));cur.lines=[];cur.cursor={at:0,d:0};SFX.remove();progChanged();
