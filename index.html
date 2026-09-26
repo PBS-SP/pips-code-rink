@@ -96,10 +96,10 @@ button{font:inherit;color:inherit;touch-action:manipulation}
 .world-head{display:flex;flex-direction:column;gap:6px}
 .world-head .ptext{height:26px}
 .world-head p{color:var(--muted);max-width:64ch}
-.mapbox{position:relative;width:min(100%,940px);aspect-ratio:11/7;margin-inline:auto;border-radius:12px;flex:none;--tile:60px;
+.mapbox{position:relative;width:min(100%,940px);aspect-ratio:11/9;margin-inline:auto;border-radius:12px;flex:none;--tile:60px;
   box-shadow:0 0 0 6px #fff,0 0 0 10px var(--gold),0 10px 30px rgba(0,0,0,.4)}
 .mapbox canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:12px;image-rendering:pixelated}
-@media (orientation:landscape) and (min-width:700px){ .mapbox{width:min(100%,940px,calc((100vh - 200px)*1.571));min-width:420px} }
+@media (orientation:landscape) and (min-width:700px){ .mapbox{width:min(100%,940px,calc((100vh - 200px)*1.222));min-width:420px} }
 .node{position:absolute;transform:translate(-50%,-50%);width:clamp(46px,calc(var(--tile)*1.2),82px);height:clamp(46px,calc(var(--tile)*1.2),82px);
   border:0;border-radius:8px;background:var(--panel-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;
   box-shadow:inset 0 -5px 0 rgba(0,0,0,.35),inset 0 3px 0 rgba(255,255,255,.18),0 3px 0 rgba(0,0,0,.25)}
@@ -510,6 +510,67 @@ td .learn{color:var(--muted);font-weight:500}
   .lockbox{padding-block:8px;gap:10px}
   .fail{padding:8px 10px;gap:4px;font-size:13px}.fail .btn.small{min-height:34px}
 }
+
+/* ---- typing: code view, Pip's keyboard, targets, Speed Shift ---- */
+.node .pyst{position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;background:#0B2C4A;display:grid;place-items:center;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.node .pyst .pi{width:13px;height:13px}
+.refcard{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font:700 14px var(--mono)}
+.refcard b{font:800 12px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.refcard code{font:700 14px var(--mono)}
+.target{background:var(--night-2);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;max-height:34%;overflow:auto;flex:none;box-shadow:inset 3px 0 0 var(--gold)}
+.target>b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.target pre{margin:0;font:700 16px/1.5 var(--mono);white-space:pre;color:var(--fn)}
+.codeview{flex:1;min-height:120px;background:var(--code);border-radius:8px;box-shadow:inset 0 0 0 2px var(--line);overflow:auto;padding:8px 0;font:700 19px/34px var(--mono);cursor:text;position:relative;-webkit-user-select:none;user-select:none}
+.codeview.focus{box-shadow:inset 0 0 0 3px var(--gold)}
+.codeview .measure{position:absolute;visibility:hidden;white-space:pre;left:0;top:0}
+.cl{display:flex;min-height:34px}
+.cl .cn{flex:none;width:38px;text-align:right;padding-right:10px;color:var(--cm);font-size:14px}
+.cl .cc{white-space:pre;color:var(--fn);flex:1;min-width:0}
+.cl.run .cn{color:var(--gold);background:rgba(246,196,69,.18)}
+.cl.bad .cn{color:#fff;background:var(--red)}
+.cl.bad .cc{background:rgba(226,59,63,.15)}
+.caret{display:inline-block;width:3px;height:24px;margin:0 -1.5px;vertical-align:-5px;background:var(--gold);border-radius:1px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+.pkb{display:flex;flex-direction:column;gap:5px;background:#07101F;border-radius:10px;padding:6px;flex:none}
+.pkb .sug{display:flex;gap:6px;min-height:36px;align-items:center;overflow:hidden;flex-wrap:nowrap;padding-left:2px}
+.pkb .sug button{flex:none;border:0;border-radius:6px;background:var(--code);box-shadow:inset 0 0 0 2px var(--fn);padding:0 10px;min-height:34px;font:700 15px var(--mono);cursor:pointer}
+.pkb .kr{display:flex;gap:5px}
+.pkb .k{flex:1;min-width:0;height:46px;border:0;border-radius:6px;background:#2A3F66;color:#fff;font:800 19px var(--mono);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);cursor:pointer;touch-action:manipulation;padding:0;-webkit-user-select:none;user-select:none}
+.pkb .k.down,.pkb .k:active{background:#4A6FB0;transform:translateY(1px)}
+.pkb .k.w2{flex:1.6}.pkb .k.w3{flex:2.6}
+.pkb .k.fn{background:#18284A;font:800 14px var(--ui)}
+.pkb .k.enter{background:var(--green)}
+#kbDone{display:none}
+.speedbar{display:flex;align-items:center;gap:10px}
+.stime{flex:1;height:14px;border-radius:4px;background:var(--night-2);overflow:hidden;box-shadow:inset 0 0 0 2px var(--line)}
+.stime i{display:block;height:100%;width:100%;background:var(--green);transition:width .1s linear}
+#speedScore{font:800 18px var(--ui);color:var(--gold);font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+.prompt{background:var(--night-2);border-radius:10px;padding:14px;text-align:center;font:800 26px var(--mono);color:var(--fn);min-height:86px;display:flex;flex-direction:column;justify-content:center}
+.prompt small{display:block;font:800 12px var(--ui);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.prompt.wrong{animation:shake .3s;box-shadow:inset 0 0 0 3px var(--red)}
+.codeview.single{flex:none;min-height:0;padding:6px 0}
+.speedin{min-height:52px;border-radius:8px;border:2px solid var(--line);background:var(--code);color:var(--fn);font:700 20px var(--mono);padding:0 12px;-webkit-user-select:text;user-select:text}
+.speedin:focus{outline:none;border-color:var(--gold)}
+#scr-level[data-mode="speed"] .controls{display:none}
+@media (max-width:600px){
+  body:not(.kb) #pkb{display:none}
+  body.kb #kbDone{display:inline-flex}
+  body.kb #kbSwitch,body.kb #mirror,body.kb #mirrorHead,body.kb #typeHead h3{display:none}
+  body.kb .refcard{font-size:12px;gap:2px 8px}
+  .refcard code{font-size:12.5px}
+  .codeview{font-size:17px;line-height:30px;min-height:90px}
+  .cl{min-height:30px}.cl .cn{width:30px;font-size:12px;padding-right:7px}
+  .caret{height:21px}
+  .pkb{padding:4px;gap:4px;border-radius:8px}
+  .pkb .k{height:40px;font-size:17px}
+  .pkb .kr{gap:4px}
+  .pkb .sug{min-height:32px}.pkb .sug button{min-height:30px;font-size:14px}
+  .prompt{font-size:21px;padding:10px;min-height:70px}
+  .target pre{font-size:13.5px}
+  #typeHead{flex-wrap:nowrap}
+  body.kb #scr-level[data-mode="speed"] .stage{display:none}
+}
+.prompt .pline{white-space:pre}
 </style>
 </head><body>
 <div id="app">
@@ -541,6 +602,7 @@ td .learn{color:var(--muted);font-weight:500}
       <button class="me" id="btnLocker" aria-label="Open your locker"><canvas id="meAvatar" width="48" height="48"></canvas><span class="me-txt"><b id="meName"></b><span id="meRank" class="rank"></span></span></button>
       <div class="xp"><div class="xp-bar"><i id="xpFill"></i></div><span id="xpTxt"></span></div>
       <span class="stat" id="statStars"></span>
+      <span class="stat" id="statPy" hidden></span>
       <span class="stat" id="statStreak"></span>
       <button class="iconbtn mute" aria-label="Sound on or off"></button>
     </header>
@@ -583,6 +645,7 @@ td .learn{color:var(--muted);font-weight:500}
       <section class="code" id="codePane">
         <div id="blocksUI" style="display:contents">
           <div class="phead" id="palHead"><h3>Blocks</h3><span class="tiny" id="palHelp">Tap to add, or drag into your program</span></div>
+          <div class="target" id="targetBoxB" hidden></div>
           <div class="palette" id="palette"></div>
           <div class="phead"><h3>Your program</h3><span class="count" id="count"></span><span class="grow"></span><span class="mode" id="modeSw1"></span><button class="btn small ghost" id="btnClear">Clear</button></div>
           <div class="cols"><span></span><span>Blocks</span><span>Python</span><span></span></div>
@@ -590,13 +653,23 @@ td .learn{color:var(--muted);font-weight:500}
           <div class="progerr" id="progErr" hidden></div>
         </div>
         <div id="typeUI" style="display:contents" hidden>
-          <div class="phead"><h3>Type your program</h3><span class="count" id="count2"></span><span class="grow"></span><button class="btn small go" id="runKb" aria-label="Done typing and play">Play</button><span class="mode" id="modeSw2"></span></div>
-          <div class="quick" id="quick"></div>
-          <div class="editor"><div class="gutter" id="gutter"></div>
+          <div class="phead" id="typeHead"><h3>Type your program</h3><span class="count" id="count2"></span><span class="grow"></span><button class="btn small go" id="runKb" aria-label="Play">Play</button><button class="btn small ghost" id="kbDone">Done</button><button class="btn small ghost" id="kbSwitch"></button><span class="mode" id="modeSw2"></span></div>
+          <div class="refcard" id="refCard"></div>
+          <div class="target" id="targetBox" hidden></div>
+          <div class="quick" id="quick" hidden></div>
+          <div class="editor" id="nativeEd"><div class="gutter" id="gutter"></div>
             <textarea id="codeText" aria-label="Python code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" wrap="off"></textarea></div>
+          <div class="codeview" id="codeView" role="textbox" aria-label="Your Python code. Tap to put the cursor there." hidden></div>
           <div class="err" id="codeErr" hidden></div>
-          <div class="phead"><h3>Same program as blocks</h3></div>
+          <div class="phead" id="mirrorHead"><h3>Same program as blocks</h3></div>
           <div class="mirror" id="mirror"></div>
+        </div>
+        <div id="speedUI" style="display:contents" hidden>
+          <div class="speedbar"><div class="stime"><i id="speedFill"></i></div><span id="speedScore"></span></div>
+          <div class="prompt" id="speedPrompt"></div>
+          <div class="codeview single" id="speedView"></div>
+          <input id="speedIn" class="speedin" type="text" aria-label="Type the line here" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" hidden>
+          <div class="row-btns" style="justify-content:flex-start;align-items:center"><button class="btn go big" id="speedStart">Start</button><span class="tiny" id="speedBest"></span></div>
         </div>
         <div id="predictUI" style="display:contents" hidden>
           <div class="phead"><h3>Read the code</h3></div>
@@ -604,6 +677,7 @@ td .learn{color:var(--muted);font-weight:500}
           <div class="cols"><span></span><span>Blocks</span><span>Python</span><span></span></div>
           <div class="prog" id="plist"></div>
         </div>
+        <div class="pkb" id="pkb" hidden></div>
       </section>
     </div>
   </section>
@@ -945,6 +1019,52 @@ const WORLDS=[
    mission:'Everything you know: push, plan and bank. There is more than one way. Find the one that also grabs the fish!',
    learn:'Putting many ideas together into one longer program.',
    hints:['First you need a bridge over the water.','Push the block into the water, cross it, then look for a shot that bounces off the corner board.'] },
+ { id:'1-15', title:'Typo Trouble', mode:'type', blocks:[...MOVES,'shoot'], rule:'typos', editPar:10,
+   map:[',,,,,,',
+        'P.#..N',
+        ',*,,,,'],
+   starter:'Down()\nright()\nrigth()\nright(\nup()\nright()\nrihgt()',
+   solution:'down()\nright()\nright()\nright()\nup()\nright()\nright()',
+   mission:'This program is full of typos! Read it carefully and fix every one BEFORE you press Play.',
+   learn:'Finding and fixing typing mistakes (syntax errors).',
+   hints:['Python cares about every letter, every capital and every bracket.','Look closely at lines 1, 3, 4 and 7.'] },
+
+ { id:'1-16', title:"Coach's Call", mode:'type', blocks:[...MOVES,'shoot'], rule:'typed', noMirror:true,
+   map:[',,*,,N',
+        ',,,,,,',
+        'P,,,,,'],
+   starter:'# Listen to Coach and type the play\n',
+   solution:'up()\nup()\nright()\nright()\nright()\nshoot()',
+   mission:"Coach on the radio: \"Up two. Right three. Then shoot!\" Type exactly that play.",
+   learn:'Turning instructions in words into code.',
+   hints:['Each thing Coach says is one command. "Up two" is two lines.','up() twice, right() three times, then shoot().'] },
+
+ { id:'1-17', title:'Blocks to Python', mode:'type', blocks:[...MOVES,'shoot'], rule:'translate',
+   map:['P..#,,',
+        ',*...,',
+        ',,,#,N'],
+   target:'right()\ndown()\nright()\nright()\nright()\nright()\ndown()',
+   mission:'Here are the blocks for this play. Type the same program in Python.',
+   learn:'Blocks and Python are two ways to write the same program.',
+   hints:['Each block becomes one line, in the same order.','A right block is right() in Python.'] },
+
+ { id:'1-18', title:'Python to Blocks', mode:'blocks', blocks:['forward','turn_left','turn_right','shoot'], rule:'buildit',
+   map:['P.#,,,',
+        '#.#,,,',
+        ',..,,N'],
+   target:'forward()\nturn_right()\nforward()\nforward()\nturn_left()\nforward()\nshoot()',
+   mission:'Here is a play written in Python. Build the same program with blocks.',
+   learn:'Reading Python and understanding what it does.',
+   hints:['Each line of Python is one block.','Go line by line: forward, turn_right, forward...'] },
+
+ { id:'1-19', title:'Speed Shift', mode:'speed', blocks:[...MOVES,'shoot'], speed:{secs:60,stars:[4,7,10],
+   pool:['right()','left()','up()','down()','shoot()','forward()','turn_left()','turn_right()','wait()']},
+   map:[',,,,,,,',
+        'P.....N',
+        ',,,,,,,'],
+   mission:'60 seconds on the clock! Type each command exactly and press Enter. Every correct one is a goal.',
+   learn:'Typing code quickly and accurately.',
+   hints:['Accuracy first: every bracket counts.','Watch for the underscore in turn_left().'] },
  ]},
 { n:2, name:'Loop Lagoon', idea:'Loops', blurb:'A loop repeats steps for you. Fewer blocks, same moves. In Python a loop is for i in range(3):',
   levels:[
@@ -1055,12 +1175,51 @@ const WORLDS=[
    mission:'Collect all 4 loose pucks, then score 5 goals. Use loops inside loops.',
    learn:'Nested loops in typed Python.',
    hints:['One lap: right 4 times, down, left 4 times, down. Do 2 laps.','After the laps you\'re in the bottom-left corner carrying 5 pucks. A tap-in scores every puck you carry.'] },
+ { id:'2-11', title:'Loop Typos', mode:'type', blocks:[...MOVES,'repeat'], rule:'typos', editPar:7,
+   map:[',,,N',
+        ',*.#',
+        ',.#,',
+        'P#,,'],
+   starter:'for i in range(3)\nup()\n    right()',
+   solution:'for i in range(3):\n    up()\n    right()',
+   mission:'This loop has typos. In Python, loops are fussy about colons and spaces. Fix it before you press Play!',
+   learn:'Loop rules in Python: the colon, and pushing lines in.',
+   hints:['A for line always ends with something.','The line after the for line needs pushing in too.'] },
+
+ { id:'2-12', title:"Coach's Laps", mode:'type', blocks:[...MOVES,'repeat'], rule:'typed', noMirror:true,
+   map:['P#,,,,,',
+        '.*.#,,,',
+        ',,...#,',
+        ',,,,..N'],
+   starter:'# Listen to Coach and type the play\n',
+   solution:'for i in range(3):\n    down()\n    right()\n    right()',
+   mission:"Coach on the radio: \"Three times: down, then right twice.\" Use a loop!",
+   learn:'Turning a repeated instruction into a loop.',
+   hints:['"Three times" means a loop: for i in range(3):','Inside the loop: down(), right(), right(). Push them in.'] },
+
+ { id:'2-13', title:'Loops to Python', mode:'type', blocks:[...MOVES,'shoot','repeat'], rule:'translate',
+   map:['P..#,,,,',
+        ',#.*.#,,',
+        ',,,,..,N'],
+   target:'for i in range(2):\n    right()\n    right()\n    down()\nright()\nshoot()',
+   mission:'Type these blocks as Python, loop and all.',
+   learn:'Writing loops in Python: for, range, colon and push-in.',
+   hints:['The repeat block becomes: for i in range(2):','Blocks inside the loop are pushed in with 4 spaces.'] },
+
+ { id:'2-14', title:'Speed Shift: Loops', mode:'speed', blocks:[...MOVES,'shoot','repeat'], speed:{secs:60,stars:[3,5,8],
+   pool:['for i in range(3):','for i in range(5):','for j in range(2):','right()','shoot()','turn_left()','turn_right()','forward()']},
+   map:[',,,,,,,',
+        'P.....N',
+        ',,,,,,,'],
+   mission:'60 seconds! Type each line exactly, loops included, and press Enter.',
+   learn:'Typing loop lines quickly and accurately.',
+   hints:['Every for line ends with a colon.','range needs brackets: range(3)'] },
  ]},
 ];
 
 'use strict';
 /* ===================== DATA ===================== */
-const LEVELS=[];WORLDS.forEach(W=>W.levels.forEach(L=>{L.world=W.n;L.key=L.id;LEVELS.push(L);}));
+const LEVELS=[];WORLDS.forEach(W=>W.levels.forEach(L=>{L.world=W.n;L.key=L.id;if(L.target&&!L.solution)L.solution=L.target;LEVELS.push(L);}));
 const WORLD_UNLOCK={2:{world:1,count:8}};
 const FUTURE=[
  {n:3,name:'Igloo Crossroads',idea:'If / else',blurb:'Pip checks the ice and decides what to do.'},
@@ -1101,12 +1260,17 @@ const BADGES=[
  {id:'world1',name:'Pond Champion',desc:'Finish every level in World 1'},
  {id:'world2',name:'Lagoon Legend',desc:'Finish every level in World 2'},
  {id:'perfect1',name:'Perfect Pond',desc:'Get every star in World 1'},
+ {id:'cleancoder',name:'Clean Coder',desc:'Earn a clean-code star'},
+ {id:'typofixer',name:'Typo Hunter',desc:'Fix a program full of typos'},
+ {id:'speedster',name:'Speed Demon',desc:'Get 3 stars in a Speed Shift'},
+ {id:'pythonista',name:'Pythonista',desc:'Earn 10 blue Python stars'},
 ];
 const CHARS={
  pip:{name:'Pip',what:'Penguin',K:'#1B2330',W:'#F4F7FA',O:'#F29A2E',E:'#FFFFFF',P:'#1B2330',req:null},
  puff:{name:'Captain Puff',what:'Puffin',K:'#23262E',W:'#FFFFFF',O:'#E8562A',E:'#FFFFFF',P:'#23262E',face:true,req:{stars:12}},
  fluff:{name:'Fluff',what:'Penguin chick',K:'#66707B',W:'#DDE3E9',O:'#2B3038',E:'#FFFFFF',P:'#1B2330',req:{stars:30}},
  robo:{name:'Robo-Pip',what:'Robot penguin',K:'#6E7F90',W:'#C9D6E2',O:'#3FD6C9',E:'#3FD6C9',P:'#0E1A30',req:{badge:'looper'}},
+ py:{name:'Captain Py',what:'Python penguin',K:'#2B5B84',W:'#FFE873',O:'#FFD43B',E:'#FFFFFF',P:'#1B2330',req:{py:12}},
 };
 const COSTUMES=[
  {id:'red',name:'Red Helmet',color:'#D8323C',req:null},
@@ -1115,6 +1279,7 @@ const COSTUMES=[
  {id:'gold',name:'Gold Helmet',color:'#F2C230',req:{badge:'hattrick'}},
  {id:'purple',name:'Daily Helmet',color:'#8A63D2',req:{badge:'dailyhat'}},
  {id:'crystal',name:'Crystal Helmet',color:'#6FE3EA',req:{badge:'perfect1'}},
+ {id:'python',name:'Python Helmet',color:'#3776AB',req:{py:5}},
 ];
 const TILE_INFO={
  'N':'Net: shoot the puck in, or skate in holding the puck for a tap-in.',
@@ -1152,9 +1317,9 @@ function streakNow(){const y=new Date();y.setDate(y.getDate()-1);return (S.strea
 function touchStreak(){const t=dayKey();if(S.streak.last===t)return;const y=new Date();y.setDate(y.getDate()-1);
   S.streak.count=(S.streak.last===dayKey(y))?S.streak.count+1:1;S.streak.last=t;S.streak.best=Math.max(S.streak.best,S.streak.count);save();
   if(S.streak.count>=3&&award('streak3'))toast(icon('trophy','#F6C445')+'New badge: On a Roll');}
-function isUnlocked(req){if(!req)return true;if(req.stars!=null)return allStars()>=req.stars;if(req.xp!=null)return S.xp>=req.xp;
+function isUnlocked(req){if(!req)return true;if(req.py!=null)return pyCount()>=req.py;if(req.stars!=null)return allStars()>=req.stars;if(req.xp!=null)return S.xp>=req.xp;
   if(req.rank!=null)return rankIdx()>=req.rank;if(req.badge)return !!S.badges[req.badge];return false;}
-function reqText(req){if(req.stars!=null)return `Collect ${req.stars} stars`;if(req.xp!=null)return `Reach ${req.xp} XP`;if(req.rank!=null)return `Reach the rank ${RANKS[req.rank]}`;
+function reqText(req){if(req.py!=null)return `Earn ${req.py} blue Python stars`;if(req.stars!=null)return `Collect ${req.stars} stars`;if(req.xp!=null)return `Reach ${req.xp} XP`;if(req.rank!=null)return `Reach the rank ${RANKS[req.rank]}`;
   if(req.badge)return `Earn the ${BADGES.find(b=>b.id===req.badge).name} badge`;return '';}
 function unlockedSet(){return new Set([...Object.keys(CHARS).filter(k=>isUnlocked(CHARS[k].req)).map(k=>'c:'+k),...COSTUMES.filter(c=>isUnlocked(c.req)).map(c=>'h:'+c.id)]);}
 const PAR={};
@@ -1219,6 +1384,8 @@ const ICONS={
  loop:["..####..",".#....#.","#......#","#....#.#","#.....##",".#..####","..##....","........"],
  cal:["#.#..#.#","########","#......#","#.##.#.#","#......#","#.#.##.#","########","........"],
  bug:["#..##..#",".#.##.#.","..####..","########","..####..","########","..####..",".#....#."],
+ kbd:["........","########","#.#.#.#.","########",".#.#.#.#","########","..####..","........"],
+ bolt:["....##..","...##...","..##....",".######.","....##..","...##...","..##....",".#......"],
  eye:["........","..####..",".#....#.","#..##..#","#..##..#",".#....#.","..####..","........"],
 };
 (function(){const r=ICONS.right,n=8;
@@ -1341,8 +1508,8 @@ function renderDaily(){const L3=dailyLevels();const d=new Date();
      <b>${esc(L.title)}</b><span class="ns">${[0,1,2].map(i=>icon('star',i<st?'#F6C445':'rgba(0,0,0,.35)')).join('')}</span></button>`;}).join('')}</div>`;}
 
 /* ---------- world map ---------- */
-const NODEPOS=[[1,5],[3,5],[5,5],[7,5],[9,5],[9,3],[7,3],[5,3],[3,3],[1,3],[1,1],[3,1],[5,1],[7,1]];
-function mapGrid(W){const cols=11,rows=7;const g=Array.from({length:rows},()=>Array(cols).fill(','));const n=W.levels.length;
+const NODEPOS=[[1,7],[3,7],[5,7],[7,7],[9,7],[9,5],[7,5],[5,5],[3,5],[1,5],[1,3],[3,3],[5,3],[7,3],[9,3],[9,1],[7,1],[5,1],[3,1]];
+function mapGrid(W){const cols=11,rows=9;const g=Array.from({length:rows},()=>Array(cols).fill(','));const n=W.levels.length;
   const pts=NODEPOS.slice(0,n);
   for(let i=0;i<pts.length-1;i++){let [x,y]=pts[i];const [x2,y2]=pts[i+1];while(x!==x2||y!==y2){g[y][x]='.';x+=Math.sign(x2-x);y+=Math.sign(y2-y);}g[y][x]='.';}
   pts.forEach(([x,y])=>g[y][x]='.');
@@ -1354,13 +1521,14 @@ function mapGrid(W){const cols=11,rows=7;const g=Array.from({length:rows},()=>Ar
     else{if(r<.14)g[y][x]='T';else if(r<.2)g[y][x]='#';else if(r<.24)g[y][x]='W';}}
   return g;}
 function openMap(){show('scr-map');renderMap();}
-function kindIcon(L){if(L.mode==='predict')return 'eye';if(L.debug)return 'bug';if(L.mode==='type')return null;return null;}
+function kindIcon(L){if(L.mode==='predict')return 'eye';if(L.debug||L.rule==='typos')return 'bug';if(L.mode==='speed')return 'bolt';if(L.mode==='type'||L.rule==='buildit')return 'kbd';return null;}
 function renderMap(){
   $('#meName').textContent='Hi, '+(S.nick||'Captain')+'!';
   const ri=rankIdx();$('#meRank').textContent=RANKS[ri];const inRank=S.xp-ri*XP_PER_RANK,max=ri===RANKS.length-1;
   $('#xpFill').style.width=(max?100:Math.min(100,inRank/XP_PER_RANK*100))+'%';
   $('#xpTxt').textContent=max?`${S.xp} XP · top rank!`:`${S.xp} XP · ${XP_PER_RANK-inRank} XP to ${RANKS[ri+1]}`;
   $('#statStars').innerHTML=icon('star','#F6C445')+`<span>${allStars()}</span>`;$('#statStars').title='Stars collected';
+  const pc=pyCount();$('#statPy').hidden=!pc&&!typingUnlocked();$('#statPy').innerHTML=icon('star','#6CC4FF')+`<span>${pc}</span>`;$('#statPy').title='Blue Python stars';
   const st=streakNow();$('#statStreak').innerHTML=icon('flame',st?'#FF8A3D':'#6D7F9E')+`<span>${st} day${st===1?'':'s'}</span>`;
   avatarTo($('#meAvatar'));renderDaily();
   if(!worldOpen(S.world))S.world=1;
@@ -1374,7 +1542,8 @@ function renderMap(){
   $('#mapNodes').innerHTML=W.levels.map((L,i)=>{const r=S.lv[L.key];const open=levelOpen(L);const isDone=r&&r.done;if(open&&!isDone&&firstOpen<0)firstOpen=i;
     const cls=isDone?'done':(open?'open':'locked');const [cx,cy]=NODEPOS[i];const st=r?r.stars:0;const ki=kindIcon(L);
     const inner=open?pixelText(String(i+1))+`<span class="ns">${[0,1,2].map(k=>icon('star',k<st?'#F6C445':'rgba(0,0,0,.35)')).join('')}</span>`:icon('lock','#C9D3E3');
-    return `<button class="node ${cls}" data-key="${L.key}" style="left:${(cx+.5)/11*100}%;top:${(cy+.5)/7*100}%" aria-label="Level ${i+1}, ${esc(L.title)}${open?`, ${st} stars`:', locked'}">${inner}${open&&ki?`<span class="kind">${icon(ki)}</span>`:''}</button>`;}).join('');
+    const py=r&&r.py?`<span class="pyst">${icon('star','#6CC4FF')}</span>`:'';
+    return `<button class="node ${cls}" data-key="${L.key}" style="left:${(cx+.5)/11*100}%;top:${(cy+.5)/9*100}%" aria-label="Level ${i+1}, ${esc(L.title)}${open?`, ${st} stars`:', locked'}">${inner}${open&&ki?`<span class="kind">${icon(ki)}</span>`:''}${open?py:''}</button>`;}).join('');
   if(firstOpen>=0)$(`#mapNodes .node[data-key="${W.levels[firstOpen].key}"]`).classList.add('next');
   $('#worldList').innerHTML=FUTURE.map(f=>`<div class="wcard">${icon('lock','#8FA3C4')}<div><b>${f.n==='S'?'Sandbox':'World '+f.n} · ${esc(f.name)}</b><span>${esc(f.idea)}: ${esc(f.blurb)}</span></div></div>`).join('');
   drawMapCanvas();}
@@ -1386,12 +1555,12 @@ function drawMapCanvas(){const box=$('#mapBox'),cv=$('#mapCanvas');const w=box.c
 /* ===================== LEVEL ===================== */
 function findLevel(key){if(key.includes('#')){const L=dailyLevels().find(l=>l.key===key);return L;}return LEVELS.find(L=>L.key===key);}
 function openLevel(L){
-  cur.L=L;cur.w=parseWorld(L);cur.par=parOf(L);cur.failCount=0;cur.failedThisVisit=false;cur.hintsShown=0;cur.reveal=0;cur.undo=null;cur.guess=null;cur.guessTries=0;
+  cur.L=L;cur.w=parseWorld(L);cur.par=parOf(L);cur.failCount=0;cur.failedThisVisit=false;cur.hintsShown=0;cur.reveal=0;cur.undo=null;cur.guess=null;cur.guessTries=0;cur.dirty=false;cur.revealErr=L.mode!=='type';cur.edits=0;speedStop();
   const r=lvRec(L.key);
   $('#lvTitle').innerHTML=pixelText(L.daily!=null?`Today · ${L.title}`:`${L.id} ${L.title}`);
   $('#lvIdea').textContent=L.daily!=null?"Today's Rink":`World ${L.world} · ${WORLDS.find(w=>w.n===L.world).idea}${L.debug?' · Bug hunt':''}${L.mode==='predict'?' · Read the code':''}`;
   $('#lvMission').textContent=L.mission;$('#btnHint').classList.remove('nudge');
-  if(L.mode==='predict')cur.mode='predict';else if(L.mode==='type')cur.mode='type';else cur.mode=(S.typePref&&typingUnlocked())?'type':'blocks';
+  if(L.mode==='predict')cur.mode='predict';else if(L.mode==='speed')cur.mode='speed';else if(L.mode==='type')cur.mode='type';else cur.mode=(S.typePref&&typingUnlocked())?'type':'blocks';
   // load saved program (stored as Python text so it works in both modes)
   let text=typeof r.prog==='string'?r.prog:(L.starter||'');
   if(L.mode==='predict')text=L.program;
@@ -1406,24 +1575,22 @@ function openLevel(L){
   requestAnimationFrame(()=>{sizeBoard();resetBoard();setStatus();});
   if(!S.seen[L.key])showIntro();
 }
-function setupMode(){const m=cur.mode;$('#blocksUI').hidden=m!=='blocks';$('#typeUI').hidden=m!=='type';$('#predictUI').hidden=m!=='predict';
+function setupMode(){const m=cur.mode;$('#blocksUI').hidden=m!=='blocks';$('#typeUI').hidden=m!=='type';$('#predictUI').hidden=m!=='predict';$('#speedUI').hidden=m!=='speed';
   const canSwitch=cur.L.mode==='blocks'&&typingUnlocked();
   const sw=`<button data-mode="blocks" aria-pressed="${m==='blocks'}">Blocks</button><button data-mode="type" aria-pressed="${m==='type'}">Python</button>`;
   $('#modeSw1').innerHTML=canSwitch?sw:'';$('#modeSw2').innerHTML=canSwitch?sw:'';$('#modeSw1').hidden=!canSwitch;$('#modeSw2').hidden=!canSwitch;
   if(m==='blocks'){renderPalette();renderProg();}
   else if(m==='type'){$('#codeText').value=cur.text;cur.caret=null;renderQuick();reparse();}
   else{$('#plist').innerHTML=rowsHTML(cur.lines,{edit:false});$('#predictNote').innerHTML=`Pip will run this program. <b>Where will he end up?</b> Tap that square on the rink, then press <b>Check</b>.`;}
-  setRunningUI(false);if(cur.screen==='scr-level')requestAnimationFrame(sizeBoard);}
+  setupTyping();setRunningUI(false);if(cur.screen==='scr-level')requestAnimationFrame(sizeBoard);}
 function switchMode(m){if(m===cur.mode||cur.running||cur.busy)return;
   if(m==='type'){cur.text=toPy(cur.lines)+(cur.lines.length?'\n':'');}
   else{const p=parsePy(cur.text,cur.L.blocks);if(p.err){toast('Fix the red line first, then switch to blocks.');return;}cur.lines=p.lines.map(x=>({b:x.b,n:x.n,d:x.d}));cur.cursor={at:cur.lines.length,d:0};}
   cur.mode=m;S.typePref=m==='type';save();setupMode();progChanged();}
-function renderGoals(){const L=cur.L,r=lvRec(L.key);let g;
-  if(L.mode==='predict')g=['Guess where Pip stops','Guess right in 2 tries','Guess right first try'];
-  else g=[L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${cur.par} blocks or fewer`,'Grab the golden fish'];
+function renderGoals(){const L=cur.L,r=lvRec(L.key);const g=starGoals(L);
   $('#goals').innerHTML=g.map((t,i)=>`<span class="goal">${icon('star',r.stars>i?'#F6C445':'#4E6389')}<span>${t}</span></span>`).join('');}
 function setStatus(t){const m=$('#lvMission');if(m&&cur.L&&matchMedia('(max-width:600px)').matches){if(t){m.textContent=t;m.classList.add('st');}else{m.textContent=cur.L.mission;m.classList.remove('st');}}
-  $('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
+  $('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='speed'?'Press Start when you are ready.':cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
 function chipHTML(L,edit,i){
   if(L.b==='repeat')return `<span class="blk" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span class="nm">repeat</span>${edit?`<button class="stp" data-dn="${i}" aria-label="Repeat fewer times">−</button>`:''}<b class="cnt">${L.n}</b>${edit?`<button class="stp" data-up="${i}" aria-label="Repeat more times">+</button>`:''}<span class="lap"></span></span>`;
   const B=BLOCKS[L.b];return `<span class="blk" data-kind="${B.kind}" data-b="${L.b}">${icon(B.icon,'#fff')}<span>${L.b}</span></span>`;}
@@ -1501,13 +1668,13 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){if(drag){e
 document.documentElement.addEventListener('pointerleave',()=>{if(drag&&drag.on){endDrag();drag=null;}});
 
 /* ---- typing ---- */
-function reparse(){cur.parsed=parsePy(cur.text,cur.L.blocks);const nLines=cur.text.split('\n').length;const bad=cur.parsed.err?cur.parsed.err.line:-1;
-  $('#gutter').innerHTML=Array.from({length:nLines},(_,i)=>`<div data-l="${i}" class="${i===bad?'bad':''}">${i+1}</div>`).join('');
-  const err=$('#codeErr');if(cur.parsed.err){err.hidden=false;err.textContent=cur.parsed.err.msg;}else err.hidden=true;
+function reparse(){cur.parsed=parsePy(cur.text,cur.L.blocks);const nLines=cur.text.split('\n').length;const showE=cur.parsed.err&&cur.revealErr;const bad=showE?cur.parsed.err.line:-1;
+  $('#gutter').innerHTML=Array.from({length:nLines},(_,i)=>`<div data-l="${i}" class="gut${i===bad?' bad':''}">${i+1}</div>`).join('');
+  const err=$('#codeErr');if(showE){err.hidden=false;err.textContent=cur.parsed.err.msg;}else err.hidden=true;renderCodeView();
   $('#mirror').innerHTML=cur.parsed.lines.length?rowsHTML(cur.parsed.lines,{edit:false,mini:true}):`<span class="tiny">Your blocks show up here as you type.</span>`;
   renderCount(cur.parsed.lines.length,'#count2');syncGutter();}
 function syncGutter(){$('#gutter').scrollTop=$('#codeText').scrollTop;}
-function renderQuick(){const calls=cur.L.blocks.filter(b=>b!=='repeat');
+function renderQuick(){$('#quick').innerHTML='';$('#quick').hidden=true;return;const calls=cur.L.blocks.filter(b=>b!=='repeat');
   $('#quick').innerHTML=calls.map(b=>`<button data-q="${b}" aria-label="Type ${b}()"><span class="fn">${b}</span><span class="pn">()</span></button>`).join('')+
   (cur.L.blocks.includes('repeat')?`<button data-q="for" aria-label="Type a loop"><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span><span class="pn">(</span><span class="num">3</span><span class="pn">):</span></button><button data-q="indent" aria-label="Push this line in"><span class="cm">push in →</span></button><button data-q="unindent" aria-label="Pull this line out"><span class="cm">← pull out</span></button>`:'')+
   `<button data-q="delline" aria-label="Delete this line"><span class="cm">delete line</span></button>`;}
@@ -1536,7 +1703,7 @@ function phoneFit(wrap){
   const stage=$('.stage');const sg=px(getComputedStyle(stage).rowGap);
   [...stage.children].forEach(ch=>{if(ch!==wrap&&ch.offsetParent!==null)used+=ch.offsetHeight+sg;});
   const code=$('#codePane'),cs=getComputedStyle(code),cg=px(cs.rowGap);let fixed=px(cs.paddingTop)+px(cs.paddingBottom);
-  const ui=cur.mode==='type'?'#typeUI':cur.mode==='predict'?'#predictUI':'#blocksUI';const flexEl={'#blocksUI':'prog','#typeUI':'editor','#predictUI':'plist'}[ui];
+  const ui=cur.mode==='type'?'#typeUI':cur.mode==='predict'?'#predictUI':cur.mode==='speed'?'#speedUI':'#blocksUI';const flexEl={'#blocksUI':'prog','#typeUI':kbPip()?'codeView':'editor','#predictUI':'plist','#speedUI':'speedPrompt'}[ui];
   let n=0;[...$(ui).children].forEach(ch=>{if(ch.offsetParent===null)return;n++;if(ch.id===flexEl||ch.classList.contains(flexEl))return;fixed+=ch.offsetHeight;});
   fixed+=Math.max(0,n-1)*cg;const flexMin=cur.mode==='type'?(vh<640?90:110):(vh<640?94:138);
   const room=vh-used-fixed-flexMin-4;const ideal=(wrap.clientWidth-8)*(cur.w.rows/cur.w.cols)+16;
@@ -1551,15 +1718,15 @@ function resetBoard(){if(!cur.w)return;const s=startState(cur.w);A={px:s.x,py:s.
 function updateHud(){const h=$('#hud');const L=cur.L;const show=L&&(L.need>1||L.pucks===0||cur.w.grid.includes('o'));h.hidden=!show;
   if(show&&A)h.innerHTML=`<span>Pucks: ${A.pucks}</span><span>Goals: ${A.scored}/${cur.w.need}</span>`;}
 function clearActive(){$$('#prog .row,#plist .row').forEach(r=>r.classList.remove('run','bad','hint','loop-on'));$$('.blk .lap').forEach(l=>l.textContent='');
-  $$('#gutter div').forEach(r=>r.classList.remove('run'));$$('#mirror .row').forEach(r=>r.classList.remove('run'));
+  $$('.gut').forEach(r=>r.classList.remove('run'));$$('#mirror .row').forEach(r=>r.classList.remove('run'));
   $$('#mirror .blk').forEach(r=>r.classList.remove('run','bad'));
-  if(cur.mode==='type'&&cur.parsed&&cur.parsed.err){const g=$(`#gutter div[data-l="${cur.parsed.err.line}"]`);if(g)g.classList.add('bad');}
+  if(cur.mode==='type'&&cur.parsed&&cur.parsed.err&&cur.revealErr){$$(`.gut[data-l="${cur.parsed.err.line}"]`).forEach(g=>g.classList.add('bad'));}
   if(cur.mode==='blocks'){const e=validate(cur.lines);if(e){const row=$(`#prog .row[data-i="${e.i}"]`);if(row)row.classList.add('bad');}}}
 function listSel(){return cur.mode==='predict'?'#plist':(cur.mode==='type'?'#mirror':'#prog');}
 function setActive(ev,cls){clearActive();const i=ev.line;const box=listSel();
   const row=$(`${box} .row[data-i="${i}"]`);if(row){row.classList.add(cls);if(cls!=='run'||box!=='#mirror')row.scrollIntoView({block:'nearest'});const b=row.querySelector('.blk');if(b&&box==='#mirror')b.classList.add(cls==='bad'?'bad':'run');}
   (ev.loops||[]).forEach(l=>{const r=$(`${box} .row[data-i="${l.line}"]`);if(r){r.classList.add('loop-on');const lap=r.querySelector('.lap');if(lap)lap.textContent=`${l.k} of ${l.n}`;}});
-  if(cur.mode==='type'){const src=cur.parsed.lines[i];if(src){const g=$(`#gutter div[data-l="${src.src}"]`);if(g)g.classList.add(cls==='bad'?'bad':'run');}}}
+  if(cur.mode==='type'){const src=cur.parsed.lines[i];if(src){$$(`.gut[data-l="${src.src}"]`).forEach(g=>g.classList.add(cls==='bad'?'bad':'run'));}}}
 function zamXY(w,t){const a=Math.floor(t),f=t-a;const p0=zamPos(w,a),p1=zamPos(w,a+1);return p0.map((p,i)=>({x:p.x+(p1[i].x-p.x)*f,y:p.y+(p1[i].y-p.y)*f}));}
 function drawBoard(t){const c=Bd.ctx;if(!c||!A)return;const s=Bd.cell,w=cur.w;c.setTransform(Bd.dpr,0,0,Bd.dpr,0,0);
   for(let y=0;y<w.rows;y++)for(let x=0;x<w.cols;x++){const idx=y*w.cols+x;let ch=A.g[idx];if(A.mask&&A.mask[idx]!=null)ch=A.mask[idx];
@@ -1633,7 +1800,7 @@ function setRunningUI(on){const pred=cur.mode==='predict';
   $('#btnRun').innerHTML=on?icon('stop')+'Stop':(pred?icon('check')+'Check':icon('play')+'Play');$('#btnRun').classList.toggle('red',on);$('#btnRun').classList.toggle('go',!on);
   $('#btnRun').disabled=!on&&pred&&!cur.guess;$('#btnStep').disabled=on||pred;$('#codePane').classList.toggle('locked',on);$('#codeText').readOnly=on;}
 function checkProgram(){if(cur.mode==='predict')return cur.lines;const lines=getLines();
-  if(lines===null){SFX.fail();setStatus(cur.mode==='type'?'Fix the red line in your code first.':'Fix the red message under your program first.');return null;}
+  if(lines===null){SFX.fail();if(cur.mode==='type'){cur.dirty=true;if(!cur.revealErr){cur.revealErr=true;reparse();}}setStatus(cur.mode==='type'?'Python found a problem. Look at the red line.':'Fix the red message under your program first.');return null;}
   if(!lines.length){SFX.fail();setStatus(cur.mode==='type'?'Type a command first, like right()':'Add some blocks first. Tap one of the blocks above.');return null;}
   const ex=expand(lines);if(ex.over){SFX.fail();setStatus('That program runs too many steps. Check your loop numbers.');return null;}return lines;}
 function newRun(lines){touchStreak();const r=lvRec(cur.L.key);r.tries++;save();resetBoard();hideFail();const acts=expand(lines).acts;run={lines,acts,sim:simulate(cur.w,acts),idx:0,done:false};}
@@ -1647,7 +1814,7 @@ async function stepOnce(){if(cur.running||cur.busy||cur.mode==='predict')return;
   if(run.idx<run.sim.events.length)await animEvent(run.sim.events[run.idx++],my);
   cur.busy=false;$('#btnStep').disabled=false;if(my!==runId)return;
   if(run.idx>=run.sim.events.length)finishRun();else setStatus(`Did step ${run.idx}. Tap Step for the next one.`);}
-function stopRun(){runId++;cur.running=false;cur.busy=false;setRunningUI(false);$('#btnStep').disabled=cur.mode==='predict';run=null;resetBoard();hideFail();setStatus();}
+function stopRun(){speedStop();runId++;cur.running=false;cur.busy=false;setRunningUI(false);$('#btnStep').disabled=cur.mode==='predict';run=null;resetBoard();hideFail();setStatus();}
 function finishRun(){run.done=true;const sim=run.sim;
   if(cur.mode==='predict'){const f=sim.final;const ok=cur.guess&&f.x===cur.guess.x&&f.y===cur.guess.y;cur.guessTries++;
     if(ok)onSuccess(sim);else onPredictMiss(sim);return;}
@@ -1673,7 +1840,7 @@ function onFail(sim){const r=lvRec(cur.L.key);r.fails++;save();cur.failCount++;c
   const f=failText(sim);setStatus(f.t+(sim.result==='incomplete'?'':' Look at the red step.'));
   showFailBox(f.t,f.m,true,()=>{resetBoard();if(ev&&sim.result!=='incomplete')setActive(ev,'bad');setStatus('Change the red step, then press Play again.');});
   if(cur.failCount>=2)$('#btnHint').classList.add('nudge');}
-function showFailBox(t,m,slow,onFix){const box=$('#failBox');box.innerHTML=`<b>${esc(t)}</b><span>${esc(m)}</span><div class="row-btns">${slow?`<button class="btn small" id="fSlow">${icon('play')}Watch it slowly</button>`:''}<button class="btn small go" id="fFix">${cur.mode==='predict'?'Guess again':'Fix my code'}</button></div>`;
+function showFailBox(t,m,slow,onFix){const box=$('#failBox');box.innerHTML=`<b>${esc(t)}</b><span>${esc(m)}</span><div class="row-btns">${slow?`<button class="btn small" id="fSlow">${icon('play')}Watch it slowly</button>`:''}<button class="btn small go" id="fFix">${cur.mode==='predict'?'Guess again':cur.mode==='speed'?'OK':'Fix my code'}</button></div>`;
   box.hidden=false;const s=$('#fSlow');if(s)s.onclick=()=>{setSpeed('slow');play();};$('#fFix').onclick=()=>{hideFail();onFix();};}
 function onPredictMiss(sim){SFX.fail();const f=sim.final;A.marks=[{x:cur.guess.x,y:cur.guess.y,c:'#F6C445',dash:true},{x:f.x,y:f.y,c:'#E23B3F',label:'Here'}];
   lvRec(cur.L.key).fails++;save();
@@ -1681,16 +1848,25 @@ function onPredictMiss(sim){SFX.fail();const f=sim.final;A.marks=[{x:cur.guess.x
   $('#btnHint').classList.add('nudge');}
 function hideFail(){$('#failBox').hidden=true;}
 function award(id){if(S.badges[id])return false;S.badges[id]=Date.now();save();SFX.badge();return true;}
-function onSuccess(sim){const L=cur.L,r=lvRec(L.key);const pred=cur.mode==='predict';
-  const used=pred?0:run.lines.length;const parOk=!pred&&used<=cur.par;const fish=!pred&&sim.fish;
-  const stars=pred?(cur.guessTries<=1?3:cur.guessTries===2?2:1):1+(parOk?1:0)+(fish?1:0);
+function onSuccess(sim){const L=cur.L;const pred=cur.mode==='predict';let res;
+  if(pred){const st=cur.guessTries<=1?3:cur.guessTries===2?2:1;res={stars:st,on:[true,st>=2,st===3],labels:['You read it!',st>=2?'Within 2 tries':'Took 3+ tries',st===3?'First try!':'Not first try'],title:'Mind reader!',rule:'predict'};}
+  else{res=computeStars(sim);res.title='Goal!';}
+  res.sim=sim;res.unused=pred?0:Math.max(0,run.acts.length-sim.events.length);
+  if(pred){setStatus('You read the code right!');A.marks=[{x:sim.final.x,y:sim.final.y,c:'#2FA163',label:'Yes!'}];}
+  else{setStatus(`GOAL! Pip finished on step ${sim.events.length}.`);$('#lamp').className='lamp';$('#lamp').innerHTML=pixelText('GOAL!','#FFFFFF','#A9242A');$('#lamp').hidden=false;}
+  grantLevel(res);}
+function grantLevel(res){const L=cur.L,r=lvRec(L.key);const sim=res.sim;const stars=res.stars;
   const before=unlockedSet();const oldRank=rankIdx();const first=!r.done;const old=r.stars;const isDaily=L.daily!=null;
-  let xp=first?(isDaily?15:20):5;if(stars>old)xp+=(isDaily?5:10)*(stars-old);S.xp+=xp;r.done=true;r.stars=Math.max(old,stars);if(fish)r.fishEver=true;save();
+  let xp=first?(isDaily?15:20):5;if(stars>old)xp+=(isDaily?5:10)*(stars-old);
+  const pyNow=cur.mode==='type'&&!r.py;if(pyNow){r.py=true;xp+=10;}
+  S.xp+=xp;r.done=true;r.stars=Math.max(old,stars);if(sim&&sim.fish)r.fishEver=true;save();
   const newB=[];const tryB=id=>{if(award(id))newB.push(id)};
   tryB('first');if(stars===3)tryB('hattrick');if(Object.values(S.lv).filter(x=>x.fishEver).length>=5)tryB('fisher');
-  if(cur.failedThisVisit&&!pred)tryB('debug');if(cur.mode==='type')tryB('typist');if(pred&&stars===3)tryB('predictor');
-  if(!pred&&run.lines.some(x=>x.b==='repeat'))tryB('looper');
-  if(sim.events.some(e=>e.push&&e.push.fill))tryB('bridge');if(sim.events.some(e=>e.bounce&&e.net))tryB('bank');
+  if(cur.failedThisVisit&&sim&&res.rule!=='predict')tryB('debug');if(cur.mode==='type')tryB('typist');if(res.rule==='predict'&&stars===3)tryB('predictor');
+  if(run&&run.lines&&res.rule!=='predict'&&run.lines.some(x=>x.b==='repeat'))tryB('looper');
+  if(sim&&sim.events.some(e=>e.push&&e.push.fill))tryB('bridge');if(sim&&sim.events.some(e=>e.bounce&&e.net))tryB('bank');
+  if(['typed','typos','translate'].includes(res.rule)&&!cur.dirty)tryB('cleancoder');if(res.rule==='typos')tryB('typofixer');if(res.rule==='speed'&&stars===3)tryB('speedster');
+  if(pyCount()>=10)tryB('pythonista');
   if(isDaily){tryB('daily');if(dailyLevels().every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('dailyhat');}
   const W1=LEVELS.filter(l=>l.world===1),W2=LEVELS.filter(l=>l.world===2);
   if(W1.every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('world1');if(W2.every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('world2');
@@ -1698,23 +1874,20 @@ function onSuccess(sim){const L=cur.L,r=lvRec(L.key);const pred=cur.mode==='pred
   const w2now=worldOpen(2);
   const after=unlockedSet();const unlocks=[...after].filter(k=>!before.has(k));const rankUp=rankIdx()>oldRank;
   cur.failCount=0;cur.failedThisVisit=false;$('#btnHint').classList.remove('nudge');renderGoals();
-  const unused=pred?0:Math.max(0,run.acts.length-sim.events.length);
-  if(pred){setStatus('You read the code right!');A.marks=[{x:sim.final.x,y:sim.final.y,c:'#2FA163',label:'Yes!'}];SFX.horn();confetti();}
-  else{setStatus(`GOAL! Pip finished on step ${sim.events.length}.`);$('#lamp').className='lamp';$('#lamp').innerHTML=pixelText('GOAL!','#FFFFFF','#A9242A');$('#lamp').hidden=false;SFX.horn();confetti();}
+  SFX.horn();confetti();
   const newWorld=L.world===1&&w2now&&!S.seen.w2open;if(newWorld){S.seen.w2open=true;save();}
-  setTimeout(()=>{$('#lamp').hidden=true;showResult({stars,used,parOk,fish,xp,newB,unlocks,rankUp,unused,pred,newWorld});},reduced?300:1500);}
+  setTimeout(()=>{$('#lamp').hidden=true;showResult(Object.assign(res,{xp,newB,unlocks,rankUp,newWorld,newPy:pyNow}));},reduced?300:1500);}
 function nextLevel(){const L=cur.L;if(L.daily!=null){const d=dailyLevels();return d[L.daily+1]||null;}
   const list=LEVELS.filter(x=>x.world===L.world);const i=list.indexOf(L);if(i+1<list.length)return list[i+1];
   const nw=LEVELS.find(x=>x.world===L.world+1);return nw&&levelOpen(nw)?nw:null;}
-function showResult(o){const next=nextLevel();
-  const labels=o.pred?['You read it!',o.stars>=2?'Within 2 tries':'Took 3+ tries',o.stars===3?'First try!':'Not first try']:
-    ['Scored!',o.parOk?`${o.used} blocks, par ${cur.par}`:`${o.used} blocks. Par is ${cur.par}`,o.fish?'Golden fish!':'Missed the fish'];
-  const on=o.pred?[true,o.stars>=2,o.stars===3]:[true,o.parOk,o.fish];
-  let html=`<div style="align-self:center">${pixelText(o.pred?'Mind reader!':'Goal!','#F6C445')}</div>
+function showResult(o){const next=nextLevel();const labels=o.labels,on=o.on;
+  let html=`<div style="align-self:center">${pixelText(o.title||'Goal!','#F6C445')}</div>
     <div class="res-stars">${labels.map((l,k)=>`<div class="rs ${on[k]?'on':''}" style="--d:${k*.3}s">${icon('star',on[k]?'#F6C445':'#3B5079')}<span>${esc(l)}</span></div>`).join('')}</div>
     ${o.unused>0?`<p style="text-align:center">Pip scored before the end, so ${o.unused} step${o.unused===1?'':'s'} never ran. Can you take ${o.unused===1?'it':'them'} out?</p>`:''}
-    ${!o.pred&&!o.parOk?`<p style="text-align:center">Par is <b>${cur.par}</b>. ${cur.L.solution?'A loop could make your program shorter.':'Is there a shorter path, or a clever shot?'}</p>`:''}
+    ${(o.rule==='normal'||o.rule==='typed')&&!o.on[1]?`<p style="text-align:center">Par is <b>${cur.par}</b>. ${cur.L.solution?'Can you make your program shorter?':'Is there a shorter path, or a clever shot?'}</p>`:''}
+    ${['typed','typos','translate'].includes(o.rule)&&!o.on[2]?`<p style="text-align:center">For the clean-code star, check your code carefully <b>before</b> you press Play.</p>`:''}
     <div class="xpgain">+${o.xp} XP</div>`;
+  if(o.newPy)html+=`<div class="award">${icon('star','#6CC4FF')}<div><b>Blue Python star!</b><p>You solved it in Python. You have ${pyCount()} blue star${pyCount()===1?'':'s'}.</p></div></div>`;
   if(o.newWorld)html+=`<div class="award">${icon('trophy','#F6C445')}<div><b>World 2 is open: Loop Lagoon!</b><p>Loops let Pip repeat steps. Find it on the map.</p></div></div>`;
   if(o.rankUp)html+=`<div class="award">${icon('trophy','#F6C445')}<div><b>New rank: ${RANKS[rankIdx()]}</b><p>You're moving up the team!</p></div></div>`;
   for(const id of o.newB){const b=BADGES.find(x=>x.id===id);html+=`<div class="award">${icon('trophy','#F6C445')}<div><b>Badge: ${esc(b.name)}</b><p>${esc(b.desc)}</p></div></div>`;}
@@ -1724,7 +1897,8 @@ function showResult(o){const next=nextLevel();
   if(!next&&cur.L.daily==null)html+=`<p style="text-align:center"><b>That's the end of this world for now.</b> Try Today's Rink for fresh puzzles!</p>`;
   openModal(html);$$('#card canvas[data-av]').forEach(cv=>{const [k,id]=cv.dataset.av.split(':');avatarTo(cv,k==='c'?{char:id}:{costume:id});});
   if(!reduced)on.forEach((v,k)=>{if(v)setTimeout(()=>SFX.star(k),350+k*300)});
-  const a=$('#rAgain');if(a)a.onclick=()=>{closeModal();cur.guess=null;stopRun();};
+  const a=$('#rAgain');if(a)a.onclick=()=>{closeModal();cur.guess=null;cur.dirty=false;cur.revealErr=cur.L.mode!=='type';cur.edits=0;stopRun();
+    if(ruleOf(cur.L)==='typos'){const t=cur.L.starter;$('#codeText').value=t;setText(t,0);}else if(cur.mode==='type')reparse();if(cur.mode==='speed')setupSpeed();};
   $('#rMap').onclick=()=>{closeModal();stopRun();openMap();};
   const n=$('#rNext');if(n)n.onclick=()=>{closeModal();openLevel(next);};}
 
@@ -1737,14 +1911,20 @@ function showIntro(){const L=cur.L;S.seen[L.key]=true;save();
   html+=`<p style="color:var(--text)">${esc(L.mission)}</p>`;
   if(L.newBlocks&&L.newBlocks.length)html+=`<div class="newb"><span class="tag">NEW</span>${L.newBlocks.map(b=>chipHTML({b,n:3,d:0},false,0)).join('')}</div><p>${L.newBlocks.map(b=>`<b>${b}</b>: ${BLOCKS[b].say}`).join('<br>')}</p>`;
   if(L.newBlocks&&L.newBlocks.includes('repeat'))html+=`<div class="equiv">${chipHTML({b:'repeat',n:3,d:0},false,0)}<span class="eq">=</span><code><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span><span class="pn">(</span><span class="num">3</span><span class="pn">):</span></code></div><p>Tap the repeat block, then add blocks. They go <b>inside</b> the loop. Tap <b>+ Add at the end</b> to add blocks after the loop.</p>`;
-  if(L.mode==='type'&&L.id==='1-12')html+=`<p><b>Now you type the code.</b> Each block becomes one line of Python:</p><div class="equiv">${chipHTML({b:'right',d:0},false,0)}<span class="eq">=</span><code><span class="fn">right</span><span class="pn">()</span></code></div><p>No keyboard? Tap the code buttons to add lines. After this level, you can switch any level between Blocks and Python.</p>`;
+  if(L.mode==='type'&&L.id==='1-12')html+=`<p><b>Now you type the code.</b> Each block becomes one line of Python:</p><div class="equiv">${chipHTML({b:'right',d:0},false,0)}<span class="eq">=</span><code><span class="fn">right</span><span class="pn">()</span></code></div><p>After this level, you can switch any level to Python. Solving a level in Python earns a <b>blue star</b>!</p>`;
   if(L.mode==='type'&&L.id==='2-9')html+=`<p>In Python the lines inside a loop are <b>pushed in with 4 spaces</b>. The "push in" and "pull out" buttons help.</p>`;
   if(L.id==='1-1')html+=`<p><b>How to play:</b> tap blocks to build a program (or drag them). Press <b>Play</b>. Pip does your steps from top to bottom.</p>`;
   html+=legendHTML(L);
-  if(L.mode!=='predict')html+=`<ul class="goal-list"><li>${icon('star','#F6C445')}${L.need>1?`Score ${L.need} goals`:'Score a goal'}</li><li>${icon('star','#F6C445')}Use ${cur.par} blocks or fewer</li><li>${icon('star','#F6C445')}Grab the golden fish</li></ul>`;
+  const rl=ruleOf(L);
+  if(['typed','typos','translate'].includes(rl))html+=`<p><b>Clean code:</b> Python checks your code when you press Play. If there's a mistake, you lose the clean-code star, so read it carefully first!</p>`;
+  if(rl==='typos')html+=`<p><b>Edits</b> count every key you press that changes the code. Fewer is better.</p>`;
+  if(rl==='speed')html+=`<p>Press <b>Start</b>, then type each line exactly and press <b>Enter</b>. Every correct line is a goal. Wrong lines don't count.</p>`;
+  if(L.mode==='type'||L.mode==='speed')html+=`<p>Use <b>Pip's keyboard</b> to type, or switch to your own keyboard.</p>`;
+  if(L.mode!=='predict')html+=`<ul class="goal-list">${starGoals(L).map(g=>`<li>${icon('star','#F6C445')}${esc(g)}</li>`).join('')}</ul>`;
   html+=`<div class="actions"><button class="btn go big" id="iGo">Let's go!</button></div>`;
   openModal(html,true);$$('#card canvas[data-tile]').forEach(cv=>tileTo(cv,cv.dataset.tile));$('#iGo').onclick=closeModal;}
 function stepHint(){const L=cur.L,w=cur.w;
+  if(cur.mode==='speed')return {text:'Go for accuracy: check every letter and bracket before Enter. Speed comes with practice.'};
   if(cur.mode==='predict'){const sim=simulate(w,expand(cur.lines).acts);cur.reveal=Math.max(1,Math.min(cur.reveal,Math.max(1,sim.events.length-1)));
     const ev=sim.events[cur.reveal-1];A.ghost={x:ev.to.x,y:ev.to.y};return {text:`After step ${cur.reveal} (${ev.act}), Pip is at the see-through penguin on the rink. Can you work out the rest?`};}
   if(cur.mode==='type'&&cur.parsed.err)return {text:'First fix this: '+cur.parsed.err.msg};
@@ -1882,7 +2062,8 @@ $('#board').addEventListener('pointerup',e=>{if(cur.mode!=='predict'||cur.runnin
   const x=Math.floor((e.clientX-r.left)/Bd.cell),y=Math.floor((e.clientY-r.top)/Bd.cell);if(x<0||y<0||x>=cur.w.cols||y>=cur.w.rows)return;
   cur.guess={x,y};SFX.add();hideFail();run=null;resetBoard();setRunningUI(false);setStatus('Good guess? Press Check to find out.');});
 const ta=$('#codeText');
-ta.addEventListener('input',()=>{cur.text=ta.value;cur.caret=ta.selectionStart;reparse();progChanged();});
+ta.addEventListener('input',()=>{cur.edits++;const fixed=ta.value.replace(/^(\s*)([A-Z])([a-z_]+)(?=\s*\(|\s+i\b)/gm,(m,a,b,c)=>{const w=b.toLowerCase()+c;return (CALLS.includes(w)||w==='for')?a+w:m;});
+  if(fixed!==ta.value){const p=ta.selectionStart;ta.value=fixed;ta.setSelectionRange(p,p);}cur.text=ta.value;cur.caret=ta.selectionStart;reparse();progChanged();});
 ['keyup','click','select'].forEach(t=>ta.addEventListener(t,()=>{cur.caret=ta.selectionStart;}));
 ta.addEventListener('scroll',syncGutter);
 ta.addEventListener('keydown',e=>{
@@ -1904,7 +2085,7 @@ const isPhone=()=>matchMedia('(max-width:600px)').matches;
 $('#lvMission').addEventListener('click',e=>e.currentTarget.classList.toggle('open'));
 ta.addEventListener('focus',()=>{if(isPhone())document.body.classList.add('kb');});
 ta.addEventListener('blur',()=>{setTimeout(()=>{if(document.activeElement!==ta)document.body.classList.remove('kb');},150);});
-$('#runKb').onclick=()=>{ta.blur();document.body.classList.remove('kb');setTimeout(play,250);};
+$('#runKb').onclick=()=>{ta.blur();closePipKb();setTimeout(play,200);};
 
 let lastAct=Date.now();['pointerdown','keydown'].forEach(t=>addEventListener(t,()=>{lastAct=Date.now();},true));
 setInterval(()=>{if(document.hidden||Date.now()-lastAct>90000)return;S.timeMs+=5000;const d=dayKey();S.dayMs[d]=(S.dayMs[d]||0)+5000;
@@ -1924,6 +2105,150 @@ function tryUnlock(){const v=$('#lockIn').value;if(passOK(v)){try{localStorage.s
   else{SFX.fail();$('#lockMsg').textContent=v.trim()?'That\'s not it. Ask a grown-up for the passcode.':'Type the passcode first.';const bx=$('#lockbox');bx.classList.remove('shake');void bx.offsetWidth;bx.classList.add('shake');}}
 $('#btnUnlock').onclick=tryUnlock;$('#lockIn').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
 if(isUnlockedDevice())start();else openLock();
+
+/* ===================== TYPING: Pip's Keyboard, star rules, Speed Shift ===================== */
+SFX.key=()=>tone(1150,0,.025,'square',.022);
+function kbPip(){return (S.kb||(matchMedia('(pointer:coarse)').matches?'pip':'native'))==='pip';}
+function ruleOf(L){if(L.mode==='predict')return 'predict';if(L.mode==='speed')return 'speed';return L.rule||(L.mode==='type'?'typed':'normal');}
+function pyCount(){return LEVELS.filter(L=>S.lv[L.key]&&S.lv[L.key].py).length;}
+function levelCommands(L){const c=(L.blocks||[]).filter(b=>b!=='repeat').map(b=>b+'()');if((L.blocks||[]).includes('repeat'))c.push('for i in range(3):');return c;}
+
+/* ---- star rules ---- */
+function starGoals(L){const par=cur.par;
+  switch(ruleOf(L)){
+    case 'predict':return ['Guess where Pip stops','Guess right in 2 tries','Guess right first try'];
+    case 'speed':{const s=L.speed.stars;return [`Score ${s[0]} goals`,`Score ${s[1]} goals`,`Score ${s[2]} goals`];}
+    case 'typed':return [cur.w&&cur.w.fishAt?'Score and grab the fish':'Score a goal',`${par} lines or fewer`,'Clean code: no errors when you press Play'];
+    case 'typos':return ['Fix it and score',`Fix it in ${L.editPar} edits or fewer`,'Clean code: no errors when you press Play'];
+    case 'translate':return ['Score a goal','Match the blocks exactly','Clean code: no errors when you press Play'];
+    case 'buildit':return ['Score a goal','Match the Python exactly','Right first time'];
+    default:return [L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${par} blocks or fewer`,'Grab the golden fish'];}}
+function sameLines(a,b){return !!b&&a.length===b.length&&a.every((x,i)=>x.b===b[i].b&&x.d===b[i].d&&(x.b!=='repeat'||x.n===b[i].n));}
+function computeStars(sim){const L=cur.L,rule=ruleOf(L),used=run.lines.length,par=cur.par;const tgt=L.target?parsePy(L.target,L.blocks).lines:null;
+  const clean=cur.dirty?'Python found an error':'Clean code!';let on,labels;
+  switch(rule){
+    case 'typed':{const f=cur.w.fishAt?sim.fish:true;on=[f,used<=par,!cur.dirty];
+      labels=[cur.w.fishAt?(sim.fish?'Scored with the fish':'Scored, missed the fish'):'Scored!',used<=par?`${used} lines, par ${par}`:`${used} lines. Par is ${par}`,clean];break;}
+    case 'typos':on=[true,cur.edits<=L.editPar,!cur.dirty];labels=['Fixed and scored!',`${cur.edits} edits, par ${L.editPar}`,clean];break;
+    case 'translate':{const ok=sameLines(run.lines,tgt);on=[true,ok,!cur.dirty];labels=['Scored!',ok?'Exact match!':'Not an exact match',clean];break;}
+    case 'buildit':{const ok=sameLines(run.lines,tgt);on=[true,ok,!cur.failedThisVisit];labels=['Scored!',ok?'Exact match!':'Not an exact match',cur.failedThisVisit?'Took a few tries':'Right first time!'];break;}
+    default:{const parOk=used<=par;on=[true,parOk,sim.fish];labels=['Scored!',parOk?`${used} blocks, par ${par}`:`${used} blocks. Par is ${par}`,sim.fish?'Golden fish!':'Missed the fish'];}}
+  return {on,labels,stars:on.filter(Boolean).length,parOk:rule==='normal'||rule==='typed'?used<=par:true,fish:sim.fish,used,rule};}
+
+/* ---- syntax colouring ---- */
+function hl(t){return esc(t).replace(/(#.*$)|\b(for|in)\b|\b(range)\b|\b([a-z_]+)(?=\s*\()|(\d+)|([():])/g,(m,c,kw,rg,fn,num,pn)=>
+  c?`<span class="cm">${c}</span>`:kw?`<span class="kw">${kw}</span>`:rg?`<span class="fn">${rg}</span>`:fn?`<span class="fn">${fn}</span>`:num?`<span class="num">${num}</span>`:`<span class="pn">${pn}</span>`);}
+
+/* ---- the code view (Pip's Keyboard mode) ---- */
+function caretOf(b){return (b.caret==null||b.caret>b.text.length)?b.text.length:b.caret;}
+function renderCodeView(){const cv=$('#codeView');if(!cv||cur.mode!=='type')return;const lines=cur.text.split('\n');const p=caretOf(cur);
+  const bad=cur.parsed&&cur.parsed.err&&cur.revealErr?cur.parsed.err.line:-1;let pos=0,h='',caretLine=0;
+  lines.forEach((ln,i)=>{const st=pos,en=pos+ln.length;let inner=hl(ln);if(p>=st&&p<=en&&kbPip()){inner=hl(ln.slice(0,p-st))+'<span class="caret"></span>'+hl(ln.slice(p-st));caretLine=i;}
+    h+=`<div class="cl gut${i===bad?' bad':''}" data-l="${i}"><span class="cn">${i+1}</span><span class="cc">${inner}</span></div>`;pos=en+1;});
+  cv.innerHTML=h+'<span class="measure" aria-hidden="true">MMMMMMMMMM</span>';
+  const cl=cv.querySelector(`.cl[data-l="${caretLine}"]`);if(cl){const r=cl.getBoundingClientRect(),vr=cv.getBoundingClientRect();if(r.bottom>vr.bottom)cv.scrollTop+=r.bottom-vr.bottom+8;else if(r.top<vr.top)cv.scrollTop-=vr.top-r.top+8;}
+  renderSug();}
+function codeViewTap(e){if(cur.running||cur.busy)return;const cv=$('#codeView');const lines=cur.text.split('\n');let li=lines.length-1,col=lines[li].length;
+  const cl=e.target.closest('.cl');const m=cv.querySelector('.measure');const cw=m?m.getBoundingClientRect().width/10:11;
+  if(cl){li=+cl.dataset.l;const cc=cl.querySelector('.cc').getBoundingClientRect();col=Math.max(0,Math.min(lines[li].length,Math.round((e.clientX-cc.left)/cw)));}
+  let p=0;for(let k=0;k<li;k++)p+=lines[k].length+1;cur.caret=p+col;renderCodeView();openPipKb();}
+function openPipKb(){if(isPhoneW()&&!document.body.classList.contains('kb')){document.body.classList.add('kb');requestAnimationFrame(sizeBoard);}$('#codeView').classList.add('focus');}
+function closePipKb(){document.body.classList.remove('kb');const cv=$('#codeView');if(cv)cv.classList.remove('focus');requestAnimationFrame(sizeBoard);}
+function isPhoneW(){return matchMedia('(max-width:600px)').matches;}
+
+/* ---- Pip's Keyboard ---- */
+function needsDigits(L){return (L.blocks||[]).includes('repeat')||(L.speed&&L.speed.pool.some(x=>/\d/.test(x)));}
+function buildKb(){const L=cur.L;const rows=[['w','e','r','t','u','i','o','p'],['a','s','d','f','g','h','j','l'],['n','_','(',')',':','bk']];
+  if(needsDigits(L))rows.push(['1','2','3','4','5','6','7','8','9','0']);
+  rows.push(cur.mode==='speed'?['left','space','right','enter']:['pull','push','left','space','right','enter']);
+  const lab={bk:'⌫',pull:'⇤ out',push:'in ⇥',left:'◀',right:'▶',space:'space',enter:cur.mode==='speed'?'Enter ⏎':'⏎'};
+  const cls={bk:'w2 fn',pull:'w2 fn',push:'w2 fn',left:'fn',right:'fn',space:'w3 fn',enter:'w2 fn enter'};
+  $('#pkb').innerHTML=`<div class="sug" id="pkbSug"></div>`+rows.map(r=>`<div class="kr">${r.map(k=>`<button class="k ${cls[k]||''}" data-k="${k}" aria-label="${k==='bk'?'Delete':k}">${esc(lab[k]||k)}</button>`).join('')}</div>`).join('');}
+function buf(){return cur.mode==='speed'?cur.sp:cur;}
+function kbPress(k){if(cur.running||cur.busy)return;const b=buf();if(!b||(cur.mode==='speed'&&!cur.sp.on))return;
+  let t=b.text,p=caretOf(b);const ls=t.lastIndexOf('\n',p-1)+1;let le=t.indexOf('\n',p);if(le<0)le=t.length;const line=t.slice(ls,le),before=t.slice(ls,p);
+  switch(k){
+    case 'bk':if(p===0)return;if(before.length&&/^ +$/.test(before)){const n=before.length%4||4;t=t.slice(0,p-n)+t.slice(p);p-=n;}else{t=t.slice(0,p-1)+t.slice(p);p--;}break;
+    case 'enter':if(cur.mode==='speed'){speedSubmit();return;}{let ind=line.match(/^ */)[0].length;if(before.trim().endsWith(':'))ind+=4;const ins='\n'+' '.repeat(ind);t=t.slice(0,p)+ins+t.slice(p);p+=ins.length;}break;
+    case 'push':t=t.slice(0,ls)+'    '+t.slice(ls);p+=4;break;
+    case 'pull':{const n=Math.min(4,line.match(/^ */)[0].length);if(!n)return;t=t.slice(0,ls)+t.slice(ls+n);p=Math.max(ls,p-n);}break;
+    case 'left':b.caret=Math.max(0,p-1);SFX.key();return cur.mode==='speed'?renderSpeedView():renderCodeView();
+    case 'right':b.caret=Math.min(t.length,p+1);SFX.key();return cur.mode==='speed'?renderSpeedView():renderCodeView();
+    case 'space':t=t.slice(0,p)+' '+t.slice(p);p++;break;
+    default:t=t.slice(0,p)+k+t.slice(p);p+=k.length;}
+  cur.edits++;SFX.key();commitBuf(t,p);}
+function commitBuf(t,p){if(cur.mode==='speed'){cur.sp.text=t;cur.sp.caret=p;renderSpeedView();return;}$('#codeText').value=t;setText(t,p);}
+function renderSug(){const s=$('#pkbSug');if(!s)return;if(cur.mode==='speed'){s.innerHTML='';return;}
+  const t=cur.text,p=caretOf(cur);const m=/[a-z_]+$/.exec(t.slice(t.lastIndexOf('\n',p-1)+1,p));const pre=m?m[0]:'';
+  const opts=pre.length>=2?levelCommands(cur.L).filter(c=>c.startsWith(pre)&&c!==pre):[];
+  s.innerHTML=opts.length?opts.map(c=>`<button data-sug="${esc(c)}">${hl(c)}</button>`).join(''):`<span class="tiny">${pre.length?'':'Type 2 letters for suggestions'}</span>`;}
+function applySug(c){const t=cur.text,p=caretOf(cur);const m=/[a-z_]+$/.exec(t.slice(t.lastIndexOf('\n',p-1)+1,p));const pre=m?m[0]:'';
+  let ins=c.slice(pre.length);let t2=t.slice(0,p)+ins+t.slice(p),p2=p+ins.length;
+  if(c.endsWith(':')){const ls=t2.lastIndexOf('\n',p2-1)+1;const ind=t2.slice(ls).match(/^ */)[0].length+4;const add='\n'+' '.repeat(ind);t2=t2.slice(0,p2)+add+t2.slice(p2);p2+=add.length;}
+  cur.edits++;SFX.add();commitBuf(t2,p2);}
+
+/* ---- setting up the typing screen ---- */
+function setupTyping(){const L=cur.L,m=cur.mode,pip=kbPip();
+  $('#scr-level').dataset.mode=m;
+  const typing=m==='type'||m==='speed';
+  $('#pkb').hidden=!(typing&&pip);if(typing&&pip)buildKb();
+  $('#kbSwitch').hidden=!typing;$('#kbSwitch').textContent=pip?'My keyboard':"Pip's keyboard";
+  if(m==='type'){
+    $('#nativeEd').hidden=pip;$('#codeView').hidden=!pip;
+    $('#refCard').innerHTML=`<b>Commands</b>`+levelCommands(L).map(c=>`<code>${hl(c)}</code>`).join('');
+    const tb=$('#targetBox');if(L.target&&ruleOf(L)==='translate'){tb.hidden=false;tb.innerHTML=`<b>Type these blocks in Python</b>${rowsHTML(parsePy(L.target,L.blocks).lines,{edit:false,mini:true})}`;}else tb.hidden=true;
+    const noM=!!L.noMirror;$('#mirror').hidden=noM;$('#mirrorHead').hidden=noM;
+    renderCodeView();}
+  const tb2=$('#targetBoxB');if(m==='blocks'&&L.target&&ruleOf(L)==='buildit'){tb2.hidden=false;tb2.innerHTML=`<b>Build this Python with blocks</b><pre>${hl(L.target)}</pre>`;}else tb2.hidden=true;
+  if(m==='speed')setupSpeed();
+  if(!typing)closePipKb();}
+
+/* ---- Speed Shift ---- */
+function setupSpeed(){const L=cur.L,r=lvRec(L.key);cur.sp=cur.sp&&cur.sp.key===L.key&&cur.sp.on?cur.sp:{key:L.key,text:'',caret:0,score:0,miss:0,on:false,prompt:null,left:L.speed.secs};
+  $('#speedIn').hidden=kbPip();$('#speedView').hidden=!kbPip();
+  $('#speedBest').textContent=r.best?`Your best: ${r.best} goals`:`Stars at ${L.speed.stars.join(', ')} goals`;renderSpeed();}
+function renderSpeed(){const sp=cur.sp,L=cur.L;if(!sp)return;$('#speedScore').textContent=`${sp.score} goals`;
+  $('#speedFill').style.width=Math.max(0,sp.left/L.speed.secs*100)+'%';
+  $('#speedPrompt').innerHTML=sp.on?`<small>Type this, then Enter</small><span class="pline">${hl(sp.prompt)}</span>`:`<small>Speed Shift</small><span style="font:800 18px var(--ui);color:var(--text)">${sp.score&&!sp.on?`Time! You scored ${sp.score}.`:`Type each line exactly. ${L.speed.secs} seconds.`}</span>`;
+  $('#speedStart').hidden=sp.on;$('#speedStart').textContent=sp.score?'Go again':'Start';renderSpeedView();}
+function renderSpeedView(){const sp=cur.sp;if(!sp)return;const p=caretOf(sp);
+  $('#speedView').innerHTML=`<div class="cl"><span class="cn">›</span><span class="cc">${hl(sp.text.slice(0,p))}<span class="caret"></span>${hl(sp.text.slice(p))}</span></div>`;
+  if($('#speedIn').value!==sp.text)$('#speedIn').value=sp.text;}
+function nextPrompt(){const pool=cur.L.speed.pool;let p;do{p=pool[Math.floor(Math.random()*pool.length)];}while(pool.length>1&&p===cur.sp.prompt);cur.sp.prompt=p;}
+function speedStart(){const L=cur.L;touchStreak();lvRec(L.key).tries++;save();hideFail();
+  cur.sp={key:L.key,text:'',caret:0,score:0,miss:0,on:true,prompt:null,left:L.speed.secs,t0:performance.now()};nextPrompt();resetBoard();
+  if(kbPip())openPipKb();else{const i=$('#speedIn');i.value='';i.focus();}
+  cur.sp.timer=setInterval(()=>{const sp=cur.sp;if(!sp||!sp.on)return;sp.left=Math.max(0,L.speed.secs-(performance.now()-sp.t0)/1000);$('#speedFill').style.width=(sp.left/L.speed.secs*100)+'%';
+    $('#speedFill').style.background=sp.left<10?'var(--red)':'var(--green)';if(sp.left<=0)speedEnd();},100);
+  SFX.badge();renderSpeed();}
+function speedSubmit(){const sp=cur.sp;if(!sp||!sp.on)return;
+  if(sp.text.trim()===sp.prompt){sp.score++;speedShot();nextPrompt();sp.text='';sp.caret=0;}
+  else{sp.miss++;SFX.fail();const pr=$('#speedPrompt');pr.classList.remove('wrong');void pr.offsetWidth;pr.classList.add('wrong');}
+  renderSpeed();if(!kbPip())$('#speedIn').focus();}
+async function speedShot(){const w=cur.w;const s=Object.assign(startState(w),{pucks:1});const r=step(w,s,'shoot');const pts=r.ev.ppath||[];SFX.shoot();
+  for(let j=1;j<pts.length;j++){const a=pts[j-1],b=pts[j];const t0=performance.now();await new Promise(res=>{const f=now=>{const k=Math.min(1,(now-t0)/45);A.fly={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k};if(k<1)requestAnimationFrame(f);else res();};requestAnimationFrame(f);});}
+  A.fly=null;A.scored=cur.sp?cur.sp.score:0;SFX.goal1();miniLamp();}
+function speedStop(){const sp=cur.sp;if(sp&&sp.timer)clearInterval(sp.timer);if(sp)sp.on=false;}
+function speedEnd(){const sp=cur.sp,L=cur.L;speedStop();closePipKb();$('#speedIn').blur();const th=L.speed.stars;const stars=th.filter(x=>sp.score>=x).length;
+  const r=lvRec(L.key);r.best=Math.max(r.best||0,sp.score);save();renderSpeed();setupSpeed();
+  if(!stars){SFX.fail();showFailBox('Time!',`You scored ${sp.score}. You need ${th[0]} for a star. Have another go!`,false,()=>{});return;}
+  grantLevel({stars,on:[stars>=1,stars>=2,stars>=3],labels:th.map(x=>`${x} goals`),title:`${sp.score} goals!`,sim:null,rule:'speed'});}
+
+/* ---- wiring ---- */
+$('#pkb').addEventListener('pointerdown',e=>{const k=e.target.closest('[data-k]');const sg=e.target.closest('[data-sug]');if(!k&&!sg)return;e.preventDefault();
+  if(sg){applySug(sg.dataset.sug);return;}const key=k.dataset.k;k.classList.add('down');setTimeout(()=>k.classList.remove('down'),90);kbPress(key);});
+$('#codeView').addEventListener('pointerup',codeViewTap);
+$('#kbDone').onclick=closePipKb;
+$('#kbSwitch').onclick=()=>{S.kb=kbPip()?'native':'pip';save();closePipKb();setupTyping();if(cur.mode==='type')reparse();toast(kbPip()?"Using Pip's keyboard":'Using your own keyboard');};
+$('#speedStart').onclick=speedStart;
+$('#speedIn').addEventListener('input',e=>{if(!cur.sp||!cur.sp.on){e.target.value='';return;}cur.sp.text=e.target.value;cur.sp.caret=e.target.selectionStart;cur.edits++;renderSpeedView();});
+$('#speedIn').addEventListener('keydown',e=>{if(e.key==='Enter'||e.keyCode===13){e.preventDefault();speedSubmit();}});
+document.addEventListener('keydown',e=>{if(cur.screen!=='scr-level'||!$('#modal').hidden||!kbPip())return;if(cur.mode!=='type'&&cur.mode!=='speed')return;
+  const tag=e.target.tagName;if(tag==='TEXTAREA'||tag==='INPUT')return;
+  const map={Backspace:'bk',Enter:'enter',ArrowLeft:'left',ArrowRight:'right',Tab:'push',' ':'space'};
+  let k=map[e.key];if(!k&&e.key.length===1&&/[a-z0-9_():]/.test(e.key))k=e.key;if(!k)return;
+  if(k==='enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();play();return;}
+  e.preventDefault();e.stopImmediatePropagation();kbPress(k);},true);
 </script>
 <script>
 if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
