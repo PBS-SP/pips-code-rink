@@ -467,6 +467,49 @@ td .learn{color:var(--muted);font-weight:500}
 }
 @media (max-width:600px) and (max-height:639px){.prog{min-height:94px}.editor{min-height:90px}}
 @media (max-width:600px){.count .lg{display:none}.mode button{padding:0 8px}}
+/* phones: every block visible — equal columns, icon above label, no sideways scrolling */
+@media (max-width:600px){
+  .palette{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:5px;overflow:visible;padding:4px 0 0;margin:0}
+  .palette .blk{flex-direction:column;justify-content:center;gap:2px;height:52px;padding:4px 2px;min-width:0;font-size:12px;touch-action:none;line-height:1.1}
+  .palette .blk span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .palette .blk .pi{width:18px;height:18px}
+  .palette .blk.new::after{top:-6px;right:-3px;font-size:9px;padding:1px 3px}
+  .quick{display:flex;flex-wrap:wrap;overflow:visible;gap:5px}
+  .quick button{min-height:40px;font-size:14px;padding:0 10px}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .palette{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:5px;overflow:visible}
+  .palette .blk{flex-direction:column;justify-content:center;gap:2px;height:48px;padding:3px 2px;min-width:0;font-size:12px;touch-action:none}
+  .palette .blk span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .quick{flex-wrap:wrap;overflow:visible}
+}
+/* ---- visual-check fixes ---- */
+.hud{white-space:nowrap}
+#scr-lock{overflow-y:auto}
+@media (max-width:600px){
+  .daily .dbtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;gap:6px;padding:0}
+  .dbtn{min-width:0;min-height:56px;padding:6px 8px}
+  .dbtn b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .wtabs{display:grid;grid-template-columns:1fr 1fr;overflow:visible;padding:0}
+  .wtab{min-width:0;padding:6px 10px;font-size:14px}
+  .wtab>span{min-width:0}
+  .wtab small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fail{left:4px;right:4px;bottom:4px;padding:8px 10px;gap:4px;font-size:13px;line-height:1.3}
+  .fail b{font-size:14px}
+  .fail .row-btns{flex-wrap:nowrap;gap:6px}
+  .fail .btn.small{min-height:36px;font-size:13px;padding:0 10px}
+  #typeUI .quick{display:none}
+  body.kb #typeUI .quick{display:flex}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .code{overflow-y:auto}
+  .editor{min-height:70px}
+  .row{grid-template-columns:24px minmax(0,1.3fr) minmax(0,1fr) 36px}
+  .bcell .blk{font-size:13px;padding:0 8px 0 6px;gap:5px}
+  .lockbox canvas{display:none}
+  .lockbox{padding-block:8px;gap:10px}
+  .fail{padding:8px 10px;gap:4px;font-size:13px}.fail .btn.small{min-height:34px}
+}
 </style>
 </head><body>
 <div id="app">
@@ -478,7 +521,7 @@ td .learn{color:var(--muted);font-weight:500}
       <input id="lockIn" class="nick" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Passcode" placeholder="Passcode">
       <span class="err2" id="lockMsg" aria-live="polite"></span>
       <button class="btn go big" id="btnUnlock">Let me in</button>
-      <span class="tiny">You only need to do this once on this iPad.</span>
+      <span class="tiny">You only need to do this once on this device.</span>
     </div>
   </section>
   <section id="scr-welcome" class="screen" hidden>
@@ -1397,7 +1440,7 @@ function rowsHTML(lines,{edit=true,mini=false}={}){
   while(stack.length)h+=slot(stack.pop(),n);
   if(edit)h+=`<div class="slot end" data-at="${n}" data-d="0"><span class="txt">${n?'+ Add at the end':'Tap a block above, or drag it here. Pip runs your program from top to bottom.'}</span></div>`;
   return h;}
-function renderPalette(){const L=cur.L;$('#palette').innerHTML=L.blocks.map(b=>{const B=BLOCKS[b];const isNew=(L.newBlocks||[]).includes(b)&&!(S.lv[L.key]&&S.lv[L.key].done);
+function renderPalette(){const L=cur.L;$('#palette').style.setProperty('--n',Math.min(6,L.blocks.length));$('#palette').innerHTML=L.blocks.map(b=>{const B=BLOCKS[b];const isNew=(L.newBlocks||[]).includes(b)&&!(S.lv[L.key]&&S.lv[L.key].done);
   return `<button class="blk${isNew?' new':''}" data-kind="${B.kind}" data-b="${b}" aria-label="Add ${b} block: ${B.say}">${icon(B.icon,'#fff')}<span>${b}</span></button>`;}).join('');}
 function renderProg(){$('#prog').innerHTML=rowsHTML(cur.lines);markCursor();renderCount(cur.lines.length,'#count');
   const e=validate(cur.lines);const pe=$('#progErr');if(e){pe.hidden=false;pe.textContent=e.msg;const row=$(`#prog .row[data-i="${e.i}"]`);if(row)row.classList.add('bad');}else pe.hidden=true;}
@@ -1834,6 +1877,7 @@ $('#prog').addEventListener('click',e=>{if(cur.running||cur.busy)return;
 $('#btnClear').onclick=()=>{if(!cur.lines.length||cur.running)return;cur.undo=cur.lines.map(x=>({...x}));cur.lines=[];cur.cursor={at:0,d:0};SFX.remove();progChanged();
   toast(`Program cleared <button class="btn small gold" id="undoBtn">Undo</button>`,5000);$('#undoBtn').onclick=()=>{if(cur.undo){cur.lines=cur.undo;cur.undo=null;cur.cursor={at:cur.lines.length,d:0};progChanged();}$('#toast').hidden=true;};};
 $('#quick').addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(b)quickInsert(b.dataset.q);});
+['pointerdown','mousedown'].forEach(t=>$('#quick').addEventListener(t,e=>{if(e.target.closest('[data-q]')&&document.activeElement===$('#codeText'))e.preventDefault();}));
 $('#board').addEventListener('pointerup',e=>{if(cur.mode!=='predict'||cur.running||cur.busy)return;const r=e.currentTarget.getBoundingClientRect();
   const x=Math.floor((e.clientX-r.left)/Bd.cell),y=Math.floor((e.clientY-r.top)/Bd.cell);if(x<0||y<0||x>=cur.w.cols||y>=cur.w.rows)return;
   cur.guess={x,y};SFX.add();hideFail();run=null;resetBoard();setRunningUI(false);setStatus('Good guess? Press Check to find out.');});
