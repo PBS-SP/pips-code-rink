@@ -424,6 +424,29 @@ td .learn{color:var(--muted);font-weight:500}
   .modal{padding:0}.card,.card.wide{width:100%;max-height:100%;height:100%;border-radius:0}
 }
 #scr-map>*,#scr-welcome>*,#scr-lock>*{flex-shrink:0}
+/* phones: slimmer code headers so the program list always has room */
+@media (max-width:600px){
+  #scr-level{overflow-y:auto}
+  #blocksUI>.phead:first-child h3,#blocksUI .phead h3{display:none}
+  .mode button{min-height:34px;padding:0 10px;font-size:13px}
+  #blocksUI .phead .btn.small{min-height:36px;padding:0 12px;font-size:14px}
+  .prog{min-height:150px}
+}
+@media (max-width:600px) and (max-height:760px){
+  .mission{-webkit-line-clamp:1}
+  .lvtitle .ptext{height:13px}
+}
+
+.speed .sm{display:none}
+@media (max-width:600px){
+  #palHead{display:none}
+  .palette{margin-top:0;padding-top:8px}
+  .speed .lg{display:none}.speed .sm{display:inline}
+  .speed button{min-width:0;padding:0 2px;font-size:12.5px}
+  .controls .btn.big{padding:0 14px}
+  #blocksUI .phead{gap:6px;flex-wrap:nowrap}
+  #blocksUI .count{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+}
 </style>
 </head><body>
 <div id="app">
@@ -490,15 +513,15 @@ td .learn{color:var(--muted);font-weight:500}
         <div class="controls">
           <button class="btn go big" id="btnRun"></button>
           <button class="btn" id="btnStep"></button>
-          <div class="speed" role="group" aria-label="Speed"><button data-speed="slow">Slow</button><button data-speed="normal">Normal</button><button data-speed="fast">Fast</button></div>
+          <div class="speed" role="group" aria-label="Speed"><button data-speed="slow" aria-label="Slow">Slow</button><button data-speed="normal" aria-label="Normal"><span class="lg">Normal</span><span class="sm">Med</span></button><button data-speed="fast" aria-label="Fast">Fast</button></div>
           <button class="btn" id="btnReset"></button>
         </div>
       </section>
       <section class="code" id="codePane">
         <div id="blocksUI" style="display:contents">
-          <div class="phead"><h3>Blocks</h3><span class="tiny" id="palHelp">Tap to add, or drag into your program</span><span class="grow"></span><span class="mode" id="modeSw1"></span></div>
+          <div class="phead" id="palHead"><h3>Blocks</h3><span class="tiny" id="palHelp">Tap to add, or drag into your program</span></div>
           <div class="palette" id="palette"></div>
-          <div class="phead"><h3>Your program</h3><span class="count" id="count"></span><span class="grow"></span><button class="btn small ghost" id="btnClear">Clear</button></div>
+          <div class="phead"><h3>Your program</h3><span class="count" id="count"></span><span class="grow"></span><span class="mode" id="modeSw1"></span><button class="btn small ghost" id="btnClear">Clear</button></div>
           <div class="cols"><span></span><span>Blocks</span><span>Python</span><span></span></div>
           <div class="prog" id="prog"></div>
           <div class="progerr" id="progErr" hidden></div>
@@ -1327,7 +1350,7 @@ function setupMode(){const m=cur.mode;$('#blocksUI').hidden=m!=='blocks';$('#typ
   if(m==='blocks'){renderPalette();renderProg();}
   else if(m==='type'){$('#codeText').value=cur.text;cur.caret=null;renderQuick();reparse();}
   else{$('#plist').innerHTML=rowsHTML(cur.lines,{edit:false});$('#predictNote').innerHTML=`Pip will run this program. <b>Where will he end up?</b> Tap that square on the rink, then press <b>Check</b>.`;}
-  setRunningUI(false);}
+  setRunningUI(false);if(cur.screen==='scr-level')requestAnimationFrame(sizeBoard);}
 function switchMode(m){if(m===cur.mode||cur.running||cur.busy)return;
   if(m==='type'){cur.text=toPy(cur.lines)+(cur.lines.length?'\n':'');}
   else{const p=parsePy(cur.text,cur.L.blocks);if(p.err){toast('Fix the red line first, then switch to blocks.');return;}cur.lines=p.lines.map(x=>({b:x.b,n:x.n,d:x.d}));cur.cursor={at:cur.lines.length,d:0};}
@@ -1441,7 +1464,20 @@ function getLines(){if(cur.mode==='blocks')return validate(cur.lines)?null:cur.l
 
 /* ===================== BOARD ===================== */
 const Bd={cell:40,dpr:1,ctx:null};let A=null;let loopOn=false;
-function sizeBoard(){if(!cur.w)return;const wrap=$('#boardWrap');wrap.style.setProperty('--ar',(cur.w.rows/cur.w.cols).toFixed(3));const W=wrap.clientWidth-24,H=wrap.clientHeight-24;const {cols,rows}=cur.w;
+function phoneFit(wrap){
+  if(!matchMedia('(max-width:600px)').matches||document.body.classList.contains('kb')){wrap.style.height='';return;}
+  const vh=window.visualViewport?visualViewport.height:innerHeight;const px=v=>parseFloat(v)||0;
+  const app=getComputedStyle($('#app')),scr=getComputedStyle($('#scr-level'));
+  let used=px(app.paddingTop)+px(app.paddingBottom)+px(scr.paddingTop)+px(scr.paddingBottom)+$('.lvbar').offsetHeight+px(scr.rowGap)+px(getComputedStyle($('.play')).rowGap);
+  const stage=$('.stage');const sg=px(getComputedStyle(stage).rowGap);
+  [...stage.children].forEach(ch=>{if(ch!==wrap&&ch.offsetParent!==null)used+=ch.offsetHeight+sg;});
+  const code=$('#codePane'),cs=getComputedStyle(code),cg=px(cs.rowGap);let fixed=px(cs.paddingTop)+px(cs.paddingBottom);
+  const ui=cur.mode==='type'?'#typeUI':cur.mode==='predict'?'#predictUI':'#blocksUI';const flexEl={'#blocksUI':'prog','#typeUI':'editor','#predictUI':'plist'}[ui];
+  let n=0;[...$(ui).children].forEach(ch=>{if(ch.offsetParent===null)return;n++;if(ch.id===flexEl||ch.classList.contains(flexEl))return;fixed+=ch.offsetHeight;});
+  fixed+=Math.max(0,n-1)*cg;const flexMin=cur.mode==='type'?120:150;
+  const room=vh-used-fixed-flexMin-4;const ideal=(wrap.clientWidth-8)*(cur.w.rows/cur.w.cols)+16;
+  const h=Math.round(Math.max(130,Math.min(ideal,room)));if(Math.abs(wrap.offsetHeight-h)>1)wrap.style.height=h+'px';}
+function sizeBoard(){if(!cur.w)return;const wrap=$('#boardWrap');wrap.style.setProperty('--ar',(cur.w.rows/cur.w.cols).toFixed(3));if(cur.screen==='scr-level')phoneFit(wrap);const W=wrap.clientWidth-24,H=wrap.clientHeight-24;const {cols,rows}=cur.w;
   const cell=Math.max(24,Math.floor(Math.min(W/cols,H/rows,150)));Bd.cell=cell;Bd.dpr=Math.min(3,devicePixelRatio||1);
   const cv=$('#board');cv.width=cell*cols*Bd.dpr;cv.height=cell*rows*Bd.dpr;cv.style.width=cell*cols+'px';cv.style.height=cell*rows+'px';
   Bd.ctx=cv.getContext('2d');Bd.ctx.imageSmoothingEnabled=false;}
@@ -1481,6 +1517,7 @@ function drawBoard(t){const c=Bd.ctx;if(!c||!A)return;const s=Bd.cell,w=cur.w;c.
 function startLoop(){if(loopOn)return;loopOn=true;(function f(t){if(!loopOn)return;drawBoard(t);requestAnimationFrame(f);})(performance.now());}
 function stopLoop(){loopOn=false;}
 const RO=new ResizeObserver(()=>{if(cur.screen==='scr-level')sizeBoard();if(cur.screen==='scr-map')drawMapCanvas();});RO.observe(document.body);RO.observe($('#boardWrap'));RO.observe($('#mapBox'));
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>{if(cur.screen==='scr-level')sizeBoard();});
 addEventListener('resize',()=>{if(cur.screen==='scr-level')sizeBoard();if(cur.screen==='scr-map')drawMapCanvas();});
 
 /* ===================== RUNNING PROGRAMS ===================== */
