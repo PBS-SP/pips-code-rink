@@ -447,6 +447,26 @@ td .learn{color:var(--muted);font-weight:500}
   #blocksUI .phead{gap:6px;flex-wrap:nowrap}
   #blocksUI .count{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 }
+/* phones: compact the controls so the rink gets more room */
+@media (max-width:600px){
+  #scr-level .status{display:none}
+  .mission.st{color:var(--gold)}
+  .lvbar .iconbtn{width:40px;height:40px}
+  .lvbar .btn{min-height:40px}
+  .controls .btn,.controls .btn.big{min-height:44px}
+  .speed button{min-height:38px}
+  .code{padding:6px;gap:5px}
+  .palette{padding-top:6px}
+  .palette .blk{height:44px;font-size:15px}
+  #blocksUI .phead .btn.small{min-height:34px}
+  .row{min-height:44px}
+  .bcell .blk{height:38px}
+  .x{height:36px}
+  .prog{min-height:140px}
+  .slot{min-height:36px}
+}
+@media (max-width:600px) and (max-height:639px){.prog{min-height:94px}.editor{min-height:90px}}
+@media (max-width:600px){.count .lg{display:none}.mode button{padding:0 8px}}
 </style>
 </head><body>
 <div id="app">
@@ -1359,7 +1379,8 @@ function renderGoals(){const L=cur.L,r=lvRec(L.key);let g;
   if(L.mode==='predict')g=['Guess where Pip stops','Guess right in 2 tries','Guess right first try'];
   else g=[L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${cur.par} blocks or fewer`,'Grab the golden fish'];
   $('#goals').innerHTML=g.map((t,i)=>`<span class="goal">${icon('star',r.stars>i?'#F6C445':'#4E6389')}<span>${t}</span></span>`).join('');}
-function setStatus(t){$('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
+function setStatus(t){const m=$('#lvMission');if(m&&cur.L&&matchMedia('(max-width:600px)').matches){if(t){m.textContent=t;m.classList.add('st');}else{m.textContent=cur.L.mission;m.classList.remove('st');}}
+  $('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
 function chipHTML(L,edit,i){
   if(L.b==='repeat')return `<span class="blk" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span class="nm">repeat</span>${edit?`<button class="stp" data-dn="${i}" aria-label="Repeat fewer times">−</button>`:''}<b class="cnt">${L.n}</b>${edit?`<button class="stp" data-up="${i}" aria-label="Repeat more times">+</button>`:''}<span class="lap"></span></span>`;
   const B=BLOCKS[L.b];return `<span class="blk" data-kind="${B.kind}" data-b="${L.b}">${icon(B.icon,'#fff')}<span>${L.b}</span></span>`;}
@@ -1384,7 +1405,7 @@ function markCursor(){$$('#prog .cur,#prog .cur-before').forEach(e=>e.classList.
   let el=$(`#prog .slot[data-at="${at}"][data-d="${d}"]`);if(el){el.classList.add('cur');return;}
   el=$(`#prog .row[data-i="${at}"][data-d="${d}"]`);if(el){el.classList.add('cur-before');return;}
   cur.cursor={at:cur.lines.length,d:0};const end=$('#prog .slot.end');if(end)end.classList.add('cur');}
-function renderCount(n,sel){const e=$(sel);e.textContent=`${n} block${n===1?'':'s'} · par ${cur.par}`;e.classList.toggle('ok',n>0&&n<=cur.par);}
+function renderCount(n,sel){const e=$(sel);e.innerHTML=`${n}<span class="lg"> block${n===1?'':'s'}</span> · par ${cur.par}`;e.classList.toggle('ok',n>0&&n<=cur.par);}
 function progChanged(){if(cur.L.mode!=='predict'){const r=lvRec(cur.L.key);if(cur.mode==='blocks'){r.lines=cur.lines.map(x=>({b:x.b,n:x.n,d:x.d}));r.prog=toPy(cur.lines);}else{r.prog=cur.text;r.lines=null;}save();}
   if(cur.mode==='blocks')renderProg();
   run=null;runId++;cur.running=false;cur.busy=false;setRunningUI(false);hideFail();resetBoard();setStatus();}
@@ -1474,7 +1495,7 @@ function phoneFit(wrap){
   const code=$('#codePane'),cs=getComputedStyle(code),cg=px(cs.rowGap);let fixed=px(cs.paddingTop)+px(cs.paddingBottom);
   const ui=cur.mode==='type'?'#typeUI':cur.mode==='predict'?'#predictUI':'#blocksUI';const flexEl={'#blocksUI':'prog','#typeUI':'editor','#predictUI':'plist'}[ui];
   let n=0;[...$(ui).children].forEach(ch=>{if(ch.offsetParent===null)return;n++;if(ch.id===flexEl||ch.classList.contains(flexEl))return;fixed+=ch.offsetHeight;});
-  fixed+=Math.max(0,n-1)*cg;const flexMin=cur.mode==='type'?120:150;
+  fixed+=Math.max(0,n-1)*cg;const flexMin=cur.mode==='type'?(vh<640?90:110):(vh<640?94:138);
   const room=vh-used-fixed-flexMin-4;const ideal=(wrap.clientWidth-8)*(cur.w.rows/cur.w.cols)+16;
   const h=Math.round(Math.max(130,Math.min(ideal,room)));if(Math.abs(wrap.offsetHeight-h)>1)wrap.style.height=h+'px';}
 function sizeBoard(){if(!cur.w)return;const wrap=$('#boardWrap');wrap.style.setProperty('--ar',(cur.w.rows/cur.w.cols).toFixed(3));if(cur.screen==='scr-level')phoneFit(wrap);const W=wrap.clientWidth-24,H=wrap.clientHeight-24;const {cols,rows}=cur.w;
