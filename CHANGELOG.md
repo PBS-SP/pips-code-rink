@@ -9,6 +9,7 @@ To roll back, restore the commit listed for that version.
 
 | Version | Date | Commit | What's in it |
 |---|---|---|---|
+| V1.01.00 | 2026-09-26 | a16d231 | Restart button in levels (back to the level's starting code, stars kept). Reopening a finished level asks Keep my program / Start fresh and shows the missing star. Full QWERTY Pip's keyboard with ( ) _ : keys. Version number in the Parent Corner. |
 | V1.00.00 | 2026-09-26 | 761b532 | Known-good baseline. Worlds 1-3 (Frozen Pond, Loop Lagoon, Power Play), daily puzzles, hard mode for Worlds 2 and 3, code buttons for Python levels (typing optional), phone and iPad layouts, offline app, Parent Corner, passcode. |
 
 ## Before V1.00.00
