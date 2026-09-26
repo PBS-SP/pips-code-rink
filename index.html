@@ -613,6 +613,26 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
   .bcell .blk[data-kind="loop"]{gap:4px;padding:0 6px}
   .blk .stepper .stp{width:28px;height:30px}
 }
+
+/* ---- command catalogue: grouped tabs on phones; everything shown on bigger screens ---- */
+.paltabs{display:none}
+@media (max-width:600px){
+  .paltabs:not([hidden]){display:flex;gap:4px;background:var(--night-2);border-radius:8px;padding:3px}
+  .paltabs button{flex:1;min-width:0;min-height:34px;border:0;border-radius:6px;background:transparent;color:var(--muted);font:800 13px var(--ui);cursor:pointer;padding:0 2px}
+  .paltabs button[aria-pressed="true"]{background:var(--panel-2);color:var(--text)}
+  .palette.grouped{grid-template-columns:repeat(var(--nt,4),minmax(0,1fr))}
+  .palette.grouped .blk.offtab{display:none}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .palette.grouped{grid-template-columns:repeat(7,minmax(0,1fr))}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .paltabs:not([hidden]){display:flex;gap:4px;background:var(--night-2);border-radius:8px;padding:3px}
+  .paltabs button{flex:1;min-width:0;min-height:30px;border:0;border-radius:6px;background:transparent;color:var(--muted);font:800 12px var(--ui);cursor:pointer;padding:0 2px}
+  .paltabs button[aria-pressed="true"]{background:var(--panel-2);color:var(--text)}
+  .palette.grouped{grid-template-columns:repeat(var(--nt,4),minmax(0,1fr))}
+  .palette.grouped .blk.offtab{display:none}
+}
 </style>
 </head><body>
 <div id="app">
@@ -688,6 +708,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
         <div id="blocksUI" style="display:contents">
           <div class="phead" id="palHead"><h3>Blocks</h3><span class="tiny" id="palHelp">Tap to add, or drag into your program</span></div>
           <div class="target" id="targetBoxB" hidden></div>
+          <div class="paltabs" id="palTabs" hidden></div>
           <div class="palette" id="palette"></div>
           <div class="phead"><h3>Your program</h3><span class="count" id="count"></span><span class="grow"></span><span class="mode" id="modeSw1"></span><button class="btn small ghost" id="btnClear">Clear</button></div>
           <div class="cols"><span></span><span>Blocks</span><span>Python</span><span></span></div>
@@ -734,8 +755,8 @@ const TURN_L={right:'up',up:'left',left:'down',down:'right'};
 const TURN_R={right:'down',down:'left',left:'up',up:'right'};
 const BOUNCE_F={right:'up',up:'right',left:'down',down:'left'};    // '/'
 const BOUNCE_B={right:'down',down:'right',left:'up',up:'left'};    // '\'
-const CALLS=['right','left','up','down','forward','turn_left','turn_right','shoot','wait'];
-const OBST={null:'boards','#':'stone','T':'tree','G':'gate','/':'angled board','\\':'angled board','B':'snow block','N':'net'};
+const CALLS=['right','left','up','down','forward','turn_left','turn_right','shoot','wait','dash','jump','pass_puck'];
+const OBST={null:'boards','#':'stone','T':'tree','G':'gate','/':'angled board','\\':'angled board','B':'snow block','N':'net','M':'teammate','K':'cone'};
 function gcd(a,b){return b?gcd(b,a%b):a}
 function parseWorld(L){
   const rows=L.map.length,cols=L.map[0].length;let start=null,fishAt=null,g='';const nets=[];
@@ -750,14 +771,16 @@ function parseWorld(L){
 function tileOf(w,g,x,y){if(x<0||y<0||x>=w.cols||y>=w.rows)return null;return g[y*w.cols+x];}
 function setT(w,g,x,y,ch){const i=y*w.cols+x;return g.slice(0,i)+ch+g.slice(i+1);}
 function zamPos(w,t){return w.zams.map(p=>{const n=p.length;if(n===1)return p[0];const per=2*(n-1),k=((t%per)+per)%per;return p[k<n?k:per-k];});}
-function startState(w){return {x:w.start.x,y:w.start.y,dir:w.L.face||'right',g:w.grid,fish:false,pucks:w.pucks0,scored:0,t:0,status:'play'};}
-const isWall=t=>t===null||t==='#'||t==='T'||t==='G'||t==='/'||t==='\\';
+function startState(w){return {x:w.start.x,y:w.start.y,dir:w.L.face||'right',g:w.grid,fish:false,pucks:w.pucks0,scored:0,t:0,status:'play',snow:false,passGoals:0,uses:0};}
+const isWall=t=>t===null||t==='#'||t==='T'||t==='G'||t==='/'||t==='\\'||t==='M'||t==='K';
 function arrive(w,n,ev,d){
   for(let guard=0;guard<60;guard++){
     const t=tileOf(w,n.g,n.x,n.y);
     if(t==='W'){ev.end='water';n.status='fail';return;}
     if(t==='*'){n.fish=true;ev.fish={x:n.x,y:n.y};n.g=setT(w,n.g,n.x,n.y,'.');}
     else if(t==='o'){n.pucks++;(ev.gotPuck=ev.gotPuck||[]).push({x:n.x,y:n.y});n.g=setT(w,n.g,n.x,n.y,'.');}
+    else if(t==='1'||t==='2'||t==='3'){const next=['1','2','3'].find(c=>n.g.includes(c));if(t===next){n.g=setT(w,n.g,n.x,n.y,'v');ev.flag={x:n.x,y:n.y,n:t};}else ev.wrongFlag=t;}
+    else if(t===','){n.snow=true;}
     else if(t==='S'){let g=n.g;for(let i=0;i<g.length;i++){if(g[i]==='G')g=g.slice(0,i)+'g'+g.slice(i+1);else if(g[i]==='g')g=g.slice(0,i)+'G'+g.slice(i+1);}n.g=g;ev.toggle=true;}
     if(t!=='=')return;
     const [dx,dy]=DIRS[d];const nx=n.x+dx,ny=n.y+dy;const nt=tileOf(w,n.g,nx,ny);
@@ -778,26 +801,50 @@ function doMove(w,n,ev,d){
   if(tileOf(w,n.g,n.x,n.y)==='c'){n.g=setT(w,n.g,n.x,n.y,'W');ev.crack={x:n.x,y:n.y};}
   n.x=nx;n.y=ny;ev.path.push({x:nx,y:ny});arrive(w,n,ev,d);
 }
-function doShoot(w,n,ev,tBefore){
+function trace(w,g,x,y,d,zs){const path=[{x,y}];let bounce=false;
+  for(let k=0;k<80;k++){const [dx,dy]=DIRS[d];x+=dx;y+=dy;const t=tileOf(w,g,x,y);const hitZ=zs.some(z=>z.x===x&&z.y===y);
+    if(t==='M'){path.push({x,y});return {end:'mate',path,at:{x,y},bounce};}
+    if(t==='K'){path.push({x,y});return {end:'cone',path,at:{x,y},bounce};}
+    if(t===null||t==='#'||t==='T'||t==='G'||t==='B'||hitZ){path.push({x,y,stop:true});return {end:'miss',path,obstacle:hitZ?'Zamboni':OBST[t],bounce};}
+    path.push({x,y});
+    if(t==='W')return {end:'sink',path,bounce};
+    if(t==='/'){d=BOUNCE_F[d];bounce=true;continue;}
+    if(t==='\\'){d=BOUNCE_B[d];bounce=true;continue;}
+    if(t==='N')return {end:'goal',path,net:{x,y},bounce};}
+  return {end:'miss',path,obstacle:'boards',bounce};}
+function scoreOne(w,n,ev,net){n.scored++;ev.net=net;if(n.scored>=w.need){ev.end='goal';n.status='goal';}else ev.scoredOne=true;}
+function doShoot(w,n,ev,tBefore,isPass){
   if(n.pucks<=0){ev.end='nopuck';n.status='fail';return;}
-  n.pucks--;let d=n.dir,x=n.x,y=n.y;ev.ppath=[{x,y}];const zs=zamPos(w,tBefore);
-  for(let k=0;k<80;k++){const [dx,dy]=DIRS[d];x+=dx;y+=dy;const t=tileOf(w,n.g,x,y);
-    const hitZ=zs.some(z=>z.x===x&&z.y===y);
-    if(isWall(t)&&t!=='/'&&t!=='\\'||t==='B'||hitZ){ev.end='miss';ev.obstacle=hitZ?'Zamboni':OBST[t];ev.ppath.push({x,y,stop:true});n.status='fail';return;}
-    ev.ppath.push({x,y});
-    if(t==='W'){ev.end='sink';n.status='fail';return;}
-    if(t==='/'){d=BOUNCE_F[d];ev.bounce=true;continue;}
-    if(t==='\\'){d=BOUNCE_B[d];ev.bounce=true;continue;}
-    if(t==='N'){n.scored++;ev.net={x,y};if(n.scored>=w.need){ev.end='goal';n.status='goal';}else ev.scoredOne=true;return;}
-  }
-  ev.end='miss';ev.obstacle='boards';n.status='fail';
-}
+  n.pucks--;const zs=zamPos(w,tBefore);const r=trace(w,n.g,n.x,n.y,n.dir,zs);ev.ppath=r.path;if(r.bounce)ev.bounce=true;
+  if(r.end==='goal'){scoreOne(w,n,ev,r.net);return;}
+  if(r.end==='cone'){n.g=setT(w,n.g,r.at.x,r.at.y,'.');ev.cone=r.at;return;}
+  if(r.end==='mate'){
+    if(!isPass){ev.end='miss';ev.obstacle='teammate';ev.atMate=true;n.status='fail';return;}
+    for(const d of ['right','up','left','down']){const r2=trace(w,n.g,r.at.x,r.at.y,d,zs);
+      if(r2.end==='goal'){ev.mate={at:r.at,path:r2.path};n.passGoals++;scoreOne(w,n,ev,r2.net);return;}}
+    ev.end='miss';ev.obstacle='teammate';ev.mateNoShot=true;n.status='fail';return;}
+  if(r.end==='sink'){ev.end='sink';n.status='fail';return;}
+  ev.end='miss';ev.obstacle=r.obstacle;n.status='fail';}
+const DASH_OK=new Set(['.',',','*','o','c','=','g','1','2','3','v','S']);
+function doDash(w,n,ev){const d=n.dir;ev.dir=d;let moved=0;
+  for(let k=0;k<30;k++){const [dx,dy]=DIRS[d];const nt=tileOf(w,n.g,n.x+dx,n.y+dy);if(!DASH_OK.has(nt))break;
+    doMove(w,n,ev,d);moved++;if(n.status!=='play')break;if(tileOf(w,n.g,n.x,n.y)==='S')break;}
+  ev.dashN=moved;}
+function doJump(w,n,ev){const d=n.dir;ev.dir=d;ev.jump=true;const [dx,dy]=DIRS[d];const mx=n.x+dx,my=n.y+dy,lx=n.x+2*dx,ly=n.y+2*dy;
+  const mt=tileOf(w,n.g,mx,my),lt=tileOf(w,n.g,lx,ly);
+  if(mt===null||mt==='T'||mt==='G'||mt==='N'||mt==='M'){ev.end='bump';ev.obstacle=mt===null?'boards':mt==='T'?'tree (too tall to jump)':OBST[mt];ev.at={x:mx,y:my};n.status='fail';return;}
+  if(lt===null||isWall(lt)||lt==='B'||lt==='N'){ev.end='bump';ev.obstacle=lt===null?'boards':OBST[lt];ev.landing=true;ev.at={x:lx,y:ly};n.status='fail';return;}
+  if(tileOf(w,n.g,n.x,n.y)==='c'){n.g=setT(w,n.g,n.x,n.y,'W');ev.crack={x:n.x,y:n.y};}
+  n.x=lx;n.y=ly;ev.path.push({x:mx,y:my,air:true},{x:lx,y:ly});arrive(w,n,ev,d);}
 function step(w,s,act){
   const n=Object.assign({},s);const ev={act,from:{x:s.x,y:s.y},path:[],dir:s.dir,end:null,gBefore:s.g,tBefore:s.t};
   n.t=s.t+1;
   if(act==='turn_left'||act==='turn_right'){n.dir=(act==='turn_left'?TURN_L:TURN_R)[s.dir];ev.type='turn';ev.dir=n.dir;}
   else if(act==='wait'){ev.type='wait';}
-  else if(act==='shoot'){ev.type='shoot';doShoot(w,n,ev,s.t);}
+  else if(act==='shoot'){ev.type='shoot';doShoot(w,n,ev,s.t,false);}
+  else if(act==='pass_puck'){ev.type='shoot';ev.pass=true;doShoot(w,n,ev,s.t,true);}
+  else if(act==='dash'){ev.type='move';doDash(w,n,ev);}
+  else if(act==='jump'){ev.type='move';doJump(w,n,ev);}
   else{ev.type='move';doMove(w,n,ev,act==='forward'?s.dir:act);}
   if(n.status==='play'&&w.zams.length){const before=zamPos(w,s.t),now=zamPos(w,n.t);
     for(let i=0;i<now.length;i++){const hit=(now[i].x===n.x&&now[i].y===n.y)||(now[i].x===s.x&&now[i].y===s.y&&before[i].x===n.x&&before[i].y===n.y);
@@ -822,7 +869,21 @@ function expand(lines,max=400){const acts=[];let over=false;
 function simulate(w,acts){let s=startState(w);const events=[];
   for(let i=0;i<acts.length;i++){const r=step(w,s,acts[i].act);r.ev.i=i;r.ev.line=acts[i].line;r.ev.loops=acts[i].loops;events.push(r.ev);s=r.s;if(s.status!=='play')break;}
   return {events,result:s.status==='goal'?'goal':(s.status==='fail'?'fail':'incomplete'),fish:s.fish,final:s};}
-function stateKey(w,s){return s.x+','+s.y+','+s.dir+','+s.g+','+(s.fish?1:0)+','+s.pucks+','+s.scored+','+(s.t%w.period);}
+function stateKey(w,s){return s.x+','+s.y+','+s.dir+','+s.g+','+(s.fish?1:0)+','+s.pucks+','+s.scored+','+(s.t%w.period)+','+(s.snow?1:0)+','+Math.min(1,s.passGoals||0)+','+(s.uses||0);}
+function objOf(L){return L.obj||{type:'fish'};}
+function objMet(w,s,L,lines){const o=objOf(L),g=s.g;
+  switch(o.type){case 'fish':return !!s.fish;case 'allfish':return !g.includes('*');case 'flags':return !/[123]/.test(g);case 'cones':return !g.includes('K');
+    case 'pass':return (s.passGoals||0)>0;case 'iceonly':return !s.snow;case 'without':return !(lines||[]).some(x=>x.b===o.block);
+    case 'budget':return (lines||[]).filter(x=>x.b===o.block).length<=o.max;}return true;}
+function bfsObj(w,L,allowed,maxNodes=150000,start){const o=objOf(L);let acts=allowed.filter(a=>a!=='repeat');if(o.type==='without')acts=acts.filter(a=>a!==o.block);
+  const cap=o.type==='budget'?o:null;const from=start||startState(w);const q=[{s:from,path:null,a:null}];let head=0;const seen=new Set([stateKey(w,from)]);
+  const build=node=>{const p=[];while(node&&node.a){p.push(node.a);node=node.path;}return p.reverse();};
+  while(head<q.length){const node=q[head++];if(seen.size>maxNodes)return null;
+    for(const a of acts){if(cap&&a===cap.block&&(node.s.uses||0)>=cap.max)continue;const r=step(w,node.s,a);if(r.s.status==='fail')continue;
+      if(cap&&a===cap.block)r.s.uses=(node.s.uses||0)+1;const nn={s:r.s,path:node,a};
+      if(r.s.status==='goal'){const lines=build(nn).map(b=>({b,d:0}));if(objMet(w,r.s,L,lines))return build(nn);continue;}
+      const k=stateKey(w,r.s);if(seen.has(k))continue;seen.add(k);q.push(nn);}}
+  return null;}
 function bfs(w,from,allowed,needFish,maxNodes=120000){
   const acts=allowed.filter(a=>a!=='repeat');const q=[{s:from,path:null,a:null}];let head=0;const seen=new Set([stateKey(w,from)]);
   const build=node=>{const p=[];while(node&&node.a){p.push(node.a);node=node.path;}return p.reverse();};
@@ -928,6 +989,7 @@ function genDaily(day,tierIdx,mechPool){
    Par for levels without a solution is worked out automatically.
    ===================================================================== */
 const MOVES=['right','left','up','down'];
+const ALL_CMDS=['right','left','up','down','forward','turn_left','turn_right','dash','jump','wait','shoot','pass_puck','repeat'];
 const WORLDS=[
 { n:1, name:'Frozen Pond', idea:'Sequences', blurb:'A program is a list of steps. Pip does them in order, one at a time, and the order is everything.',
   levels:[
@@ -1258,18 +1320,106 @@ const WORLDS=[
    learn:'Typing loop lines quickly and accurately.',
    hints:['Every for line ends with a colon.','range needs brackets: range(3)'] },
  ]},
+
+{ n:3, name:'Power Play', idea:'Choosing commands', blurb:'Every command is yours. The skill now is choosing the best ones, and each level has its own bonus challenge.',
+  levels:[
+ { id:'3-1', title:'Dash Dash', mode:'blocks', blocks:ALL_CMDS, newBlocks:['dash'], obj:{type:'without',block:'right'},
+   map:['P.....#',
+        '######.',
+        'N......'],
+   mission:'Welcome to Power Play: every command is yours now! New: dash() skates until something stops Pip. Bonus: finish without using right().',
+   learn:'Choosing the best command for the job.',
+   hints:['dash() goes the way Pip is facing, as far as it can.','Pip starts facing right, so dash() takes him along the top without using right().'] },
+
+ { id:'3-2', title:'Leap Frog', mode:'blocks', blocks:ALL_CMDS, newBlocks:['jump'], obj:{type:'iceonly'},
+   map:[',,,,,,,',
+        'P.W.W.N',
+        ',,,,,,,'],
+   mission:'New: jump() hops over one square, even water! Bonus: stay on the ice the whole way. No snow!',
+   learn:'Using a new command to find a better path.',
+   hints:['jump() lands two squares ahead, the way Pip faces.','Skate right once, then jump over each patch of water.'] },
+
+ { id:'3-3', title:'Give and Go', mode:'blocks', blocks:ALL_CMDS, newBlocks:['pass_puck'], obj:{type:'pass'},
+   map:['P..#..N',
+        ',,,,,,,',
+        ',,,,,,M'],
+   mission:'New: pass_puck() passes to a teammate. If he can see the net, he scores! Bonus: score off a pass.',
+   learn:'Programs can work with other players (other parts of a program).',
+   hints:['Your teammate needs a clear line to the net.','Get onto the bottom row, face your teammate, then pass_puck().'] },
+
+ { id:'3-4', title:'Cone Drill', mode:'blocks', blocks:ALL_CMDS, pucks:3, obj:{type:'cones'},
+   map:['K,,,,,,',
+        'P.....N',
+        ',,,,,,K'],
+   mission:'You have 3 pucks. Score a goal. Bonus: knock down both orange cones first. A shot at a cone knocks it over.',
+   learn:'Planning the order of actions.',
+   hints:['Once you score, the level ends. So cones first!','turn_left() lets Pip face a cone without moving.'] },
+
+ { id:'3-5', title:'Flag Run', mode:'blocks', blocks:ALL_CMDS, obj:{type:'flags'},
+   map:['P..1..#',
+        '#,##,.#',
+        'N.3..2.'],
+   mission:'Score. Bonus: skate through flags 1, 2 and 3 in that order.',
+   learn:'Sequencing: doing things in the right order.',
+   hints:['dash() skates over flags too, and they count.','Dash along the top, drop down to flag 2, then dash left through flag 3.'] },
+
+ { id:'3-6', title:'Fish Fry', mode:'blocks', blocks:ALL_CMDS, obj:{type:'allfish'},
+   map:['*..#..*',
+        '.#...#.',
+        'P..=..N',
+        '.#...#.',
+        '*..#...'],
+   mission:'Score. Bonus: grab all 3 golden fish on the way.',
+   learn:'Finding an efficient route.',
+   hints:['Plan a route that visits every corner with a fish.','dash() and jump() can get you across quickly.'] },
+
+ { id:'3-7', title:'One Big Leap', mode:'blocks', blocks:ALL_CMDS, obj:{type:'budget',block:'jump',max:1},
+   map:['P.W.W.N',
+        '.,,,,W,',
+        '.,,,,,,'],
+   mission:'Score. Bonus: use jump() only once. Two jumps is easy. Can you do it with one?',
+   learn:'Working within a limit (a constraint).',
+   hints:['Find a way around one of the water patches.','Go down onto the snow, dash along, then use your one jump.'] },
+
+ { id:'3-8', title:'Power Play', mode:'blocks', blocks:ALL_CMDS, pucks:2, obj:{type:'pass'},
+   map:['P......',
+        '.##.##.',
+        'N..K..M'],
+   mission:'The cone is blocking your teammate\'s shot! You have 2 pucks. Bonus: score off a pass.',
+   learn:'Changing the world so another part of the program can work.',
+   hints:['Knock the cone down first, so your teammate can see the net.','Get onto the bottom row facing right: shoot the cone, then pass.'] },
+
+ { id:'3-9', title:'Code the Play', mode:'type', blocks:ALL_CMDS, pucks:2, obj:{type:'cones'},
+   map:[',,K,,,,',
+        'P.....N',
+        ',,,,,,,'],
+   starter:'# All the commands are yours. Type the play!\n',
+   mission:'Type it! You have 2 pucks. Score. Bonus: knock down the cone first.',
+   learn:'Writing a plan in Python using the full set of commands.',
+   hints:['Face up underneath the cone, then shoot.','Every command works here: dash(), jump(), pass_puck() and the rest.'] },
+
+ { id:'3-10', title:'Power Final', mode:'blocks', blocks:ALL_CMDS, obj:{type:'flags'},
+   map:['P.W.1.#',
+        '.#W.#..',
+        '2.=====',
+        '.#,W,#.',
+        '.,,W,3N'],
+   mission:'Everything at once! Score. Bonus: skate through flags 1, 2 and 3 in order.',
+   learn:'Combining every skill into one plan.',
+   hints:['Jump the water to reach flag 1, then work your way back.','After flag 2, the glare ice and a jump get you to flag 3.'] },
+ ]},
 ];
 
 'use strict';
 /* ===================== DATA ===================== */
 const LEVELS=[];WORLDS.forEach(W=>W.levels.forEach(L=>{L.world=W.n;L.key=L.id;if(L.target&&!L.solution)L.solution=L.target;LEVELS.push(L);}));
-const WORLD_UNLOCK={2:{world:1,count:8}};
+const WORLD_UNLOCK={2:{world:1,count:8},3:{world:2,count:8}};
 const FUTURE=[
- {n:3,name:'Igloo Crossroads',idea:'If / else',blurb:'Pip checks the ice and decides what to do.'},
- {n:4,name:'Scoreboard Shack',idea:'Variables',blurb:'Keep score in named boxes.'},
- {n:5,name:'Power Play Peak',idea:'Functions',blurb:'Name a play, then call it any time.'},
- {n:6,name:'Arena Workshop',idea:'Events',blurb:'Make things happen when you tap.'},
- {n:7,name:'Boss Glacier',idea:'Everything',blurb:'Big puzzles that use it all.'},
+ {n:4,name:'Igloo Crossroads',idea:'If / else',blurb:'Pip checks the ice and decides what to do.'},
+ {n:5,name:'Scoreboard Shack',idea:'Variables',blurb:'Keep score in named boxes.'},
+ {n:6,name:'Faceoff Peak',idea:'Functions',blurb:'Name a play, then call it any time.'},
+ {n:7,name:'Arena Workshop',idea:'Events',blurb:'Make things happen when you tap.'},
+ {n:8,name:'Boss Glacier',idea:'Everything',blurb:'Big puzzles that use it all.'},
  {n:'S',name:'Build-a-Rink',idea:'Sandbox',blurb:'Make your own game or animation.'}];
 const BLOCKS={
  right:{kind:'move',icon:'right',say:'skate one square right'},
@@ -1282,6 +1432,9 @@ const BLOCKS={
  shoot:{kind:'shoot',icon:'puck',say:'shoot the puck the way Pip faces'},
  wait:{kind:'time',icon:'wait',say:'stay still for one step'},
  repeat:{kind:'loop',icon:'loop',say:'repeat the blocks inside it'},
+ dash:{kind:'move',icon:'dash',say:'skate the way Pip faces until something stops him'},
+ jump:{kind:'move',icon:'jump',say:'hop over one square, the way Pip faces'},
+ pass_puck:{kind:'shoot',icon:'pass',say:'pass the puck to a teammate the way Pip faces'},
 };
 const MAX_LINES=20;
 const RANKS=['Rookie','Winger','Defender','Centre','Captain','All-Star','Legend'];
@@ -1307,6 +1460,8 @@ const BADGES=[
  {id:'typofixer',name:'Typo Hunter',desc:'Fix a program full of typos'},
  {id:'speedster',name:'Speed Demon',desc:'Get 3 stars in a Speed Shift'},
  {id:'pythonista',name:'Pythonista',desc:'Earn 10 blue Python stars'},
+ {id:'playmaker',name:'Playmaker',desc:'Score off a pass to a teammate'},
+ {id:'world3',name:'Power Player',desc:'Finish every level in World 3'},
 ];
 const CHARS={
  pip:{name:'Pip',what:'Penguin',K:'#1B2330',W:'#F4F7FA',O:'#F29A2E',E:'#FFFFFF',P:'#1B2330',req:null},
@@ -1330,7 +1485,7 @@ const TILE_INFO={
  'W':'Water: Pip falls in.','#':'Stone: Pip bumps into it.','T':'Tree: Pip bumps into it.',
  'c':'Cracked ice: turns into water after Pip steps off.','=':'Glare ice: Pip slides until something stops him.',
  'B':'Snow block: push it. Push it into water to make a bridge.','S':'Switch: flips every gate open or shut.',
- 'G':'Gate (shut): a switch opens it.','g':'Gate (open): a switch shuts it.','/':'Angled board: the puck bounces off it.','\\':'Angled board: the puck bounces off it.'};
+ 'G':'Gate (shut): a switch opens it.','M':'Teammate: pass_puck() to him and he shoots if he can see the net.','K':'Cone: knock it down with a shot.','1':'Flags: skate through 1, 2, 3 in order.','g':'Gate (open): a switch shuts it.','/':'Angled board: the puck bounces off it.','\\':'Angled board: the puck bounces off it.'};
 
 /* ===================== UTILITIES + SAVED PROGRESS ===================== */
 const $=s=>document.querySelector(s);
@@ -1368,6 +1523,7 @@ function unlockedSet(){return new Set([...Object.keys(CHARS).filter(k=>isUnlocke
 const PAR={};
 function parOf(L){if(L.par)return L.par;if(PAR[L.key]!=null)return PAR[L.key];let p=0;
   if(L.solution)p=parsePy(L.solution,L.blocks).lines.length;
+  else if(L.obj){const w=parseWorld(L);const s=bfsObj(w,L,L.blocks,300000);p=s?s.length:0;}
   else if(L.mode!=='predict'){const w=parseWorld(L);const s=bfs(w,startState(w),L.blocks,!!w.fishAt)||bfs(w,startState(w),L.blocks,false);p=s?s.length:0;}
   return PAR[L.key]=p;}
 function worldOpen(n){const u=WORLD_UNLOCK[n];if(!u)return true;return LEVELS.filter(L=>L.world===u.world&&S.lv[L.key]&&S.lv[L.key].done).length>=u.count;}
@@ -1429,6 +1585,9 @@ const ICONS={
  bug:["#..##..#",".#.##.#.","..####..","########","..####..","########","..####..",".#....#."],
  kbd:["........","########","#.#.#.#.","########",".#.#.#.#","########","..####..","........"],
  bolt:["....##..","...##...","..##....",".######.","....##..","...##...","..##....",".#......"],
+ dash:["........","#..#....",".#..#...","..#..#..",".#..#...","#..#....","........","........"],
+ jump:["..####..",".#....#.","#......#","#......#","........","##....##","##....##","........"],
+ pass:["........","....#...","....##..","#######.","....##..","....#...","........","##.##.##"],
  eye:["........","..####..",".#....#.","#..##..#","#..##..#",".#....#.","..####..","........"],
 };
 (function(){const r=ICONS.right,n=8;
@@ -1463,6 +1622,10 @@ function drawTile(c,ch,gx,gy,x,y,s){
   case 'g':R(1,2,2,13,'#D8323C');R(13,2,2,13,'#D8323C');R(3,4,10,1,'rgba(255,255,255,.4)');R(3,12,10,1,'rgba(255,255,255,.4)');break;
   case '/':for(let k=0;k<13;k++){R(1+k,12-k,3,3,'#FFFFFF');R(2+k,14-k,1,1,'#F6C445');}R(13,0,3,2,'#FFFFFF');break;
   case '\\':for(let k=0;k<13;k++){R(1+k,1+k,3,3,'#FFFFFF');R(2+k,k,1,1,'#F6C445');}R(13,14,3,2,'#FFFFFF');break;
+  case 'K':R(7,2,2,2,'#FF9A3C');R(6,4,4,3,'#FF8A2A');R(5,7,6,3,'#FF8A2A');R(4,10,8,3,'#FF8A2A');R(6,6,4,1,'#FFFFFF');R(5,9,6,1,'#FFFFFF');R(3,13,10,2,'#C85A14');break;
+  case '1':case '2':case '3':case 'v':{R(4,2,1,13,'#6B4A2B');R(3,14,3,1,'#4A3320');const fc=ch==='v'?'#2FA163':'#E23B3F';R(5,2,8,6,fc);R(5,7,6,1,fc);
+    if(ch==='v'){R(7,5,1,1,'#fff');R(8,6,1,1,'#fff');R(9,5,1,1,'#fff');R(10,4,1,1,'#fff');}else{c.fillStyle='#fff';c.font=`800 ${Math.round(s*.34)}px ui-rounded,system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(ch,x+9*p,y+5*p);c.textAlign='start';c.textBaseline='alphabetic';}break;}
+  case 'M':drawSprite(c,x+s*.08,y,s*.9,{char:'pip',costume:'blue',face:'left',puck:false});R(2,15,12,1,'rgba(0,40,80,.15)');break;
   case 'o':R(5,9,6,3,'#15181D');R(5,9,6,1,'#3A3F46');R(4,12,8,1,'rgba(0,40,80,.15)');break;
   }
 }
@@ -1561,6 +1724,7 @@ function mapGrid(W){const cols=11,rows=9;const g=Array.from({length:rows},()=>Ar
   if(ny>=0){g[ly+dy][lx+dx]='.';g[ny][nx]='N';}
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){if(g[y][x]!==',')continue;const r=hash(x,y,W.n*31);
     if(W.n===2){if(r<.16)g[y][x]='W';else if(r<.24)g[y][x]='=';else if(r<.3)g[y][x]='T';}
+    else if(W.n===3){if(r<.08)g[y][x]='K';else if(r<.12)g[y][x]='M';else if(r<.2)g[y][x]='T';else if(r<.24)g[y][x]='#';}
     else{if(r<.14)g[y][x]='T';else if(r<.2)g[y][x]='#';else if(r<.24)g[y][x]='W';}}
   return g;}
 function openMap(){show('scr-map');renderMap();}
@@ -1622,7 +1786,7 @@ function setupMode(){const m=cur.mode;$('#blocksUI').hidden=m!=='blocks';$('#typ
   const canSwitch=cur.L.mode==='blocks'&&typingUnlocked();
   const sw=`<button data-mode="blocks" aria-pressed="${m==='blocks'}">Blocks</button><button data-mode="type" aria-pressed="${m==='type'}">Python</button>`;
   $('#modeSw1').innerHTML=canSwitch?sw:'';$('#modeSw2').innerHTML=canSwitch?sw:'';$('#modeSw1').hidden=!canSwitch;$('#modeSw2').hidden=!canSwitch;
-  if(m==='blocks'){renderPalette();renderProg();}
+  if(m==='blocks'){renderPalette();renderPalTabs();renderProg();}
   else if(m==='type'){$('#codeText').value=cur.text;cur.caret=null;renderQuick();reparse();}
   else{$('#plist').innerHTML=rowsHTML(cur.lines,{edit:false});$('#predictNote').innerHTML=`Pip will run this program. <b>Where will he end up?</b> Tap that square on the rink, then press <b>Check</b>.`;}
   setupTyping();setRunningUI(false);if(cur.screen==='scr-level')requestAnimationFrame(sizeBoard);}
@@ -1650,8 +1814,16 @@ function rowsHTML(lines,{edit=true,mini=false}={}){
   while(stack.length)h+=slot(stack.pop(),n);
   if(edit)h+=`<div class="slot end" data-at="${n}" data-d="0"><span class="txt">${n?'+ Add at the end':'Tap a block above, or drag it here. Pip runs your program from top to bottom.'}</span></div>`;
   return h;}
+const PAL_GROUPS=[['Skate',['right','left','up','down']],['Steer',['forward','turn_left','turn_right']],['Moves',['dash','jump','wait']],['Puck',['shoot','pass_puck']],['Loop',['repeat']]];
+function renderPalTabs(){const L=cur.L,el=$('#palTabs');const groups=PAL_GROUPS.map(([n,bs])=>[n,bs.filter(b=>L.blocks.includes(b))]).filter(g=>g[1].length);
+  const many=L.blocks.length>6;el.hidden=!many;$('#palette').classList.toggle('grouped',many);if(!many)return;
+  if(!groups.some(g=>g[0]===cur.palTab))cur.palTab=groups[0][0];
+  el.innerHTML=groups.map(([n])=>`<button data-tab="${n}" aria-pressed="${cur.palTab===n}">${n}</button>`).join('');
+  $$('#palette .blk').forEach(b=>{const g=groups.find(x=>x[1].includes(b.dataset.b));b.classList.toggle('offtab',!!g&&g[0]!==cur.palTab);});
+  const vis=groups.find(g=>g[0]===cur.palTab)[1].length;$('#palette').style.setProperty('--nt',Math.max(3,vis));}
 function renderPalette(){const L=cur.L;$('#palette').style.setProperty('--n',Math.min(6,L.blocks.length));$('#palette').innerHTML=L.blocks.map(b=>{const B=BLOCKS[b];const isNew=(L.newBlocks||[]).includes(b)&&!(S.lv[L.key]&&S.lv[L.key].done);
   return `<button class="blk${isNew?' new':''}" data-kind="${B.kind}" data-b="${b}" aria-label="Add ${b} block: ${B.say}">${icon(B.icon,'#fff')}<span>${b}</span></button>`;}).join('');}
+function renderProgPal(){}
 function renderProg(){$('#prog').innerHTML=rowsHTML(cur.lines);markCursor();renderCount(cur.lines.length,'#count');
   const e=validate(cur.lines);const pe=$('#progErr');if(e){pe.hidden=false;pe.textContent=e.msg;const row=$(`#prog .row[data-i="${e.i}"]`);if(row)row.classList.add('bad');}else pe.hidden=true;}
 function markCursor(){$$('#prog .cur,#prog .cur-before').forEach(e=>e.classList.remove('cur','cur-before'));const {at,d}=cur.cursor;
@@ -1768,7 +1940,7 @@ function sizeBoard(){if(!cur.w)return;const wrap=$('#boardWrap');wrap.style.setP
 function resetBoard(){if(!cur.w)return;const s=startState(cur.w);A={px:s.x,py:s.y,face:s.dir==='left'?'left':'right',dir:s.dir,pucks:s.pucks,scored:0,g:s.g,zt:0,
   fly:null,sink:0,ox:0,oy:0,fx:[],push:null,mask:null,marks:[],ghost:null};$('#lamp').hidden=true;clearActive();updateHud();
   if(cur.mode==='predict'){if(cur.guess)A.marks.push({x:cur.guess.x,y:cur.guess.y,c:'#F6C445'});}}
-function updateHud(){const h=$('#hud');const L=cur.L;const show=L&&(L.need>1||L.pucks===0||cur.w.grid.includes('o'));h.hidden=!show;
+function updateHud(){const h=$('#hud');const L=cur.L;const show=L&&(L.need>1||(L.pucks!=null&&L.pucks!==1)||cur.w.grid.includes('o'));h.hidden=!show;
   if(show&&A)h.innerHTML=`<span>Pucks: ${A.pucks}</span><span>Goals: ${A.scored}/${cur.w.need}</span>`;}
 function clearActive(){$$('#prog .row,#plist .row').forEach(r=>r.classList.remove('run','bad','hint','loop-on'));$$('.blk .lap').forEach(l=>l.textContent='');
   $$('.gut').forEach(r=>r.classList.remove('run'));$$('#mirror .row').forEach(r=>r.classList.remove('run'));
@@ -1823,8 +1995,11 @@ async function animEvent(ev,my){const D=SPEEDS[S.speed]||SPEEDS.normal;setActive
       if(ev.type==='tapin'&&ev.end!=='goal'){SFX.goal1();miniLamp();A.fly=null;}return;}
     SFX.skate();if(ev.slide)SFX.slide();
     if(ev.push){const m={};m[ev.push.from.y*w.cols+ev.push.from.x]=',';m[ev.push.to.y*w.cols+ev.push.to.x]=ev.gBefore[ev.push.to.y*w.cols+ev.push.to.x];A.mask=m;A.g=ev.gAfter;A.push={...ev.push.from};SFX.push();}
+    if(ev.act==='dash')SFX.slide();
     const pts=[{x:A.px,y:A.py},...ev.path];const segs=pts.length-1;
-    for(let j=1;j<pts.length;j++){const a=pts[j-1],b=pts[j];const dur=j===1?D*.7:Math.max(70,D*.22);
+    for(let j=1;j<pts.length;j++){let a=pts[j-1],b=pts[j];
+      if(b.air){const land=pts[j+1];SFX.hint();await tween(D*.8,k=>{A.px=a.x+(land.x-a.x)*k;A.py=a.y+(land.y-a.y)*k;A.oy=-Math.sin(Math.PI*k)*.55;zt((j+k)/segs);},my);A.oy=0;if(my!==runId)return;j++;SFX.skate();if(ev.crack){SFX.crack();fxAt('snow',ev.crack);}continue;}
+      const dur=j===1?D*.7:Math.max(70,D*.22);
       await tween(dur,k=>{const e=j===1&&segs===1?ease(k):k;A.px=a.x+(b.x-a.x)*e;A.py=a.y+(b.y-a.y)*e;
         if(A.push&&j===1){A.push={x:ev.push.from.x+(ev.push.to.x-ev.push.from.x)*e,y:ev.push.from.y+(ev.push.to.y-ev.push.from.y)*e};}
         zt((j-1+k)/segs);},my);if(my!==runId)return;
@@ -1835,6 +2010,7 @@ async function animEvent(ev,my){const D=SPEEDS[S.speed]||SPEEDS.normal;setActive
     if(ev.fish){SFX.fish();fxAt('spark',ev.fish);}
     if(ev.gotPuck){SFX.pick();ev.gotPuck.forEach(p=>fxAt('spark',p));}
     if(ev.toggle)SFX.toggle();
+    if(ev.flag){SFX.ping();fxAt('spark',ev.flag);}
     A.pucks=ev.pucks;A.scored=ev.scored;updateHud();
     if(ev.end==='water'){SFX.splash();fxAt('splash',ev.to);await tween(D*.9,k=>{A.sink=k},my);}
     if(ev.end==='zamboni'){SFX.bump();shake();}}
@@ -1844,7 +2020,10 @@ async function animEvent(ev,my){const D=SPEEDS[S.speed]||SPEEDS.normal;setActive
       await tween(Math.max(55,D*.2)*(stop?.5:1),k=>{const kk=stop?k*.45:k;A.fly={x:a.x+(b.x-a.x)*kk,y:a.y+(b.y-a.y)*kk};zt(j/n);},my);if(my!==runId)return;
       const tt=A.g[b.y*w.cols+b.x];if(!stop&&(tt==='/'||tt==='\\'))SFX.ping();}
     A.zt=ev.t;
-    if(ev.end==='miss'){SFX.clank();shake();const last=pts[pts.length-1],prev=pts[pts.length-2];await tween(D*.2,k=>{A.fly={x:last.x+(prev.x-last.x)*(.45+k*.3),y:last.y+(prev.y-last.y)*(.45+k*.3)}},my);}
+    if(ev.cone){SFX.clank();fxAt('spark',ev.cone);A.fly=null;A.g=ev.gAfter;}
+    if(ev.mate){SFX.pick();await sleep(D*.25);if(my!==runId)return;SFX.shoot();const mp=ev.mate.path;for(let j=1;j<mp.length;j++){const a=mp[j-1],b=mp[j];await tween(Math.max(55,D*.2),k=>{A.fly={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k};},my);if(my!==runId)return;}}
+    if(ev.cone){}
+    else if(ev.end==='miss'){SFX.clank();shake();const last=pts[pts.length-1],prev=pts[pts.length-2];await tween(D*.2,k=>{A.fly={x:last.x+(prev.x-last.x)*(.45+k*.3),y:last.y+(prev.y-last.y)*(.45+k*.3)}},my);}
     else if(ev.end==='sink'){SFX.splash();fxAt('splash',pts[pts.length-1]);A.fly=null;}
     else{A.scored=ev.scored;updateHud();if(ev.end!=='goal'){SFX.goal1();miniLamp();A.fly=null;}}}}
 function miniLamp(){const l=$('#lamp');l.className='lamp small';l.innerHTML=pixelText(`Goal ${A.scored}!`,'#FFFFFF','#8A6A00');l.hidden=false;setTimeout(()=>{l.hidden=true;l.className='lamp';},900);}
@@ -1880,11 +2059,14 @@ function failText(sim){const ev=sim.events[sim.events.length-1];const n=ev?ev.i+
     return {t:'Out of steps!',m:`Pip did all ${run.acts.length} step${run.acts.length===1?'':'s'}, but the puck isn't in the net yet. Add more steps.`};}
   const ob=ev.obstacle||'something';
   switch(ev.end){
-    case 'bump':return {t:'Bonk!',m:`On step ${n} (${ev.act}), Pip bumped into ${ob==='boards'?'the boards at the edge of the rink':'a '+ob}.`};
+    case 'bump':if(ev.landing)return {t:'Bad landing!',m:`On step ${n}, Pip couldn't land on ${ob==='boards'?'the boards':'a '+ob}. He needs an empty square two ahead.`};
+      return {t:'Bonk!',m:`On step ${n} (${ev.act}), Pip ${ev.jump?'couldn\'t jump over':'bumped into'} ${ob==='boards'?'the boards at the edge of the rink':'a '+ob}.`};
     case 'stuck':return {t:'Stuck!',m:`On step ${n}, Pip pushed the snow block, but ${ob==='boards'?'the boards':'a '+ob} was behind it.`};
     case 'water':return {t:'Splash!',m:`On step ${n}, Pip went into the water. Don't worry, penguins can swim!`};
     case 'nopuck':return {t:'No puck!',m:`On step ${n}, Pip had no puck left to ${ev.type==='shoot'?'shoot':'score with'}.`};
-    case 'miss':return {t:'Missed!',m:`On step ${n}, the shot hit ${ob==='boards'?'the boards':'a '+ob}. Pip was facing ${ev.dir}.`};
+    case 'miss':if(ev.mateNoShot)return {t:'No shot!',m:`On step ${n}, the teammate got the pass but couldn't see the net. Is something in the way?`};
+      if(ev.atMate)return {t:'Oops!',m:`On step ${n}, Pip shot the puck at his own teammate! Use pass_puck() to pass.`};
+      return {t:'Missed!',m:`On step ${n}, the ${ev.pass?'pass':'shot'} hit ${ob==='boards'?'the boards':'a '+ob}. Pip was facing ${ev.dir}.`};
     case 'sink':return {t:'Plop!',m:`On step ${n}, the puck slid into the water.`};
     case 'zamboni':return {t:'Beep beep!',m:`On step ${n}, Pip got in the Zamboni's way. Try wait() to let it pass.`};}
   return {t:'Not yet',m:'Try again!'};}
@@ -1919,7 +2101,8 @@ function grantLevel(res){const L=cur.L,r=lvRec(L.key);const sim=res.sim;const st
   if(run&&run.lines&&res.rule!=='predict'&&run.lines.some(x=>x.b==='repeat'))tryB('looper');
   if(sim&&sim.events.some(e=>e.push&&e.push.fill))tryB('bridge');if(sim&&sim.events.some(e=>e.bounce&&e.net))tryB('bank');
   if(['typed','typos','translate'].includes(res.rule)&&!cur.dirty)tryB('cleancoder');if(res.rule==='typos')tryB('typofixer');if(res.rule==='speed'&&stars===3)tryB('speedster');
-  if(pyCount()>=10)tryB('pythonista');
+  if(pyCount()>=10)tryB('pythonista');if(sim&&sim.final&&sim.final.passGoals>0)tryB('playmaker');
+  const W3=LEVELS.filter(l=>l.world===3);if(W3.length&&W3.every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('world3');
   if(isDaily){tryB('daily');if(dailyLevels().every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('dailyhat');}
   const W1=LEVELS.filter(l=>l.world===1),W2=LEVELS.filter(l=>l.world===2);
   if(W1.every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('world1');if(W2.every(l=>S.lv[l.key]&&S.lv[l.key].done))tryB('world2');
@@ -1937,7 +2120,7 @@ function showResult(o){const next=nextLevel();const labels=o.labels,on=o.on;
   let html=`<div style="align-self:center">${pixelText(o.title||'Goal!','#F6C445')}</div>
     <div class="res-stars">${labels.map((l,k)=>`<div class="rs ${on[k]?'on':''}" style="--d:${k*.3}s">${icon('star',on[k]?'#F6C445':'#3B5079')}<span>${esc(l)}</span></div>`).join('')}</div>
     ${o.unused>0?`<p style="text-align:center">Pip scored before the end, so ${o.unused} step${o.unused===1?'':'s'} never ran. Can you take ${o.unused===1?'it':'them'} out?</p>`:''}
-    ${(o.rule==='normal'||o.rule==='typed')&&!o.on[1]?`<p style="text-align:center">Par is <b>${cur.par}</b>. ${cur.L.solution?'Can you make your program shorter?':'Is there a shorter path, or a clever shot?'}</p>`:''}
+    ${['normal','typed','objective'].includes(o.rule)&&!o.on[1]?`<p style="text-align:center">Par is <b>${cur.par}</b>. ${cur.L.solution?'Can you make your program shorter?':'Is there a shorter path, or a clever shot?'}</p>`:''}
     ${['typed','typos','translate'].includes(o.rule)&&!o.on[2]?`<p style="text-align:center">For the clean-code star, check your code carefully <b>before</b> you press Play.</p>`:''}
     <div class="xpgain">+${o.xp} XP</div>`;
   if(o.newPy)html+=`<div class="award">${icon('star','#6CC4FF')}<div><b>Blue Python star!</b><p>You solved it in Python. You have ${pyCount()} blue star${pyCount()===1?'':'s'}.</p></div></div>`;
@@ -2011,10 +2194,10 @@ function stepHint(){const L=cur.L,w=cur.w;
   const flat=expand(lines).acts.map(a=>a.act);let s=startState(w),k=0,solved=false;
   for(;k<flat.length;k++){const r=step(w,s,flat[k]);if(r.s.status==='fail')break;s=r.s;if(s.status==='goal'){solved=true;k++;break;}}
   if(solved){if(s.fish&&lines.length<=cur.par)return {text:'Your program already scores with all the stars. Press Play!'};
-    const tips=[];if(!s.fish&&w.fishAt)tips.push('find a path that goes over the golden fish');if(lines.length>cur.par)tips.push(`try to do it in ${cur.par} blocks or fewer`);
+    const tips=[];if(L.obj){if(!objMet(w,s,L,lines))tips.push('go for the bonus: '+objLabel(L).toLowerCase());}else if(!s.fish&&w.fishAt)tips.push('find a path that goes over the golden fish');if(lines.length>cur.par)tips.push(`try to do it in ${cur.par} blocks or fewer`);
     return {text:'Your program already scores! For more stars, '+tips.join(' and ')+'.'};}
   if(lines.some(x=>x.b==='repeat'))return {text:'Hint 3 works step by step. Try writing it without loops first, then look for a pattern.'};
-  const path=bfs(w,s,L.blocks,!!w.fishAt&&!s.fish,60000)||bfs(w,s,L.blocks,false,60000);if(!path||!path.length)return {text:'Press Reset and plan the path again from the start. Some steps can\'t be undone!'};
+  const path=L.obj?(bfsObj(w,L,L.blocks,80000,s)||bfs(w,s,L.blocks,false,60000)):(bfs(w,s,L.blocks,!!w.fishAt&&!s.fish,60000)||bfs(w,s,L.blocks,false,60000));if(!path||!path.length)return {text:'Press Reset and plan the path again from the start. Some steps can\'t be undone!'};
   const b=path[0],replace=k<lines.length;
   return {k,line:{b,d:0},replace,text:replace?`Step ${k+1} should be ${b}(). Right now it is ${lines[k].b}().`:(k===0?`Start with ${b}()`:`Steps 1 to ${k} are good! Next, add step ${k+1}: ${b}()`)};}
 function applyStepHint(h){const L2={b:h.line.b,n:h.line.n,d:h.line.d};
@@ -2117,6 +2300,7 @@ $('#btnReset').innerHTML=icon('reset')+'<span class="lbl">Reset</span>';$('#btnR
 $$('.speed button').forEach(b=>b.onclick=()=>setSpeed(b.dataset.speed));
 $('#modeSw1').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)switchMode(b.dataset.mode);});
 $('#modeSw2').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)switchMode(b.dataset.mode);});
+$('#palTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;cur.palTab=b.dataset.tab;SFX.add();renderPalTabs();});
 $('#palette').addEventListener('pointerdown',e=>{const b=e.target.closest('.blk');if(b)onBlockDown(e,{from:'pal',b:b.dataset.b});});
 $('#palette').addEventListener('click',e=>{const b=e.target.closest('.blk');if(b&&e.detail===0)addAtCursor(b.dataset.b);});
 $('#prog').addEventListener('pointerdown',e=>{const chip=e.target.closest('.row .blk');if(!chip)return;const i=+chip.closest('.row').dataset.i;onBlockDown(e,{from:'prog',i,b:cur.lines[i].b});});
@@ -2182,7 +2366,11 @@ if(isUnlockedDevice())start();else openLock();
 /* ===================== TYPING: Pip's Keyboard, star rules, Speed Shift ===================== */
 SFX.key=()=>tone(1150,0,.025,'square',.022);
 function kbPip(){return (S.kb||(matchMedia('(pointer:coarse)').matches?'pip':'native'))==='pip';}
-function ruleOf(L){if(L.mode==='predict')return 'predict';if(L.mode==='speed')return 'speed';return L.rule||(L.mode==='type'?'typed':'normal');}
+function ruleOf(L){if(L.mode==='predict')return 'predict';if(L.mode==='speed')return 'speed';if(L.obj)return 'objective';return L.rule||(L.mode==='type'?'typed':'normal');}
+function objLabel(L){const o=objOf(L),g=L.map.join('');
+  switch(o.type){case 'fish':return 'Grab the golden fish';case 'allfish':return `Grab all ${(g.match(/\*/g)||[]).length} golden fish`;case 'flags':return 'Skate through flags 1, 2, 3 in order';
+    case 'cones':return 'Knock down every cone';case 'pass':return 'Score off a pass';case 'iceonly':return 'Stay on the ice (no snow)';
+    case 'without':return `Don't use ${o.block}()`;case 'budget':return `Use ${o.block}() ${o.max===1?'only once':o.max+' times or fewer'}`;}return 'Bonus';}
 function pyCount(){return LEVELS.filter(L=>S.lv[L.key]&&S.lv[L.key].py).length;}
 function levelCommands(L){const c=(L.blocks||[]).filter(b=>b!=='repeat').map(b=>b+'()');if((L.blocks||[]).includes('repeat'))c.push('for i in range(3):');return c;}
 
@@ -2195,6 +2383,7 @@ function starGoals(L){const par=cur.par;
     case 'typos':return ['Fix it and score',`Fix it in ${L.editPar} edits or fewer`,'Clean code: no errors when you press Play'];
     case 'translate':return ['Score a goal','Match the blocks exactly','Clean code: no errors when you press Play'];
     case 'buildit':return ['Score a goal','Match the Python exactly','Right first time'];
+    case 'objective':return [L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${par} blocks or fewer`,'Bonus: '+objLabel(L)];
     default:return [L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${par} blocks or fewer`,'Grab the golden fish'];}}
 function sameLines(a,b){return !!b&&a.length===b.length&&a.every((x,i)=>x.b===b[i].b&&x.d===b[i].d&&(x.b!=='repeat'||x.n===b[i].n));}
 function computeStars(sim){const L=cur.L,rule=ruleOf(L),used=run.lines.length,par=cur.par;const tgt=L.target?parsePy(L.target,L.blocks).lines:null;
@@ -2205,8 +2394,9 @@ function computeStars(sim){const L=cur.L,rule=ruleOf(L),used=run.lines.length,pa
     case 'typos':on=[true,cur.edits<=L.editPar,!cur.dirty];labels=['Fixed and scored!',`${cur.edits} edits, par ${L.editPar}`,clean];break;
     case 'translate':{const ok=sameLines(run.lines,tgt);on=[true,ok,!cur.dirty];labels=['Scored!',ok?'Exact match!':'Not an exact match',clean];break;}
     case 'buildit':{const ok=sameLines(run.lines,tgt);on=[true,ok,!cur.failedThisVisit];labels=['Scored!',ok?'Exact match!':'Not an exact match',cur.failedThisVisit?'Took a few tries':'Right first time!'];break;}
+    case 'objective':{const ok=objMet(cur.w,sim.final,L,run.lines);on=[true,used<=par,ok];labels=['Scored!',used<=par?`${used} blocks, par ${par}`:`${used} blocks. Par is ${par}`,(ok?'Bonus: ':'Missed bonus: ')+objLabel(L)];break;}
     default:{const parOk=used<=par;on=[true,parOk,sim.fish];labels=['Scored!',parOk?`${used} blocks, par ${par}`:`${used} blocks. Par is ${par}`,sim.fish?'Golden fish!':'Missed the fish'];}}
-  return {on,labels,stars:on.filter(Boolean).length,parOk:rule==='normal'||rule==='typed'?used<=par:true,fish:sim.fish,used,rule};}
+  return {on,labels,stars:on.filter(Boolean).length,parOk:['normal','typed','objective'].includes(rule)?used<=par:true,fish:sim.fish,used,rule};}
 
 /* ---- syntax colouring ---- */
 function hl(t){return esc(t).replace(/(#.*$)|\b(for|in)\b|\b(range)\b|\b([a-z_]+)(?=\s*\()|(\d+)|([():])/g,(m,c,kw,rg,fn,num,pn)=>
@@ -2231,7 +2421,7 @@ function isPhoneW(){return matchMedia('(max-width:600px)').matches;}
 
 /* ---- Pip's Keyboard ---- */
 function needsDigits(L){return (L.blocks||[]).includes('repeat')||(L.speed&&L.speed.pool.some(x=>/\d/.test(x)));}
-function buildKb(){const L=cur.L;const rows=[['w','e','r','t','u','i','o','p'],['a','s','d','f','g','h','j','l'],['n','_','(',')',':','bk']];
+function buildKb(){const L=cur.L;const rows=[['w','e','r','t','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['c','n','m','_','(',')',':','bk']];
   if(needsDigits(L))rows.push(['1','2','3','4','5','6','7','8','9','0']);
   rows.push(cur.mode==='speed'?['left','space','right','enter']:['pull','push','left','space','right','enter']);
   const lab={bk:'⌫',pull:'⇤ out',push:'in ⇥',left:'◀',right:'▶',space:'space',enter:cur.mode==='speed'?'Enter ⏎':'⏎'};
