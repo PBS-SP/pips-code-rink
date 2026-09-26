@@ -717,6 +717,24 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
 .reopen-act .btn{gap:8px}
 .pkb .k.sym{background:#223556;color:var(--fn)}
 @media (max-width:600px){.lvbar .mute{display:none}.reopen-act{flex-direction:column-reverse;align-items:stretch}}
+
+/* ---- tablets: program list adapts to its own width (side-by-side layouts) ---- */
+.prog{container-type:inline-size;container-name:prog}
+@container prog (max-width:820px){
+  .row{grid-template-columns:28px minmax(0,1.4fr) minmax(0,.9fr) 40px}
+}
+@container prog (max-width:600px){
+  .row{grid-template-columns:24px minmax(0,1.5fr) minmax(0,.8fr) 34px}
+  .bcell .blk[data-kind="loop"] .tm,.bcell .blk[data-kind="loop"]>.pi{display:none}
+  .bcell .blk[data-kind="loop"]{gap:5px;padding:0 7px}
+}
+/* Pip's keyboard on tablets: make room by hiding the block mirror while typing */
+@media (min-width:601px){
+  body.kb #mirror,body.kb #mirrorHead{display:none}
+  body.kb #kbDone{display:inline-flex}
+  .pkb .k{height:44px}
+}
+@media (min-width:601px) and (orientation:portrait){body.kb #boardWrap{max-height:24vh}body.kb .goals{display:none}body.kb .play{grid-template-rows:auto minmax(0,1fr)}}
 </style>
 </head><body>
 <div id="app">
@@ -738,7 +756,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
       <p>Hi! I'm <b style="color:var(--text)">Pip</b>. I play hockey on the frozen pond, but I only move when you give me a program. Let's score some goals together.</p>
       <label for="nickIn">What should Pip call you?</label>
       <input id="nickIn" class="nick" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Nickname">
-      <span class="tiny">A nickname is enough. It stays on this iPad.</span>
+      <span class="tiny">A nickname is enough. It stays on this device.</span>
       <div class="row-btns"><button class="btn go big" id="btnStart">Let's play</button></div>
     </div>
   </section>
@@ -1199,7 +1217,7 @@ const WORLDS=[
    program:'forward()\nturn_right()\nforward()\nforward()\nturn_left()\nforward()\nturn_left()\nforward()',
    mission:'Pip starts facing right. Where does he end up? Tap the square, then press Check.',
    learn:'Following turns in your head.',
-   hints:['Turn the iPad in your head, or point your finger the way Pip faces.','After forward, turn_right, forward, forward, Pip is 2 squares down and facing down.'] },
+   hints:['Turn the device in your head, or point your finger the way Pip faces.','After forward, turn_right, forward, forward, Pip is 2 squares down and facing down.'] },
 
  { id:'1-14', title:'Pond Final', mode:'type', blocks:[...MOVES,'shoot'],
    map:['T,,W,,\\',
@@ -1532,7 +1550,7 @@ function hardChip(L,n){return L.mode==='speed'?`Hard · ${L.speed.secs}s, higher
 
 'use strict';
 /* ===================== DATA ===================== */
-const APP_VERSION='V1.01.00';
+const APP_VERSION='V1.01.01';
 const LEVELS=[];WORLDS.forEach(W=>W.levels.forEach(L=>{L.world=W.n;L.key=L.id;if(L.target&&!L.solution)L.solution=L.target;LEVELS.push(L);}));
 const WORLD_UNLOCK={2:{world:1,count:8},3:{world:2,count:8}};
 const FUTURE=[
@@ -2401,12 +2419,12 @@ function openParent(){const today=dayKey();let week=0;for(let i=0;i<7;i++){const
   <span class="sec-h">Nickname</span>
   <div class="field"><input id="pNick" maxlength="12" value="${esc(S.nick)}" aria-label="Nickname" autocomplete="off"><button class="btn small" id="pNickSave">Save nickname</button></div>
   <span class="sec-h">Backup</span>
-  <p>Progress is saved only in this browser on this iPad. Copy this code somewhere safe to restore it later or move it to the Home Screen app.</p>
+  <p>Progress is saved only in this browser on this device. Copy this code somewhere safe to restore it later or move it to the Home Screen app.</p>
   <div class="field"><textarea id="pCode" readonly></textarea><button class="btn small" id="pCopy">Copy code</button><button class="btn small ghost" id="pRestoreShow">Restore from a code</button></div>
   <div class="field" id="pRestoreBox" hidden><textarea id="pIn" placeholder="Paste a backup code"></textarea><button class="btn small" id="pRestore">Restore</button><span id="pMsg" class="tiny"></span></div>
   <span class="sec-h">Privacy</span><p>No accounts, no ads, no chat, no tracking. Nothing is sent anywhere. Only his nickname and game progress are stored, on this device.</p>
-  <span class="sec-h">Passcode</span><p>This iPad remembers the passcode. Lock it again if someone else will use the game on this device.</p>
-  <div class="row-btns" style="justify-content:flex-start"><button class="btn small ghost" id="pLock">Lock this iPad again</button></div>
+  <span class="sec-h">Passcode</span><p>This device remembers the passcode. Lock it again if someone else will use the game on this device.</p>
+  <div class="row-btns" style="justify-content:flex-start"><button class="btn small ghost" id="pLock">Lock this device again</button></div>
   <div class="danger"><b>Reset everything</b><p>Erases the nickname, stars, badges, streak and time. This can't be undone.</p>
    <div class="row-btns" style="justify-content:flex-start"><button class="btn small red" id="pReset">Reset progress</button></div></div>
   <p class="tiny" style="text-align:center;margin:4px 0 0">Pip's Code Rink ${APP_VERSION}</p><div class="actions"><button class="btn go" id="pDone">Done</button></div>`;
@@ -2573,7 +2591,7 @@ function codeViewTap(e){if(cur.running||cur.busy)return;const cv=$('#codeView');
   const cl=e.target.closest('.cl');const m=cv.querySelector('.measure');const cw=m?m.getBoundingClientRect().width/10:11;
   if(cl){li=+cl.dataset.l;const cc=cl.querySelector('.cc').getBoundingClientRect();col=Math.max(0,Math.min(lines[li].length,Math.round((e.clientX-cc.left)/cw)));}
   let p=0;for(let k=0;k<li;k++)p+=lines[k].length+1;cur.caret=p+col;renderCodeView();openPipKb();}
-function openPipKb(){if(isPhoneW()&&!document.body.classList.contains('kb')){document.body.classList.add('kb');requestAnimationFrame(sizeBoard);}$('#codeView').classList.add('focus');}
+function openPipKb(){if(!document.body.classList.contains('kb')){document.body.classList.add('kb');requestAnimationFrame(sizeBoard);}$('#codeView').classList.add('focus');}
 function closePipKb(){document.body.classList.remove('kb');const cv=$('#codeView');if(cv)cv.classList.remove('focus');requestAnimationFrame(sizeBoard);}
 function isPhoneW(){return matchMedia('(max-width:600px)').matches;}
 
@@ -2736,7 +2754,7 @@ $('#spad').addEventListener('click',e=>{const b=e.target.closest('[data-sp]');if
 /* ---- switch between code buttons and typing ---- */
 function renderInSwitch(){$$('.inswitch').forEach(b=>{b.innerHTML=btnIn()?`${icon('kbd')}<span>Type it</span>`:`${icon('bolt')}<span>Buttons</span>`;
   b.setAttribute('aria-label',btnIn()?'Type the code with a keyboard instead':'Use code buttons instead of typing');});}
-$$('.inswitch').forEach(b=>b.onclick=()=>{if(cur.sp&&cur.sp.on)return;S.codeIn=btnIn()?'type':'buttons';save();closePipKb();setupTyping();if(cur.mode==='type')reparse();$('#lvMission').textContent=missionOf(cur.L);requestAnimationFrame(sizeBoard);
+$$('.inswitch').forEach(b=>b.onclick=()=>{if(cur.sp&&cur.sp.on)return;S.codeIn=btnIn()?'type':'buttons';save();closePipKb();setupTyping();if(cur.mode==='type')reparse();$('#lvMission').textContent=missionOf(cur.L);requestAnimationFrame(sizeBoard);setStatus();
   toast(btnIn()?'Code buttons: tap to build your Python':'Typing mode: type it yourself');});
 </script>
 <script>
