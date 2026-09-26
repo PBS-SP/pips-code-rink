@@ -313,6 +313,117 @@ td .learn{color:var(--muted);font-weight:500}
 .lockbox .nick{font-size:24px;letter-spacing:.08em}
 .lockbox .err2{color:#FF9A9D;font-weight:800;min-height:1.4em}
 .lockbox.shake{animation:shake .3s}
+
+/* ================= PHONES (portrait) ================= */
+@media (max-width:600px){
+  #app{padding-inline:10px}
+  .screen{gap:8px;padding-block:8px}
+  .iconbtn{width:44px;height:44px}
+  .btn{min-height:46px;font-size:16px;padding:0 14px}
+  .btn.big{min-height:50px;font-size:17px;padding:0 18px}
+  .lbl{display:none}
+  /* map */
+  .topbar{gap:8px}
+  .me{min-height:52px;padding:4px 10px 4px 4px}
+  .me canvas{width:40px;height:40px}
+  .xp{order:5;flex-basis:100%;min-width:0}
+  .stat{min-height:40px;padding:0 10px}
+  .daily{padding:12px;gap:10px}
+  .daily .dh{min-width:0}
+  .daily .dbtns{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .dbtn{min-width:128px;min-height:62px;scroll-snap-align:start;flex:none}
+  .wtabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  .wtab{flex:none;min-height:50px;padding:6px 12px}
+  .world-head .ptext{height:20px}
+  .world-head p{font-size:15px}
+  .mapbox{width:100%;box-shadow:0 0 0 4px #fff,0 0 0 7px var(--gold),0 8px 20px rgba(0,0,0,.4)}
+  .node{width:clamp(40px,calc(var(--tile)*1.3),60px);height:clamp(40px,calc(var(--tile)*1.3),60px)}
+  .node .kind{width:20px;height:20px;top:-7px;right:-7px}
+  .worlds{grid-template-columns:1fr}
+  /* level */
+  #scr-level{overflow:hidden}
+  .lvbar{gap:6px}
+  .lvtitle .ptext{height:15px}
+  .lvtitle .chip{display:none}
+  .hintbtn{padding:0 12px}
+  .play{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .stage{flex:none;gap:6px}
+  .board-wrap{flex:none;height:min(calc((100vw - 28px) * var(--ar,.6) + 16px),44vh);height:min(calc((100vw - 28px) * var(--ar,.6) + 16px),44dvh)}
+  .mission{font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+  .mission.open{display:block}
+  .goals{display:none}
+  .rink{padding:4px;border-radius:12px;box-shadow:0 0 0 3px var(--gold),0 6px 18px rgba(0,0,0,.4)}
+  .rink canvas{border-radius:8px}
+  .hud{left:8px;top:8px;font-size:12px;padding:2px 7px}
+  .lamp .ptext{height:38px}
+  .fail{padding:10px;gap:6px;font-size:14px}
+  .fail b{font-size:16px}
+  .status{font-size:13px;min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .controls{gap:6px;flex-wrap:nowrap}
+  .controls .btn{flex:none}
+  .speed{flex:1;min-width:0}
+  .speed button{flex:1;min-height:40px;padding:0 4px;font-size:13px}
+  .code{flex:1;min-height:0;padding:8px;gap:6px;border-radius:8px}
+  .phead h3{font-size:13px}
+  #palHelp,.cols{display:none}
+  .palette{flex-wrap:nowrap;overflow-x:auto;padding:8px 2px 4px;margin-top:-6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .palette::-webkit-scrollbar{display:none}
+  .palette .blk{flex:none;touch-action:pan-x;height:48px;font-size:16px;padding:0 12px 0 9px}
+  .blk .pi{width:18px;height:18px}
+  .prog{min-height:0;padding:4px}
+  .row{grid-template-columns:22px minmax(0,1.1fr) minmax(0,1fr) 36px;gap:5px;min-height:50px;padding:1px 2px}
+  .row .ln{font-size:12px}
+  .bcell .blk{height:42px;font-size:15px;padding:0 10px 0 8px;gap:6px}
+  .blk[data-kind="loop"] .nm{display:none}
+  .blk .stp{width:32px;height:32px;font-size:20px}
+  .rail{width:16px}.rail::before{left:4px;width:4px}
+  .row .py{font-size:12.5px}
+  .x{width:36px;height:40px}
+  .slot{padding-left:26px;min-height:40px;font-size:13px}
+  .row.drop-before::before,.row.cur-before::before{left:24px}
+  .quick{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .quick::-webkit-scrollbar{display:none}
+  .quick button{flex:none;min-height:42px;font-size:15px}
+  .editor{min-height:110px}
+  .gutter{width:32px;font-size:12px}
+  .mirror{max-height:84px}
+  .predict-note{font-size:14px;padding:8px 10px}
+  /* keyboard open on a typed level: hide the rink, give the editor the room */
+  body.kb .stage{display:none}
+  body.kb #runKb{display:inline-flex}
+  /* pop-ups become full-screen sheets */
+  .modal{padding:0;place-items:stretch}
+  .card,.card.wide{width:100%;max-height:none;height:100%;border-radius:0;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));gap:12px}
+  .card .actions{margin-top:auto}
+  .card .actions .btn{flex:1}
+  .rs{width:96px}.rs .pi{width:46px;height:46px}
+  .legend{grid-template-columns:1fr}
+  .grid-items{grid-template-columns:repeat(2,1fr)}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .devpanel input,.devpanel select,.devpanel textarea{font-size:16px}
+}
+#runKb{display:none}
+/* ================= PHONES held sideways ================= */
+@media (orientation:landscape) and (max-height:520px){
+  .screen{gap:6px;padding-block:6px}
+  .iconbtn{width:40px;height:40px}
+  .btn{min-height:42px;font-size:15px;padding:0 12px}
+  .btn.big{min-height:44px;font-size:16px;padding:0 16px}
+  .lbl{display:none}
+  .lvtitle .ptext{height:15px}
+  .lvtitle .chip,.mission,.goals,#palHelp,.cols{display:none}
+  .play{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:8px}
+  .stage{gap:4px}
+  .status{font-size:12px;min-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .controls{flex-wrap:nowrap;gap:5px}.speed button{min-height:36px;padding:0 6px;font-size:12px}
+  .code{padding:8px;gap:6px}
+  .palette{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.palette .blk{flex:none;touch-action:pan-x;height:42px;font-size:15px}
+  .row{min-height:44px}.bcell .blk{height:38px;font-size:14px}.row .py{font-size:12px}
+  .quick{flex-wrap:nowrap;overflow-x:auto}.quick button{flex:none;min-height:38px}
+  .mirror{display:none}
+  .modal{padding:0}.card,.card.wide{width:100%;max-height:100%;height:100%;border-radius:0}
+}
+#scr-map>*,#scr-welcome>*,#scr-lock>*{flex-shrink:0}
 </style>
 </head><body>
 <div id="app">
@@ -393,7 +504,7 @@ td .learn{color:var(--muted);font-weight:500}
           <div class="progerr" id="progErr" hidden></div>
         </div>
         <div id="typeUI" style="display:contents" hidden>
-          <div class="phead"><h3>Type your program</h3><span class="count" id="count2"></span><span class="grow"></span><span class="mode" id="modeSw2"></span></div>
+          <div class="phead"><h3>Type your program</h3><span class="count" id="count2"></span><span class="grow"></span><button class="btn small go" id="runKb" aria-label="Done typing and play">Play</button><span class="mode" id="modeSw2"></span></div>
           <div class="quick" id="quick"></div>
           <div class="editor"><div class="gutter" id="gutter"></div>
             <textarea id="codeText" aria-label="Python code" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" wrap="off"></textarea></div>
@@ -935,7 +1046,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function dayKey(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function fmtTime(ms){const m=Math.round(ms/60000);if(m<1)return ms>0?'under 1 min':'0 min';if(m<60)return m+' min';return Math.floor(m/60)+' h '+(m%60)+' min';}
-const KEY='pips-code-rink.v2',OLDKEY='pips-code-rink.v1';
+const KEY=(typeof RINK_KEY!=='undefined'?RINK_KEY:'pips-code-rink.v2'),OLDKEY='pips-code-rink.v1';
 function freshState(){return {v:2,nick:'',xp:0,lv:{},badges:{},streak:{count:0,best:0,last:''},dayMs:{},timeMs:0,char:'pip',costume:'red',muted:false,seen:{},speed:'normal',world:1,typePref:false,dailyCache:null}}
 function load(){
   try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);if(o&&typeof o==='object')return Object.assign(freshState(),o);}}catch(e){}
@@ -1227,7 +1338,7 @@ function renderGoals(){const L=cur.L,r=lvRec(L.key);let g;
   $('#goals').innerHTML=g.map((t,i)=>`<span class="goal">${icon('star',r.stars>i?'#F6C445':'#4E6389')}<span>${t}</span></span>`).join('');}
 function setStatus(t){$('#status').textContent=t||(cur.mode==='predict'?(cur.guess?'Press Check to see if you are right.':'Tap the square where you think Pip will stop.'):cur.mode==='type'?'Type your program, then press Play.':'Build your program, then press Play.');}
 function chipHTML(L,edit,i){
-  if(L.b==='repeat')return `<span class="blk" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span>repeat</span>${edit?`<button class="stp" data-dn="${i}" aria-label="Repeat fewer times">−</button>`:''}<b class="cnt">${L.n}</b>${edit?`<button class="stp" data-up="${i}" aria-label="Repeat more times">+</button>`:''}<span class="lap"></span></span>`;
+  if(L.b==='repeat')return `<span class="blk" data-kind="loop" data-b="repeat">${icon('loop','#fff')}<span class="nm">repeat</span>${edit?`<button class="stp" data-dn="${i}" aria-label="Repeat fewer times">−</button>`:''}<b class="cnt">${L.n}</b>${edit?`<button class="stp" data-up="${i}" aria-label="Repeat more times">+</button>`:''}<span class="lap"></span></span>`;
   const B=BLOCKS[L.b];return `<span class="blk" data-kind="${B.kind}" data-b="${L.b}">${icon(B.icon,'#fff')}<span>${L.b}</span></span>`;}
 function pyLineHTML(L){const ind='    '.repeat(L.d);
   if(L.b==='repeat')return `${ind}<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span><span class="pn">(</span><span class="num">${L.n}</span><span class="pn">):</span>`;
@@ -1330,7 +1441,7 @@ function getLines(){if(cur.mode==='blocks')return validate(cur.lines)?null:cur.l
 
 /* ===================== BOARD ===================== */
 const Bd={cell:40,dpr:1,ctx:null};let A=null;let loopOn=false;
-function sizeBoard(){if(!cur.w)return;const wrap=$('#boardWrap');const W=wrap.clientWidth-24,H=wrap.clientHeight-24;const {cols,rows}=cur.w;
+function sizeBoard(){if(!cur.w)return;const wrap=$('#boardWrap');wrap.style.setProperty('--ar',(cur.w.rows/cur.w.cols).toFixed(3));const W=wrap.clientWidth-24,H=wrap.clientHeight-24;const {cols,rows}=cur.w;
   const cell=Math.max(24,Math.floor(Math.min(W/cols,H/rows,150)));Bd.cell=cell;Bd.dpr=Math.min(3,devicePixelRatio||1);
   const cv=$('#board');cv.width=cell*cols*Bd.dpr;cv.height=cell*rows*Bd.dpr;cv.style.width=cell*cols+'px';cv.style.height=cell*rows+'px';
   Bd.ctx=cv.getContext('2d');Bd.ctx.imageSmoothingEnabled=false;}
@@ -1647,9 +1758,9 @@ $('#wtabs').addEventListener('click',e=>{const b=e.target.closest('[data-world]'
   if(!worldOpen(n)){SFX.fail();const u=WORLD_UNLOCK[n];toast(icon('lock')+`Finish ${u.count} levels in World ${u.world} to open this world.`);return;}S.world=n;save();renderMap();});
 $('#btnBack').innerHTML=icon('back');$('#btnBack').onclick=()=>{stopRun();openMap();};
 $('#btnInfo').innerHTML=icon('question');$('#btnInfo').onclick=showIntro;
-$('#btnHint').innerHTML=icon('bulb')+'Hint';$('#btnHint').onclick=()=>{if(cur.running)return;openHints();};
-$('#btnRun').onclick=play;$('#btnStep').innerHTML=icon('step')+'Step';$('#btnStep').onclick=stepOnce;
-$('#btnReset').innerHTML=icon('reset')+'Reset';$('#btnReset').onclick=()=>{if(cur.mode==='predict')cur.guess=null;stopRun();};
+$('#btnHint').innerHTML=icon('bulb')+'<span class="lbl">Hint</span>';$('#btnHint').setAttribute('aria-label','Hint');$('#btnHint').onclick=()=>{if(cur.running)return;openHints();};
+$('#btnRun').onclick=play;$('#btnStep').innerHTML=icon('step')+'<span class="lbl">Step</span>';$('#btnStep').setAttribute('aria-label','Step');$('#btnStep').onclick=stepOnce;
+$('#btnReset').innerHTML=icon('reset')+'<span class="lbl">Reset</span>';$('#btnReset').setAttribute('aria-label','Reset');$('#btnReset').onclick=()=>{if(cur.mode==='predict')cur.guess=null;stopRun();};
 $$('.speed button').forEach(b=>b.onclick=()=>setSpeed(b.dataset.speed));
 $('#modeSw1').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)switchMode(b.dataset.mode);});
 $('#modeSw2').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)switchMode(b.dataset.mode);});
@@ -1687,6 +1798,11 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Backspace'&&cur.mode==='blocks'){e.preventDefault();deleteLine(cur.lines.length-1);}
   else if(e.key==='Enter'&&!e.target.closest('button')){e.preventDefault();play();}});
 document.addEventListener('gesturestart',e=>e.preventDefault());
+const isPhone=()=>matchMedia('(max-width:600px)').matches;
+$('#lvMission').addEventListener('click',e=>e.currentTarget.classList.toggle('open'));
+ta.addEventListener('focus',()=>{if(isPhone())document.body.classList.add('kb');});
+ta.addEventListener('blur',()=>{setTimeout(()=>{if(document.activeElement!==ta)document.body.classList.remove('kb');},150);});
+$('#runKb').onclick=()=>{ta.blur();document.body.classList.remove('kb');setTimeout(play,250);};
 
 let lastAct=Date.now();['pointerdown','keydown'].forEach(t=>addEventListener(t,()=>{lastAct=Date.now();},true));
 setInterval(()=>{if(document.hidden||Date.now()-lastAct>90000)return;S.timeMs+=5000;const d=dayKey();S.dayMs[d]=(S.dayMs[d]||0)+5000;
