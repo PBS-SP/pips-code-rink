@@ -46,11 +46,24 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .grp .gp{grid-column:1/3;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;align-self:center}.grp .gp i{display:block;height:100%;background:var(--ice)}
 .grp .gc{grid-row:2;grid-column:3;font:600 12px var(--disp);color:var(--text)}
 .grp.done{opacity:.6}
+/* restart advice, events */
+.pill.lv0{color:var(--muted)}.pill.lv1{color:var(--star);border-color:#4B3F86}.pill.lv2{color:var(--ink);background:var(--star);border-color:var(--star)}
+.evpill{cursor:pointer;color:var(--ink);background:var(--ore);border-color:var(--ore);font-weight:700}
+.advice{display:grid;gap:2px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:12px;padding:10px 12px}
+.advice b{font:700 16px var(--disp)}.advice span{color:var(--muted);font-size:13px}
+.advice.lv1{border-left-color:var(--star)}.advice.lv2{border-left-color:var(--ok)}.advice.lv2 b{color:var(--ok)}
+.grp.chal b{color:var(--ore)}.grp.chal .gp i{background:var(--ore)}
+#chal{display:grid;gap:6px}
+.ghost.small{padding:7px 12px;font-size:13px;justify-self:start;margin-top:6px}
+.evb{display:flex;flex-wrap:wrap;gap:6px}.evb span{font:600 12px var(--body);padding:3px 9px;border-radius:8px;background:var(--panel);border:1px solid #4B3F86;color:var(--star)}
+body[data-world="coffee"]{--ore:#E9A86A;--ore2:#FFD2A6;--ice:#9EE0B8}
+body[data-world="event"]{--ice:#FFB36B}
 /* tab badges, group tags, members, perk warnings */
 .tabs button{position:relative}
 .badge{position:absolute;top:3px;right:5px;min-width:9px;height:9px;border-radius:9px;background:var(--ore);font:700 9px/9px var(--disp);color:var(--ink);font-style:normal;padding:0 2px}
 .badge:not(:empty){min-width:15px;height:15px;line-height:15px;top:1px;right:2px}
-.gtag{font:600 10px var(--disp);letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:6px;margin-right:auto;margin-left:6px;align-self:center}
+.msl{display:flex;gap:6px;align-items:center;min-width:0}.msl .ms{flex:1;min-width:0}
+.gtag{font:600 10px var(--disp);letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:6px;flex:none}
 .gtag.g0{color:#9AE6C8;background:rgba(95,211,154,.14)}.gtag.g1{color:var(--ice);background:rgba(127,227,240,.13)}.gtag.g2{color:var(--star);background:rgba(201,167,255,.15)}
 .mem{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .mem span{font:600 11px var(--body);padding:1px 6px;border-radius:6px;background:var(--panel2)}
@@ -131,14 +144,14 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="app">
   <header class="hud">
-    <div class="world">World 1 · Asteroid Belt</div>
-    <div><div class="cash"><span id="cash">0</span><small>credits</small></div><div class="ps" id="ps">0/s</div></div>
-    <div class="starchip"><b id="stars">0</b>Stars <span id="starx">×1.00</span></div>
-    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span></div>
+    <div class="world" id="wname">World 1 · Asteroid Belt</div>
+    <div><div class="cash"><span id="cash">0</span><small id="curlbl">credits</small></div><div class="ps" id="ps">0/s</div></div>
+    <div class="starchip"><b id="stars">0</b><span id="starlbl">Stars</span> <span id="starx">×1.00</span></div>
+    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><button class="pill evpill" id="evpill" data-world="event" hidden></button></div>
   </header>
   <nav class="tabs" role="tablist">
     <button data-tab="earners" role="tab">Earners</button><button data-tab="upgrades" role="tab">Upgrades<i class="badge" hidden></i></button>
-    <button data-tab="powerups" role="tab">Power-ups<i class="badge" hidden></i></button><button data-tab="stars" role="tab">Stars<i class="badge" hidden></i></button><button data-tab="worlds" role="tab">Worlds</button>
+    <button data-tab="powerups" role="tab">Power-ups<i class="badge" hidden></i></button><button data-tab="stars" role="tab"><span class="tl">Stars</span><i class="badge" hidden></i></button><button data-tab="worlds" role="tab">Worlds<i class="badge" hidden></i></button>
   </nav>
   <section class="pane" id="p-earners">
     <div class="main">
@@ -146,50 +159,20 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
         <div class="modes"><span>Tap a rock to collect. Managers do it for you.</span><button data-mode="1" aria-pressed="true">×1</button><button data-mode="10" aria-pressed="false">×10</button><button data-mode="100" aria-pressed="false">×100</button><button data-mode="max" aria-pressed="false">Max</button><button data-mode="next" aria-pressed="false">Next</button></div>
         <div id="earners"></div>
       </div>
-      <aside class="side"><h3 style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ice)">Group targets</h3><div id="groups"></div></aside>
+      <aside class="side"><h3 id="chalHead" hidden style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ore)">Event challenges</h3><div id="chal" hidden></div><h3 style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ice)">Group targets</h3><div id="groups"></div></aside>
     </div>
   </section>
   <section class="pane" id="p-upgrades" hidden></section>
   <section class="pane" id="p-powerups" hidden></section>
   <section class="pane" id="p-stars" hidden></section>
-  <section class="pane" id="p-worlds" hidden>
-    <p class="lead">Each world plays at its own speed with its own twist. They all feed one shared bonus.</p>
-    <div class="worlds">
-      <div class="wcard on"><span class="tag">Playing</span><b>Asteroid Belt</b><small>Normal speed. Random group power-ups.</small></div>
-      <div class="wcard lock"><span class="tag">Coming next</span><b>Coffee Empire</b><small>Slow, big payouts. Earners boost each other.</small></div>
-      <div class="wcard lock"><span class="tag">Coming later</span><b>Deep-Sea Salvage</b><small>Fast ticks. Dive deeper for more, but pressure can push you back.</small></div>
-      <div class="wcard lock"><span class="tag">Coming later</span><b>Wizard's Tower</b><small>Stack spells with cooldowns so they multiply.</small></div>
-    </div>
-  </section>
+  <section class="pane" id="p-worlds" hidden></section>
 </div>
 <button id="gold" hidden aria-label="Golden asteroid: tap for a bonus">TAP</button>
 <div id="toasts" aria-live="polite"></div>
 <div id="modal" hidden><div id="modalCard" role="dialog" aria-modal="true"></div></div>
 <script>
 /* ===================== ECONOMY (pure: shared by the game and the pacing simulator) ===================== */
-const ECON=(function(){
-const W={
- id:'belt',name:'Asteroid Belt',cur:'credits',
- tiers:[
-  {name:'Pickaxe Bot',   cost:4,      g:1.07, t:0.6,   rev:1},
-  {name:'Dust Scoop',    cost:60,     g:1.15, t:3,     rev:60},
-  {name:'Rock Hopper',   cost:720,    g:1.14, t:6,     rev:540},
-  {name:'Laser Drill',   cost:8640,   g:1.13, t:12,    rev:4320},
-  {name:'Ore Hauler',    cost:103680, g:1.12, t:24,    rev:51840},
-  {name:'Magnet Rig',    cost:1.24e6, g:1.11, t:48,    rev:622080},
-  {name:'Ice Harvester', cost:1.49e7, g:1.10, t:96,    rev:7.46e6},
-  {name:'Crystal Cutter',cost:1.79e8, g:1.09, t:192,   rev:8.96e7},
-  {name:'Plasma Bore',   cost:2.15e9, g:1.08, t:384,   rev:1.07e9},
-  {name:'Core Tapper',   cost:2.58e10,g:1.07, t:768,   rev:2.97e10},
-  {name:'Moon Crusher',  cost:3.1e11, g:1.07, t:1536,  rev:3.6e11},
-  {name:'Star Forge',    cost:3.72e12,g:1.07, t:3072,  rev:4.3e12}],
- mgrCost:[60, 1500, 1.2e4, 1.2e5, 1.5e6, 1.8e7, 2.2e8, 2.7e9, 3.3e10, 4e11, 5e12, 6e13],
- bands:[{name:'Inner Belt',tiers:[0,1,2,3]},{name:'Outer Belt',tiers:[4,5,6,7]},{name:'Deep Belt',tiers:[8,9,10,11]}],
- bandTargets:[10,25,50,100,200,350,550,800,1100,1500,2000,2600],   // non-linear, jittered each run
- fullTargets:[1,10,25,60,130,250,450,750,1100],                   // all 12 earners
- milestones:[25,50,100,200,300,400,500,600,700,800,900,1000],     // per-earner: speed x2 (first 4), then profit x2..x4
- starBase:1e10,   // lifetime credits for the first Star
-};
+const ECON_MAKE=function(W){
 /* ---- random numbers with a saved seed, so a run's surprises survive a reload ---- */
 function rng(st){st.seed=(st.seed*1664525+1013904223)>>>0;return st.seed/4294967296;}
 /* ---- power-ups drawn when a group target is reached ---- */
@@ -210,11 +193,11 @@ function drawPup(st,big){let r=rng(st)*100,p=PUPS[0];for(const q of PUPS){if(r<q
   return {k:p.k,t,m,txt:p.txt(m,t)};}
 function jitter(st,arr,a=0.8,b=1.1){return arr.map(v=>v<=1?v:Math.max(1,Math.round(v*(a+rng(st)*(b-a)))));}
 /* ---- a fresh run ---- */
-function newRun(st){
+function newRun(st){st.pHist=[];
   st.cash=st.perks.head?[0,1e3,1e6,1e9][st.perks.head]:0;st.runEarned=0;st.runStart=st.now||0;
   st.tiers=W.tiers.map((_,i)=>({n:i===0?1:0,mgr:!!(st.perks.keepMgr&&i<4*st.perks.keepMgr),prog:0,run:false}));
   st.ups={};st.pups=[];st.bandIdx=[0,0,0];st.fullIdx=0;
-  st.bandT=W.bands.map(()=>jitter(st,W.bandTargets));st.fullT=jitter(st,W.fullTargets,0.85,1.15);
+  const bs=(st.mod&&st.mod.band)||1;st.bandT=W.bands.map(()=>jitter(st,W.bandTargets.map(v=>Math.max(1,Math.round(v*bs)))));st.fullT=jitter(st,W.fullTargets,0.85,1.15);
   rollMilestones(st);st.boost=null;st.nextGold=(st.now||0)+ (40+rng(st)*60)*1000;
   if(st.perks.startPup)for(let i=0;i<st.perks.startPup;i++)st.pups.push(drawPup(st,false));
   return st;}
@@ -243,11 +226,12 @@ function msFx(st){if(!st.msR)rollMilestones(st);const fx=W.tiers.map(()=>({sp:1,
   fx.forEach(f=>f.pr*=all);return fx;}
 function milestoneOf(n){return {sp:1,pr:1};}
 function nextMilestone(n){return W.milestones.find(m=>m>n)||null;}
-function tierMult(st,i){const T=st.tiers[i];let m=starMult(st)*msFx(st)[i].pr;
+function tierMult(st,i){const T=st.tiers[i];let m=starMult(st)*msFx(st)[i].pr*(st.xm||1);
+  if(W.syn&&i>0)m*=1+W.syn*st.tiers[i-1].n;
   UPS.forEach(u=>{if(st.ups[u.id]&&(u.t===i||u.t===-1))m*=u.m;});
   st.pups.forEach(p=>{if(p.k==='all')m*=p.m;else if(p.k==='tier'&&p.t===i)m*=p.m;else if(p.k==='mgr'&&T.mgr)m*=p.m;});
   if(st.boost&&st.boost.until>st.now&&st.boost.k==='x')m*=st.boost.m;return m;}
-function tierSpeed(st,i){let s=msFx(st)[i].sp;st.pups.forEach(p=>{if(p.k==='speed'&&p.t===i)s*=p.m;});
+function tierSpeed(st,i){let s=msFx(st)[i].sp*((st.mod&&st.mod.speed)||1);st.pups.forEach(p=>{if(p.k==='speed'&&p.t===i)s*=p.m;});
   if(st.boost&&st.boost.until>st.now&&st.boost.k==='fast')s*=st.boost.m;return s;}
 function cycle(st,i){return W.tiers[i].t/tierSpeed(st,i);}
 function payout(st,i){return W.tiers[i].rev*st.tiers[i].n*tierMult(st,i);}
@@ -258,8 +242,9 @@ function incomeAll(st){let s=0;st.tiers.forEach((T,i)=>{s+=perSec(st,i);});retur
 function costN(st,i,k){const T=W.tiers[i];const n=st.tiers[i].n;return T.cost*Math.pow(T.g,n)*(Math.pow(T.g,k)-1)/(T.g-1)*costMult(st)*msFx(st)[i].cost;}
 function maxAfford(st,i){const T=W.tiers[i];const c0=T.cost*Math.pow(T.g,st.tiers[i].n)*costMult(st)*msFx(st)[i].cost;if(st.cash<c0)return 0;
   return Math.floor(Math.log(st.cash*(T.g-1)/c0+1)/Math.log(T.g));}
-function buy(st,i,k){if(k<=0)return false;const c=costN(st,i,k);if(c>st.cash)return false;st.cash-=c;st.tiers[i].n+=k;checkGroups(st);return true;}
-function mgrPrice(st,i){return W.mgrCost[i]*costMult(st);}
+function allowed(st,i){return !(st.mod&&st.mod.max&&i>=st.mod.max);}
+function buy(st,i,k){if(k<=0||!allowed(st,i))return false;const c=costN(st,i,k);if(c>st.cash)return false;st.cash-=c;st.tiers[i].n+=k;checkGroups(st);return true;}
+function mgrPrice(st,i){return W.mgrCost[i]*costMult(st)*((st.mod&&st.mod.mgr)||1);}
 function buyMgr(st,i){const c=mgrPrice(st,i);if(st.tiers[i].mgr||c>st.cash||!st.tiers[i].n)return false;st.cash-=c;st.tiers[i].mgr=true;return true;}
 function upPrice(st,u){return u.cost*costMult(st);}
 function buyUp(st,id){const u=UPS.find(x=>x.id===id);if(!u||st.ups[id])return false;const c=upPrice(st,u);if(c>st.cash)return false;st.cash-=c;st.ups[id]=true;return true;}
@@ -283,6 +268,18 @@ function away(st,ms){const s=ms/1000;const v=incomeManaged(st)*s;earn(st,v);retu
 function starsFor(earned){return earned<W.starBase?0:Math.floor(25*Math.log10(earned/W.starBase)+10);}
 function pendingStars(st){return Math.max(0,starsFor(st.runEarned)-starsFor(st.best||0));}
 function restart(st){const p=pendingStars(st);st.stars+=p;st.starsEver+=p;st.runs++;st.best=Math.max(st.best||0,st.runEarned);return newRun(st),p;}
+/* restart advice: size of the boost, and whether Stars are still piling up quickly */
+function noteStars(st){const p=pendingStars(st);st.pHist=st.pHist||[];const t=st.now||0;const last=st.pHist[st.pHist.length-1];
+  if(!last||t-last.t>=20000){st.pHist.push({t,p});while(st.pHist.length>12)st.pHist.shift();}}
+function advice(st){const p=pendingStars(st);const a=starMult(st),b=1+0.02*(st.stars+p);const gain=b/a-1;
+  const h=(st.pHist||[]).filter(x=>x.t>=(st.now||0)-120000&&x.t>=(st.runStart||0));const old=h.length?h[0]:null;
+  const climb=old&&p>0&&(st.now-old.t)>=60000?(p-old.p)/p:1;          // share of the ready Stars earned in the last ~2 minutes
+  const goodAt=st.runs===0?1.0:0.4;
+  if(!p)return {level:0,gain,a,b,p,text:'Beat your best run to earn '+W.starName};
+  if(gain<0.15)return {level:0,gain,a,b,p,text:'Not yet'};
+  if(gain<goodAt)return {level:1,gain,a,b,p,text:'Worth it soon'};
+  if(climb>0.2)return {level:1,gain,a,b,p,climb,text:'Still climbing, a few more minutes pays off'};
+  return {level:2,gain,a,b,p,text:'Good time to restart'};}
 const PERKS=[
  {id:'keepMgr',max:3,cost:[15,60,240],txt:l=>`Keep ${4*l} managers after a restart`},
  {id:'head',max:3,cost:[5,40,300],txt:l=>`Start each run with ${['','1K','1M','1B'][l]} credits`},
@@ -293,21 +290,70 @@ function perkCost(st,p){const l=st.perks[p.id]||0;return l>=p.max?null:p.cost[l]
 function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+0.02*(st.stars-c);return {c,a,b,drop:1-b/a};}
 function buyPerk(st,id){const p=PERKS.find(x=>x.id===id);const c=perkCost(st,p);if(c==null||st.stars<c)return false;st.stars-=c;st.perks[id]=(st.perks[id]||0)+1;return true;}
 /* ---- golden asteroid ---- */
-function goldGap(st){return (45+rng(st)*75)*1000/(1+[0,.3,.6,1][st.perks.luck||0]);}
+function goldGap(st){return (45+rng(st)*75)*1000/(1+[0,.3,.6,1][st.perks.luck||0])/((st.mod&&st.mod.gold)||1);}
 function goldReward(st){const r=rng(st);const inc=Math.max(incomeAll(st),1);
   if(r<.45){const v=Math.max(inc*90,st.cash*0.15,50);earn(st,v);return {k:'cash',v,txt:'Ore strike'};}
   if(r<.8){st.boost={k:'x',m:7,until:st.now+30000};return {k:'x',txt:'Rich seam: ×7 for 30s'};}
   st.boost={k:'fast',m:3,until:st.now+30000};return {k:'fast',txt:'Overclock: ×3 speed for 30s'};}
 /* auto-buy perk: managed earners top up when a buy costs under 5% of cash */
 function autoBuy(st){if(!st.perks.auto)return;st.tiers.forEach((T,i)=>{if(!T.mgr)return;let k=0;while(k<50&&costN(st,i,1)<st.cash*0.05){buy(st,i,1);k++;}});}
-return {W,UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,
-  incomeAll,incomeManaged,away,msText,msFx,rollMilestones,perkImpact,pendingStars,starsFor,restart,starMult,milestoneOf,nextMilestone,checkGroups,goldGap,goldReward,autoBuy,rng};
-})();
-if(typeof module!=='undefined')module.exports=ECON;
+return {UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,
+  incomeAll,incomeManaged,away,noteStars,advice,allowed,W,msText,msFx,rollMilestones,perkImpact,pendingStars,starsFor,restart,starMult,milestoneOf,nextMilestone,checkGroups,goldGap,goldReward,autoBuy,rng};
+};
 
-/* ===================== ASTEROID BELT: the game screen ===================== */
+
+const DEFS={
+ belt:{
+ id:'belt',name:'Asteroid Belt',cur:'credits',
+ tiers:[
+  {name:'Pickaxe Bot',   cost:4,      g:1.07, t:0.6,   rev:1},
+  {name:'Dust Scoop',    cost:60,     g:1.15, t:3,     rev:60},
+  {name:'Rock Hopper',   cost:720,    g:1.14, t:6,     rev:540},
+  {name:'Laser Drill',   cost:8640,   g:1.13, t:12,    rev:4320},
+  {name:'Ore Hauler',    cost:103680, g:1.12, t:24,    rev:51840},
+  {name:'Magnet Rig',    cost:1.24e6, g:1.11, t:48,    rev:622080},
+  {name:'Ice Harvester', cost:1.49e7, g:1.10, t:96,    rev:7.46e6},
+  {name:'Crystal Cutter',cost:1.79e8, g:1.09, t:192,   rev:8.96e7},
+  {name:'Plasma Bore',   cost:2.15e9, g:1.08, t:384,   rev:1.07e9},
+  {name:'Core Tapper',   cost:2.58e10,g:1.07, t:768,   rev:2.97e10},
+  {name:'Moon Crusher',  cost:3.1e11, g:1.07, t:1536,  rev:3.6e11},
+  {name:'Star Forge',    cost:3.72e12,g:1.07, t:3072,  rev:4.3e12}],
+ mgrCost:[60, 1500, 1.2e4, 1.2e5, 1.5e6, 1.8e7, 2.2e8, 2.7e9, 3.3e10, 4e11, 5e12, 6e13],
+ bands:[{name:'Inner Belt',tiers:[0,1,2,3]},{name:'Outer Belt',tiers:[4,5,6,7]},{name:'Deep Belt',tiers:[8,9,10,11]}],
+ bandTargets:[10,25,50,100,200,350,550,800,1100,1500,2000,2600],   // non-linear, jittered each run
+ fullTargets:[1,10,25,60,130,250,450,750,1100],                   // all 12 earners
+ milestones:[25,50,100,200,300,400,500,600,700,800,900,1000],     // per-earner: speed x2 (first 4), then profit x2..x4
+ starBase:1e10,   // lifetime credits for the first Star
+},
+ coffee:{id:'coffee',name:'Coffee Empire',cur:'coins',starName:'Beans',unit:'Bean',syn:0.004,
+ blurb:'Slow, big payouts. Each earner boosts the one above it, so the order you buy in matters.',
+ tiers:[
+  {name:'Coffee Cart',     cost:12,     g:1.08, t:2,    rev:6},
+  {name:'Espresso Bar',    cost:180,    g:1.15, t:9,    rev:360},
+  {name:'Drive-Thru',      cost:2200,   g:1.14, t:18,   rev:3240},
+  {name:'Bakery Corner',   cost:26000,  g:1.13, t:36,   rev:25920},
+  {name:'Roastery',        cost:3.1e5,  g:1.12, t:72,   rev:311040},
+  {name:'Cafe Chain',      cost:3.7e6,  g:1.11, t:144,  rev:3.73e6},
+  {name:'Bean Farm',       cost:4.5e7,  g:1.10, t:288,  rev:4.48e7},
+  {name:'Cold Brew Lab',   cost:5.4e8,  g:1.09, t:576,  rev:5.38e8},
+  {name:'Franchise Office',cost:6.5e9,  g:1.08, t:1152, rev:6.42e9},
+  {name:'Airport Kiosks',  cost:7.7e10, g:1.07, t:2304, rev:1.78e11},
+  {name:'Coffee Fleet',    cost:9.3e11, g:1.07, t:4608, rev:2.16e12},
+  {name:'Global HQ',       cost:1.1e13, g:1.07, t:9216, rev:2.58e13}],
+ mgrCost:[180,4500,3.6e4,3.6e5,4.5e6,5.4e7,6.6e8,8.1e9,9.9e10,1.2e12,1.5e13,1.8e14],
+ bands:[{name:'Street',tiers:[0,1,2,3]},{name:'City',tiers:[4,5,6,7]},{name:'Global',tiers:[8,9,10,11]}],
+ bandTargets:[10,25,50,100,200,350,550,800,1100,1500,2000,2600],
+ fullTargets:[1,10,25,60,130,250,450,750,1100],
+ milestones:[25,50,100,200,300,400,500,600,700,800,900,1000],
+ starBase:1.5e11}};
+DEFS.belt.starName='Stars';DEFS.belt.unit='Star';DEFS.belt.blurb='Normal speed. Random group power-ups.';
+const ECONS={belt:ECON_MAKE(DEFS.belt),coffee:ECON_MAKE(DEFS.coffee),event:ECON_MAKE(DEFS.belt)};
+const ECON=ECONS.belt;
+if(typeof module!=='undefined')module.exports=Object.assign(ECON,{ECONS,DEFS});
+
+/* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-const E=ECON,W=E.W;const KEY='belt-idle.v1';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V1.02.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -315,28 +361,84 @@ function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixe
 function fmtT(s){if(s<1)return s.toFixed(2)+'s';if(s<60)return s.toFixed(s<10?1:0)+'s';if(s<3600)return Math.floor(s/60)+'m '+Math.floor(s%60)+'s';const h=Math.floor(s/3600);return h+'h '+Math.floor(s%3600/60)+'m';}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 /* ---- save ---- */
-let st;const now=()=>Date.now();
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.v===1)return s;}catch(e){}return null;}
-function save(){st.saved=now();try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
-st=load();let awayMsg=null;
-if(!st){st=E.fresh(now());}else{const gap=now()-(st.saved||now());if(gap>5000){st.now=now();const v=E.away(st,gap);
-  st.tiers.forEach(T=>{if(!T.mgr){T.run=false;T.prog=0;}});if(v>0||gap>60000)awayMsg={gap,v};}
-  st.nextGold=Math.max(st.nextGold||0,now()+20000);}
-st.now=now();
+let P,st;const now=()=>Date.now();
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null;}}
+function save(){P.saved=now();try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}}
+const raw=load();
+if(raw&&raw.v===2)P=raw;else if(raw&&raw.v===1)P={v:2,cur:'belt',w:{belt:raw},ev:null,tok:0,evBadges:[],saved:raw.saved};
+else P={v:2,cur:'belt',w:{belt:ECONS.belt.fresh(now())},ev:null,tok:0,evBadges:[],saved:now()};
+P.evBadges=P.evBadges||[];P.tok=P.tok||0;
+function econOf(id){return ECONS[id];}
+function stateOf(id){return id==='event'?(P.ev&&P.ev.st):P.w[id];}
+function worldIds(){return Object.keys(P.w).concat(P.ev?['event']:[]);}
+function sharedMult(id){let other=0;for(const k in P.w)if(k!==id)other+=P.w[k].starsEver||0;return (1+0.005*other)*(1+0.01*P.tok);}
+function awayAll(gap){const lines=[];worldIds().forEach(id=>{const S=stateOf(id),X=econOf(id);S.xm=sharedMult(id);S.now=now();const v=X.away(S,gap);
+    S.tiers.forEach(T=>{if(!T.mgr&&T.run){T.run=false;T.prog=0;}});if(v>0)lines.push([id==='event'?'Weekly event':X.W.name,v,X.W.cur]);});return lines;}
+let awayMsg=null;{const gap=now()-(P.saved||now());if(gap>5000){const lines=awayAll(gap);if(lines.length||gap>60000)awayMsg={gap,lines};}}
+worldIds().forEach(id=>{const S=stateOf(id);S.nextGold=Math.max(S.nextGold||0,now()+20000);S.now=now();});
+/* ---- weekly events: open Friday to Monday, one new event every week, worked out from the date ---- */
+const DAY=864e5;
+const TWISTS=[
+ {id:'flare',name:'Solar Flare',txt:'Every earner works twice as fast.',mod:{speed:2}},
+ {id:'tight',name:'Tight Quarters',txt:'Only the first 6 earners can be bought.',mod:{max:6,band:0.6}},
+ {id:'hire',name:'Hiring Spree',txt:'Managers cost half.',mod:{mgr:0.5}},
+ {id:'lucky',name:'Lucky Belt',txt:'Group targets are half as high.',mod:{band:0.5}},
+ {id:'rush',name:'Gold Rush',txt:'Golden asteroids come three times as often.',mod:{gold:3}},
+ {id:'storm',name:'Meteor Storm',txt:'Twice as fast, and golden asteroids twice as often.',mod:{speed:2,gold:2}}];
+function eventWindow(t){const d=new Date(t);const back=(d.getDay()-5+7)%7;const s=new Date(d.getFullYear(),d.getMonth(),d.getDate()-back);
+  const start=s.getTime(),end=new Date(s.getFullYear(),s.getMonth(),s.getDate()+4).getTime(),next=new Date(s.getFullYear(),s.getMonth(),s.getDate()+7).getTime();
+  return {id:Math.round(start/DAY),start,end,next,live:t<end};}
+function twistFor(id){return TWISTS[((id*2654435761)>>>0)%TWISTS.length];}
+function chalRand(){P.ev.cs=((P.ev.cs||(P.ev.id*31+7))*1103515245+12345)>>>0;return (P.ev.cs%100000)/100000;}
+function chalValue(c){const S=P.ev.st,X=ECONS.event;switch(c.ty){case 'earn':return S.runEarned-c.base;case 'own':return S.tiers[c.t].n;
+  case 'mgr':return S.tiers.filter(T=>T.mgr).length;case 'gold':return P.ev.gold-c.base;case 'pup':return S.pups.length-c.base;case 'rate':return X.incomeAll(S);}return 0;}
+function chalText(c){const W0=ECONS.event.W;switch(c.ty){case 'earn':return `Earn ${fmt(c.need)} credits`;case 'own':return `Own ${c.need} ${W0.tiers[c.t].name}`;
+  case 'mgr':return `Hire ${c.need} managers`;case 'gold':return `Catch ${c.need} golden asteroid${c.need>1?'s':''}`;case 'pup':return `Get ${c.need} group power-up${c.need>1?'s':''}`;case 'rate':return `Reach ${fmt(c.need)} credits/s`;}return '';}
+function chalGen(k){const S=P.ev.st;const max=(S.mod&&S.mod.max)||12;const types=['earn','own','mgr','gold','pup','rate'];const ty=types[Math.floor(chalRand()*types.length)];let c;
+  switch(ty){case 'earn':c={need:Math.pow(10,5+k*1.3)};break;
+    case 'own':c={t:Math.floor(chalRand()*Math.min(max,4+k)),need:[25,50,100,150,200,300][Math.min(5,Math.floor(k/2)+Math.floor(chalRand()*2))]};break;
+    case 'mgr':c={need:Math.min(max,2+k)};break;case 'gold':c={need:2+Math.floor(k/2)};break;case 'pup':c={need:1+Math.floor(k/2)};break;
+    case 'rate':c={need:Math.pow(10,3+k*1.2)};break;}
+  if(ty==='own'&&S.tiers[c.t].n>=c.need)c.need=[25,50,100,150,200,300,400,500,750,1000].find(v=>v>S.tiers[c.t].n)||S.tiers[c.t].n+100;
+  if(ty==='mgr'){const have=S.tiers.filter(T=>T.mgr).length;if(have>=c.need){if(have>=max)return chalGen(k);c.need=have+1;}}
+  if(ty==='rate'){const cur=ECONS.event.incomeAll(S);if(cur>=c.need)c.need=Math.pow(10,Math.ceil(Math.log10(cur*4)));}
+  c.ty=ty;c.k=k;c.tok=5+3*k;c.base=0;c.base=ty==='earn'?S.runEarned:ty==='gold'?P.ev.gold:ty==='pup'?S.pups.length:0;return c;}
+function fillChal(){while(P.ev.chal.length<3)P.ev.chal.push(chalGen(P.ev.k++));}
+function checkChal(){if(!P.ev)return;let got=false;P.ev.chal=P.ev.chal.map(c=>{if(chalValue(c)>=c.need){P.ev.tok+=c.tok;P.ev.done++;got=true;
+    toast(`<b>Challenge done</b> ${esc(chalText(c))} · +${c.tok} tokens`,'star');return chalGen(P.ev.k++);}return c;});if(got)save();}
+function eventCheck(){const t=now();const w=eventWindow(t);
+  if(P.ev&&(P.ev.id!==w.id||!w.live))finishEvent();
+  if(w.live&&!P.ev){const tw=twistFor(w.id);const S=ECONS.event.fresh(t);S.seed=(w.id*7919)>>>0;S.mod=tw.mod;ECONS.event.newRun(S);
+    P.ev={id:w.id,end:w.end,tw:tw.id,st:S,tok:0,gold:0,k:0,chal:[],done:0};fillChal();save();}
+  return w;}
+function finishEvent(){const e=P.ev;if(!e)return;const tw=TWISTS.find(x=>x.id===e.tw)||TWISTS[0];P.ev=null;P.tok+=e.tok;
+  P.evBadges.push({id:e.id,name:tw.name,tok:e.tok,done:e.done});if(P.cur==='event')switchWorld('belt',true);
+  if(e.tok)setTimeout(()=>openModal(`<h2>${esc(tw.name)} is over</h2><p>You finished <b>${e.done}</b> challenge${e.done===1?'':'s'}.</p><div class="bigstat"><span>+${e.tok}%</span><small>permanent bonus to every world</small></div><p>Your event bonus is now <b>+${P.tok}%</b>. A new event opens next Friday.</p><div class="mact"><button class="go" id="awayOk">Nice</button></div>`),300);save();}
+eventCheck();
+if(P.cur!=='belt'&&!stateOf(P.cur))P.cur='belt';
+E=econOf(P.cur);W=E.W;st=stateOf(P.cur);
 /* ---- UI state ---- */
 let mode=1,tab='earners';
 const TIER_COL=['#C9B79C','#B7A48B','#9FB0C4','#E0B060','#D98C5A','#8FA7D8','#9AE0F0','#C79AF0','#F08AC0','#F2B84B','#E6E0D2','#FFD37A'];
-function rockSVG(i){const c=TIER_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h7l3 3v6l-3 3H5l-3-3V5z" fill="${c}"/><path d="M4 2h7l3 3v2H2V5z" fill="#fff" opacity=".22"/><rect x="5" y="6" width="2" height="2" fill="#0E1022" opacity=".35"/><rect x="9" y="9" width="3" height="2" fill="#0E1022" opacity=".35"/><rect x="10" y="4" width="1" height="1" fill="#fff" opacity=".7"/></svg>`;}
+const CUP_COL=['#D7B48A','#A8744A','#E0A15B','#F0C27A','#8C5A3A','#C98B5E','#7FB26B','#9BD3E6','#E6C07B','#F2B84B','#B5A0E6','#FFD37A'];
+function rockSVG(i){if(P.cur==='coffee'){const c=CUP_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="5" width="8" height="8" fill="${c}"/><rect x="3" y="5" width="8" height="2" fill="#fff" opacity=".3"/><rect x="11" y="7" width="2" height="4" fill="${c}"/><rect x="4" y="13" width="6" height="1" fill="#0E1022" opacity=".4"/><rect x="5" y="2" width="1" height="2" fill="#fff" opacity=".5"/><rect x="8" y="1" width="1" height="3" fill="#fff" opacity=".5"/></svg>`;}const c=TIER_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h7l3 3v6l-3 3H5l-3-3V5z" fill="${c}"/><path d="M4 2h7l3 3v2H2V5z" fill="#fff" opacity=".22"/><rect x="5" y="6" width="2" height="2" fill="#0E1022" opacity=".35"/><rect x="9" y="9" width="3" height="2" fill="#0E1022" opacity=".35"/><rect x="10" y="4" width="1" height="1" fill="#fff" opacity=".7"/></svg>`;}
 /* ---- build static rows once ---- */
 function buildEarners(){$('#earners').innerHTML=W.tiers.map((T,i)=>`
  <div class="row" id="r${i}" data-i="${i}">
    <button class="rock" data-tap="${i}" aria-label="Collect from ${esc(T.name)}">${rockSVG(i)}<b class="own" id="own${i}">0</b></button>
-   <div class="mid"><div class="nm"><span>${esc(T.name)}</span><span class="gtag g${Math.floor(i/4)}">${['Inner','Outer','Deep'][Math.floor(i/4)]}</span><span class="rate" id="rate${i}"></span></div>
+   <div class="mid"><div class="nm"><span>${esc(T.name)}</span><span class="rate" id="rate${i}"></span></div>
      <div class="bar" data-tap="${i}"><i id="bar${i}"></i><span id="pay${i}"></span></div>
-     <div class="ms" id="ms${i}"></div></div>
+     <div class="msl"><div class="ms" id="ms${i}"></div><span class="gtag g${Math.floor(i/4)}">${esc(W.bands[Math.floor(i/4)].name.split(' ')[0])}</span></div></div>
    <div class="acts"><button class="buy" data-buy="${i}" id="buy${i}"><small id="buyn${i}">Buy 1</small><b id="cost${i}"></b></button>
      <button class="mgr" data-mgr="${i}" id="mgr${i}"></button></div>
  </div>`).join('');}
+function unlockCoffee(){return (P.w.belt.runs||0)>=3;}
+function switchWorld(id,quiet){if(id==='coffee'&&!P.w.coffee){if(!unlockCoffee())return;P.w.coffee=ECONS.coffee.fresh(now());}
+  if(id==='event'&&!P.ev)return;P.cur=id;E=econOf(id);W=E.W;st=stateOf(id);st.now=now();st.nextGold=Math.max(st.nextGold||0,now()+15000);
+  $('#gold').hidden=true;buildEarners();labels();if(!quiet){setTab('earners');toast(`<b>${esc(id==='event'?'Weekly event':W.name)}</b> ${id==='event'?'Finish challenges for tokens.':esc(W.blurb)}`);}save();}
+function labels(){const ev=P.cur==='event';const tw=ev?TWISTS.find(x=>x.id===P.ev.tw):null;
+  $('#wname').textContent=ev?`Weekly event · ${tw.name}`:`World ${P.cur==='belt'?1:2} · ${W.name}`;$('#curlbl').textContent=W.cur;
+  $('#starlbl').textContent=ev?'Tokens':W.starName;$('[data-tab="stars"] .tl').textContent=ev?'Event':W.starName;document.body.dataset.world=P.cur;}
 function setTab(t){tab=t;$$('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));$$('section.pane').forEach(p=>p.hidden=p.id!=='p-'+t);render(true);}
 /* ---- toasts ---- */
 function toast(html,cls=''){const d=document.createElement('div');d.className='toast '+cls;d.innerHTML=html;$('#toasts').appendChild(d);setTimeout(()=>d.classList.add('out'),3400);setTimeout(()=>d.remove(),4000);}
@@ -349,28 +451,31 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.dataset.mgr!=null){const i=+b.dataset.mgr;if(E.buyMgr(st,i))toast(`<b>Manager hired</b> ${esc(W.tiers[i].name)} runs by itself now, even while you're away.`);render();return;}
   if(b.dataset.up){if(E.buyUp(st,b.dataset.up))render(true);return;}
   if(b.dataset.perk){const pk=E.PERKS.find(x=>x.id===b.dataset.perk);const im=E.perkImpact(st,pk);
-    if(im&&im.drop>0.2&&!b.dataset.sure){openModal(`<h2>Big cut to your bonus</h2><p>This perk spends <b>${im.c}</b> of your <b>${st.stars}</b> Stars. All earnings go from <b>×${im.a.toFixed(2)}</b> to <b>×${im.b.toFixed(2)}</b>, a ${Math.round(im.drop*100)}% cut.</p><p>${PERK_TIP[pk.id][0].toUpperCase()+PERK_TIP[pk.id].slice(1)}. It may be worth waiting until you have more Stars.</p><div class="mact"><button class="ghost" id="rsNo">Wait</button><button class="go" data-perk="${pk.id}" data-sure="1">Buy anyway</button></div>`);return;}
+    if(im&&im.drop>0.2&&!b.dataset.sure){openModal(`<h2>Big cut to your bonus</h2><p>This perk spends <b>${im.c}</b> of your <b>${st.stars}</b> ${W.starName}. All earnings go from <b>×${im.a.toFixed(2)}</b> to <b>×${im.b.toFixed(2)}</b>, a ${Math.round(im.drop*100)}% cut.</p><p>${PERK_TIP[pk.id][0].toUpperCase()+PERK_TIP[pk.id].slice(1)}. It may be worth waiting until you have more Stars.</p><div class="mact"><button class="ghost" id="rsNo">Wait</button><button class="go" data-perk="${pk.id}" data-sure="1">Buy anyway</button></div>`);return;}
     if(E.buyPerk(st,b.dataset.perk)){closeModal();save();render(true);}return;}
   if(b.dataset.mode){mode=['max','next'].includes(b.dataset.mode)?b.dataset.mode:+b.dataset.mode;$$('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();return;}
   if(b.dataset.tab){setTab(b.dataset.tab);return;}
+  if(b.dataset.world){switchWorld(b.dataset.world);return;}
   if(b.id==='restartBtn'){openRestart();return;}
-  if(b.id==='rsYes'){const p=E.restart(st);st.now=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} Stars. Everything earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
+  if(b.id==='rsYes'){const p=E.restart(st);st.now=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${W.starName}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
   if(b.id==='rsNo'||b.id==='awayOk'){closeModal();return;}
-  if(b.id==='gold'){const r=E.goldReward(st);b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} credits`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
+  if(b.id==='gold'){const r=E.goldReward(st);if(P.cur==='event')P.ev.gold++;b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} ${W.cur}`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
 });
 function openModal(h){$('#modalCard').innerHTML=h;$('#modal').hidden=false;}
 function closeModal(){$('#modal').hidden=true;}
-function openRestart(){const p=E.pendingStars(st);const after=1+0.02*(st.stars+p);
-  openModal(`<h2>Restart the run?</h2><p>You'll keep your Stars and perks. Credits, earners, managers${st.perks.keepMgr?' (except the ones your perk keeps)':''}, upgrades and power-ups reset.</p>
-  <div class="bigstat"><span>+${p}</span><small>Stars</small></div><p>All earnings go from <b>×${E.starMult(st).toFixed(2)}</b> to <b>×${after.toFixed(2)}</b>.</p>
-  <div class="mact"><button class="ghost" id="rsNo">Keep playing</button><button class="go" id="rsYes"${p?'':' disabled'}>Restart for ${p} Stars</button></div>`);}
+function openRestart(){const a=E.advice(st);const SN=W.starName;
+  openModal(`<h2>Restart ${esc(W.name)}?</h2><p>You'll keep your ${SN} and perks. ${W.cur[0].toUpperCase()+W.cur.slice(1)}, earners, managers${st.perks.keepMgr?' (except the ones your perk keeps)':''}, upgrades and power-ups reset.</p>
+  <div class="bigstat"><span>+${a.p}</span><small>${SN}</small></div><p>Earnings here go from <b>×${a.a.toFixed(2)}</b> to <b>×${a.b.toFixed(2)}</b> (+${Math.round(a.gain*100)}%). <b>${esc(a.text)}.</b></p>
+  <div class="mact"><button class="ghost" id="rsNo">Keep playing</button><button class="go" id="rsYes"${a.p?'':' disabled'}>Restart for ${a.p} ${SN}</button></div>`);}
 /* ---- render ---- */
 let lastFull=0;
 function render(full){const t=now();
   $('#cash').textContent=fmt(st.cash);$('#ps').textContent=fmt(E.incomeAll(st))+'/s';
-  $('#stars').textContent=st.stars;$('#starx').textContent='×'+E.starMult(st).toFixed(2);
+  const ev=P.cur==='event';$('#stars').textContent=ev?P.ev.tok:st.stars;$('#starx').textContent=ev?`+${P.tok}% kept`:'×'+E.starMult(st).toFixed(2);
   const bst=st.boost&&st.boost.until>t?st.boost:null;$('#boost').hidden=!bst;if(bst)$('#boost').textContent=(bst.k==='x'?'Rich seam ×7':'Overclock ×3 speed')+' · '+Math.ceil((bst.until-t)/1000)+'s';
-  const p=E.pendingStars(st);$('#pend').textContent=p?`+${p} Stars ready`:'Beat your best run to earn Stars';$('#pend').classList.toggle('ready',p>=Math.max(20,st.stars*0.25));
+  const pe=$('#pend');if(ev){pe.textContent=`Ends in ${fmtT((P.ev.end-t)/1000)} · ${P.ev.done} done`;pe.className='pill';}
+  else{const a=E.advice(st);pe.textContent=a.p?`${a.text} · +${a.p} ${W.starName} (×${a.a.toFixed(2)} → ×${a.b.toFixed(2)})`:a.text;pe.className='pill lv'+a.level;}
+  const eb=$('#evpill');eb.hidden=!P.ev||ev;if(P.ev&&!ev)eb.textContent=`Event live: ${TWISTS.find(x=>x.id===P.ev.tw).name} · ${fmtT((P.ev.end-t)/1000)} left`;
   if(tab==='earners'){
     W.tiers.forEach((T,i)=>{const S=st.tiers[i];const row=$('#r'+i);
       $('#own'+i).textContent=S.n;const cyc=E.cycle(st,i);const fast=cyc<0.25;
@@ -382,15 +487,15 @@ function render(full){const t=now();
       const m=$('#mgr'+i);if(S.mgr){m.textContent='Managed';m.disabled=true;m.className='mgr on';}else{const mc=E.mgrPrice(st,i);m.innerHTML=`<small>Manager</small>${fmt(mc)}`;m.disabled=mc>st.cash||!S.n;m.className='mgr';}
       const nm=E.nextMilestone(S.n);const ms=$('#ms'+i);if(nm&&S.n){const prev=[0,...W.milestones].filter(x=>x<=S.n).pop();const idx=W.milestones.indexOf(nm);
         ms.innerHTML=`<i style="width:${Math.min(100,(S.n-prev)/(nm-prev)*100)}%"></i><span>${S.n}/${nm} → ${esc(E.msText(st,i,idx))}</span>`;}else if(!S.n)ms.innerHTML=`<span>0/25 → speed ×2</span>`;else ms.innerHTML='';});
-    renderGroups();}
+    renderGroups();renderChal();}
   if(full||t-lastFull>700){lastFull=t;renderBadges();
-    if(tab==='upgrades')renderUps();if(tab==='powerups')renderPups();if(tab==='stars')renderStars();}
+    if(tab==='upgrades')renderUps();if(tab==='powerups')renderPups();if(tab==='stars')(P.cur==='event'?renderEvent():renderStars());if(tab==='worlds')renderWorlds();}
 }
 function renderBadges(){const ups=E.UPS.some(u=>!st.ups[u.id]&&E.upPrice(st,u)<=st.cash&&(u.t<0||st.tiers[u.t].n));
   const newP=st.pups.length-(st.seenPups||0);if(tab==='powerups')st.seenPups=st.pups.length;
-  const p=E.pendingStars(st);const perk=E.PERKS.some(pk=>{const c=E.perkCost(st,pk);return c!=null&&c<=st.stars;});
+  const lv=P.cur==='event'?0:E.advice(st).level;const perk=P.cur!=='event'&&E.PERKS.some(pk=>{const im=E.perkImpact(st,pk);return im&&im.c<=st.stars&&im.drop<=0.2;});
   const set=(t,v)=>{const el=$(`[data-tab="${t}"] .badge`);el.hidden=!v;el.textContent=v===true?'':v;};
-  set('upgrades',ups);set('powerups',tab==='powerups'?0:Math.max(0,newP));set('stars',(p>=Math.max(20,st.stars*0.25)||perk)?true:0);}
+  set('upgrades',ups);set('powerups',tab==='powerups'?0:Math.max(0,newP));set('stars',(lv===2||perk)?true:0);set('worlds',(P.ev&&P.cur!=='event'&&!P.evSeen)||(unlockCoffee()&&!P.w.coffee)?true:0);if(tab==='worlds')P.evSeen=true;}
 function groupLine(label,idx,targets,tiers){if(idx>=targets.length)return `<div class="grp done"><b>${label}</b><span>All targets reached</span></div>`;
   const need=targets[idx];const have=tiers.filter(i=>st.tiers[i].n>=need).length;
   const mem=tiers.length>4?`<div class="mem">${tiers.filter(i=>st.tiers[i].n<need).length} earner${tiers.filter(i=>st.tiers[i].n<need).length===1?'':'s'} still below ${need}</div>`:
@@ -405,16 +510,35 @@ function renderPups(){const P=st.pups;
   $('#p-powerups').innerHTML=`<p class="lead">Get every earner in a group to the target count and a random power-up drops. Targets climb faster each time, and they shift a little every run.</p>
    <div id="groups2">${W.bands.map((B,b)=>groupLine(B.name,st.bandIdx[b],st.bandT[b],B.tiers)).join('')}${groupLine('Full set',st.fullIdx,st.fullT,W.tiers.map((_,i)=>i))}</div>
    <h3>Active this run (${P.length})</h3>${P.length?P.map(p=>`<div class="card pupc"><div><b>${esc(p.txt)}</b><small>${esc(p.src||'Start-of-run perk')}</small></div></div>`).join(''):'<p class="muted">None yet. The first one usually drops within a few minutes.</p>'}`;}
+function chalHTML(){if(P.cur!=='event')return '';return P.ev.chal.map(c=>{const v=Math.max(0,chalValue(c));const pct=Math.min(100,v/c.need*100);
+  return `<div class="grp chal"><b>${esc(chalText(c))}</b><span>+${c.tok} tokens</span><span class="gp"><i style="width:${pct}%"></i></span><span class="gc">${Math.floor(pct)}%</span></div>`;}).join('');}
+function renderChal(){const el=$('#chal');el.hidden=P.cur!=='event';$('#chalHead').hidden=P.cur!=='event';if(P.cur==='event')el.innerHTML=chalHTML();}
+function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);
+  $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${P.ev.tok}</span><small>tokens this event</small></div><div><span class="big">+${P.tok}%</span><small>bonus kept from past events</small></div></div>
+   <div class="advice lv1"><b>${esc(tw.name)}</b><span>${esc(tw.txt)} Ends in ${fmtT((P.ev.end-now())/1000)}.</span></div>
+   <p class="lead">Challenges appear three at a time. Finish one and a harder one takes its place. When the event ends, every token becomes +1% earnings in every world, for good. There are no restarts in an event.</p>
+   <h3>Challenges</h3>${chalHTML()}<p class="muted small">${P.ev.done} challenge${P.ev.done===1?'':'s'} finished so far.</p>`;}
+function renderWorlds(){const w=eventWindow(now());const cr=P.w.belt.runs||0;const card=(id,name,tag,txt,on,lock,btn)=>`<div class="wcard${on?' on':''}${lock?' lock':''}"><span class="tag">${tag}</span><b>${esc(name)}</b><small>${txt}</small>${btn?`<button class="ghost small" data-world="${id}">${btn}</button>`:''}</div>`;
+  const tw=P.ev?TWISTS.find(x=>x.id===P.ev.tw):twistFor(eventWindow(w.next).id);
+  $('#p-worlds').innerHTML=`<p class="lead">Each world plays at its own speed with its own twist. ${esc(ECONS.belt.W.starName)} and Beans from one world add 0.5% each to the others, and event tokens add 1% each to all of them.</p><div class="worlds">
+   ${card('belt','Asteroid Belt',P.cur==='belt'?'Playing':'World 1','Normal speed. Random group power-ups.',P.cur==='belt',false,P.cur==='belt'?'':'Go to the Belt')}
+   ${card('coffee','Coffee Empire',P.cur==='coffee'?'Playing':unlockCoffee()?'World 2':'Locked','Slow, big payouts. Each earner boosts the one above it, so the order you buy in matters.'+(unlockCoffee()?'':` Unlocks after 3 Belt restarts (${cr}/3).`),P.cur==='coffee',!unlockCoffee(),unlockCoffee()&&P.cur!=='coffee'?(P.w.coffee?'Go to Coffee':'Open Coffee Empire'):'')}
+   ${P.ev?card('event','Weekly event: '+tw.name,P.cur==='event'?'Playing':'Live now',esc(tw.txt)+` Ends in ${fmtT((P.ev.end-now())/1000)}.`,P.cur==='event',false,P.cur==='event'?'':'Play the event'):card('','Next event: '+tw.name,'Opens Friday',`${esc(tw.txt)} Starts in ${fmtT((w.next-now())/1000)} and runs for 4 days.`,false,true,'')}
+   ${card('','Deep-Sea Salvage','Coming later','Fast. Dive deeper for more, but pressure can push you back.',false,true,'')}
+   ${card('','Wizard\'s Tower','Coming later','Stack spells with cooldowns so they multiply.',false,true,'')}
+  </div>${P.evBadges.length?`<h3>Event badges</h3><div class="evb">${P.evBadges.slice(-12).reverse().map(b=>`<span>${esc(b.name)} · ${b.tok} tokens</span>`).join('')}</div>`:''}`;}
 const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',auto:'less tapping on long sessions'};
 function renderStars(){const p=E.pendingStars(st);
-  $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>Stars · each adds 2% to all earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
-   <p class="lead">Restarting resets the run and banks Stars for how far you got past your best run so far (${fmt(st.best||0)} credits). ${p>=Math.max(20,st.stars*0.25)?'<b class="ok">Now is a good time.</b>':'A restart pays off most once the ready Stars are at least a quarter of what you have.'}</p>
-   <button class="go wide" id="restartBtn" ${p?'':'disabled'}>Restart for ${p} Stars</button>
-   <h3>Perks</h3><p class="muted">Perks cost Stars, and spent Stars stop adding their 2%. Pick the ones that suit how you play.</p>`+
+  const a=E.advice(st),SN=W.starName;
+  $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>${SN} · each adds 2% to ${esc(W.name)} earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
+   <div class="advice lv${a.level}"><b>${esc(a.text)}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
+   <p class="lead">A restart banks ${SN} for how far you got past your best run (${fmt(st.best||0)} ${W.cur}). It says "Good time" once the boost is big (at least +40%, or double on your first restart) and the ${SN} have stopped piling up quickly.</p>
+   <button class="go wide" id="restartBtn" ${p?'':'disabled'}>Restart for ${p} ${SN}</button>
+   <h3>Perks</h3><p class="muted">Perks cost ${SN}, and spent ${SN} stop adding their 2%. Pick the ones that suit how you play.</p>`+
    E.PERKS.map(pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;
-     const impact=im?(c>st.stars?`<small>Needs ${c} Stars</small>`:`<small class="${risky?'warn':''}">Bonus ×${im.a.toFixed(2)} → ×${im.b.toFixed(2)} (−${Math.round(im.drop*100)}%)</small>`):'';
+     const impact=im?(c>st.stars?`<small>Needs ${c} ${W.starName}</small>`:`<small class="${risky?'warn':''}">Bonus ×${im.a.toFixed(2)} → ×${im.b.toFixed(2)} (−${Math.round(im.drop*100)}%)</small>`):'';
      return `<div class="card"><div><b>${esc(pk.txt(Math.min(pk.max,l+(l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max} · ${PERK_TIP[pk.id]}</small>${impact}</div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy${risky?' risky':''}" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>${risky?'Big cut':'Buy'}</small><b>${c} ★</b></button>`}</div>`;}).join('')+
-   `<p class="muted small">Runs so far: ${st.runs}. Best run: ${fmt(st.best||0)} credits. Lifetime: ${fmt(st.total)} credits. Version V1.01.01.</p>`;}
+   `<p class="muted small">Runs so far: ${st.runs}. Best run: ${fmt(st.best||0)} ${W.cur}. Lifetime: ${fmt(st.total)} ${W.cur}. Shared bonus from other worlds and events: ×${sharedMult(P.cur).toFixed(2)}. Version ${VERSION}.</p>`;}
 /* ---- golden asteroid ---- */
 function goldCheck(){const g=$('#gold');const t=now();if(!g.hidden)return;if(t>=st.nextGold){g.hidden=false;const y=12+Math.random()*60;g.style.top=y+'%';g.classList.remove('fly');void g.offsetWidth;g.classList.add('fly');
   setTimeout(()=>{if(!g.hidden){g.hidden=true;st.nextGold=now()+E.goldGap(st);}},11000);}}
@@ -424,18 +548,22 @@ function stars(){const c=$('#sky');const dpr=Math.min(2,devicePixelRatio||1);con
   (function f(){x.clearRect(0,0,w,h);pts.forEach(p=>{if(!reduce){p.x-=(0.05+p.z*0.25)*dpr;if(p.x<0)p.x=w;}x.fillStyle=`rgba(237,235,255,${0.25+p.z*0.6})`;const s=(p.z>0.85?2:1)*dpr;x.fillRect(p.x,p.y,s,s);});requestAnimationFrame(f);})();}
 /* ---- loop ---- */
 let last=now(),saveT=0;
-function loop(){const t=now();let dt=(t-last)/1000;last=t;if(dt>5){st.now=t;const v=E.away(st,dt*1000);if(dt>30)welcome(dt*1000,v);dt=0;}
-  E.tick(st,dt,t);E.autoBuy(st);goldCheck();render();saveT+=dt;if(saveT>5){saveT=0;save();}}
-buildEarners();stars();setTab('earners');
+let evT=0;
+function loop(){const t=now();let dt=(t-last)/1000;last=t;
+  evT+=dt;if(evT>10){evT=0;const had=!!P.ev;eventCheck();if(!had&&P.ev)toast(`<b>Weekly event is live</b> ${esc(TWISTS.find(x=>x.id===P.ev.tw).name)}. Find it on the Worlds tab.`,'star');}
+  if(dt>5){const lines=awayAll(dt*1000);if(dt>30)welcome(dt*1000,lines);dt=0;}
+  worldIds().forEach(id=>{const S=stateOf(id),X=econOf(id);S.xm=sharedMult(id);if(S===st){X.tick(S,dt,t);X.autoBuy(S);X.noteStars(S);}else{S.now=t;X.away(S,dt*1000);}});
+  checkChal();goldCheck();render();saveT+=dt;if(saveT>5){saveT=0;save();}}
+buildEarners();labels();stars();setTab('earners');
 function sticky(){const h=$('.hud').offsetHeight,tb=$('.tabs').offsetHeight;document.documentElement.style.setProperty('--hudH',h+'px');document.documentElement.style.setProperty('--tabH',tb+'px');}
 sticky();addEventListener('resize',sticky);setInterval(sticky,1500);
 setInterval(loop,100);
 let hiddenAt=0;
-function welcome(gap,v){openModal(`<h2>Welcome back</h2><p>You were away for <b>${fmtT(gap/1000)}</b>.</p><div class="bigstat"><span>+${fmt(v)}</span><small>credits from your managers</small></div>${v?'':'<p class="muted">Hire managers so earners keep working while you\'re away.</p>'}<div class="mact"><button class="go" id="awayOk">Collect</button></div>`);}
+function welcome(gap,lines){const main=lines[0];openModal(`<h2>Welcome back</h2><p>You were away for <b>${fmtT(gap/1000)}</b>.</p>${lines.length?lines.map(([n,v,c])=>`<div class="bigstat"><span>+${fmt(v)}</span><small>${c} in ${esc(n)}</small></div>`).join(''):'<p class="muted">Hire managers so earners keep working while you\'re away.</p>'}<div class="mact"><button class="go" id="awayOk">Collect</button></div>`);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=now();save();}else if(hiddenAt){const gap=now()-hiddenAt;hiddenAt=0;
-  if(gap>2000){st.now=now();const v=E.away(st,gap);st.tiers.forEach(T=>{if(!T.mgr&&T.run){T.run=false;T.prog=0;}});last=now();if(gap>30000)welcome(gap,v);render(true);save();}}});addEventListener('pagehide',save);
-if(awayMsg)welcome(awayMsg.gap,awayMsg.v);
-window.__belt={st:()=>st,E,save};
+  if(gap>2000){const lines=awayAll(gap);last=now();if(gap>30000)welcome(gap,lines);render(true);save();}}});addEventListener('pagehide',save);
+if(awayMsg)welcome(awayMsg.gap,awayMsg.lines);
+window.__belt={st:()=>st,E:()=>E,P:()=>P,save,switchWorld,eventCheck,finishEvent};
 })();
 
 </script>
