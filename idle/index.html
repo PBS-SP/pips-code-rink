@@ -62,6 +62,8 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .ghost.small{padding:7px 12px;font-size:13px;justify-self:start;margin-top:6px}
 .evb{display:flex;flex-wrap:wrap;gap:6px}.evb span{font:600 12px var(--body);padding:3px 9px;border-radius:8px;background:var(--panel);border:1px solid #4B3F86;color:var(--star)}
 body[data-world="coffee"]{--ore:#E9A86A;--ore2:#FFD2A6;--ice:#9EE0B8}
+body[data-world="salvage"]{--ore:#5FD3C8;--ore2:#A6F0E6;--ice:#7FB8F0;--ink:#081424;--deep:#0D1C33;--panel:#11243F;--panel2:#18304F;--line:#24456E}
+.curpill{color:var(--ink);background:var(--ice);border-color:var(--ice);font-variant-numeric:tabular-nums}.row.hot{border-color:var(--ice);box-shadow:0 0 0 1px var(--ice) inset}
 body[data-world="event"]{--ice:#FFB36B}
 /* tab badges, group tags, members, perk warnings */
 .tabs button{position:relative}
@@ -157,7 +159,7 @@ body[data-world="event"]{--ice:#FFB36B}
     <div class="world"><span id="wname">World 1 · Asteroid Belt</span><span class="snds"><button class="snd" id="musBtn" aria-pressed="false" title="Music">♪</button><button class="snd" id="sfxBtn" aria-pressed="false" title="Sounds">Fx</button></span></div>
     <div><div class="cash"><span id="cash">0</span><small id="curlbl">credits</small></div><div class="ps" id="ps">0/s</div></div>
     <div class="starchip"><b id="stars">0</b><span id="starlbl">Stars</span> <span id="starx">×1.00</span></div>
-    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
+    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><span class="pill curpill" id="curpill" hidden></span><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
   </header>
   <nav class="tabs" role="tablist">
     <button data-tab="earners" role="tab">Items</button><button data-tab="upgrades" role="tab">Upgrades<i class="badge" hidden></i></button>
@@ -182,29 +184,44 @@ body[data-world="event"]{--ice:#FFB36B}
 <div id="modal" hidden><div id="modalCard" role="dialog" aria-modal="true"></div></div>
 <script>
 /* ===================== ECONOMY (pure: shared by the game and the pacing simulator) ===================== */
+/* Main worlds stack power-ups by ADDING (steady growth). Events stack by MULTIPLYING (wild, short-lived growth). */
 const ECON_MAKE=function(W){
+const ADD=W.stack!=='mult';
+W.starPer=W.starPer||0.02;W.msStep=W.msStep||100;W.msBeyond=W.msBeyond||1.5;
 /* ---- random numbers with a saved seed, so a run's surprises survive a reload ---- */
 function rng(st){st.seed=(st.seed*1664525+1013904223)>>>0;return st.seed/4294967296;}
+const pct=m=>Math.round(m*100)+'%';
 /* ---- power-ups drawn when a group target is reached ---- */
 const PUPS=[
- {k:'all',     w:20, txt:m=>`Everything ×${m}`},
- {k:'tier',    w:18, txt:(m,t)=>`${W.tiers[t].name} ×${m}`},
- {k:'speed',   w:18, txt:(m,t)=>`${W.tiers[t].name} works ×${m} faster`},
- {k:'grpspeed',w:8,  txt:(m,t)=>`${W.bands[t].name} items work ×${m} faster`},
- {k:'allspeed',w:6,  txt:m=>`Everything works ×${m} faster`},
+ {k:'all',     w:20, txt:m=>ADD?`Everything +${pct(m)}`:`Everything ×${m}`},
+ {k:'tier',    w:18, txt:(m,t)=>ADD?`${W.tiers[t].name} +${pct(m)}`:`${W.tiers[t].name} ×${m}`},
+ {k:'speed',   w:18, txt:(m,t)=>ADD?`${W.tiers[t].name} works ${pct(m)} faster`:`${W.tiers[t].name} works ×${m} faster`},
+ {k:'grpspeed',w:8,  txt:(m,t)=>ADD?`${W.bands[t].name} items work ${pct(m)} faster`:`${W.bands[t].name} items work ×${m} faster`},
+ {k:'allspeed',w:6,  txt:m=>ADD?`Everything works ${pct(m)} faster`:`Everything works ×${m} faster`},
  {k:'cost',    w:8,  txt:m=>`Everything costs ${Math.round((1-m)*100)}% less`},
- {k:'mgr',     w:6,  txt:m=>`Managed items ×${m}`},
+ {k:'mgr',     w:6,  txt:m=>ADD?`Managed items +${pct(m)}`:`Managed items ×${m}`},
  {k:'tx',      w:6,  txt:(m,t,d)=>`Everything ×${m} for ${d/60000} minutes`},
  {k:'ttier',   w:5,  txt:(m,t,d)=>`${W.tiers[t].name} ×${m} for ${d/60000} minutes`},
  {k:'tfast',   w:5,  txt:(m,t,d)=>`Everything ×${m} speed for ${d/60000} minutes`}];
 const TIMED={tx:1,ttier:1,tfast:1};
 function drawPup(st,big){let r=rng(st)*100,p=PUPS[0];for(const q of PUPS){if(r<q.w){p=q;break;}r-=q.w;}
-  const owned=st.tiers.map((x,i)=>x.n>0?i:-1).filter(i=>i>=0);const t=owned.length?owned[Math.floor(rng(st)*owned.length)]:0;
-  const lvl=big?2:1;let m;
-  let d=0,tt=t;
-  switch(p.k){case 'all':m=big?2:(rng(st)<.25?1.75:1.5);break;
-    case 'tier':m=W.swing?(big?[4,6,8][Math.floor(rng(st)*3)]:[2,3,5][Math.floor(rng(st)*3)]):(big?5:(rng(st)<.3?4:3));break;
-    case 'speed':m=(t>=8?[3,5]:t>=4?[2,3]:[1.5,2])[big?1:0];break;          // bigger speed-ups for the costlier items
+  const owned=st.tiers.map((x,i)=>x.n>0&&allowed(st,i)?i:-1).filter(i=>i>=0);const t=owned.length?owned[Math.floor(rng(st)*owned.length)]:0;
+  let m,d=0,tt=t;const pick=a=>a[Math.floor(rng(st)*a.length)];
+  if(ADD)switch(p.k){           // amounts are ADDED together (+50% means ×1.5 on its own, +100% from two)
+    case 'all':m=big?1:pick([0.5,0.5,0.75]);break;
+    case 'tier':m=W.swing?(big?pick([3,4,6]):pick([1,2,3])):(big?4:pick([2,2,3]));break;
+    case 'speed':m=(t>=8?[1,2]:t>=4?[0.75,1]:[0.5,0.75])[big?1:0];break;
+    case 'grpspeed':tt=rng(st)<.5?2:(rng(st)<.6?1:0);m=[[0.5,0.75],[0.75,1],[1,1.5]][tt][big?1:0];break;
+    case 'allspeed':m=big?0.5:0.25;break;
+    case 'cost':m=big?0.8:0.9;break;
+    case 'mgr':m=big?1:0.5;break;
+    case 'tx':m=big?5:3;d=(big?15:10)*60000;break;
+    case 'ttier':m=big?25:10;d=15*60000;break;
+    case 'tfast':m=2;d=(big?10:5)*60000;break;}
+  else switch(p.k){             // events: everything multiplies
+    case 'all':m=big?2:(rng(st)<.25?1.75:1.5);break;
+    case 'tier':m=big?5:(rng(st)<.3?4:3);break;
+    case 'speed':m=(t>=8?[3,5]:t>=4?[2,3]:[1.5,2])[big?1:0];break;
     case 'grpspeed':tt=rng(st)<.5?2:(rng(st)<.6?1:0);m=[[1.5,2],[2,3],[2.5,4]][tt][big?1:0];break;
     case 'allspeed':m=big?1.5:1.25;break;
     case 'cost':m=big?0.8:0.9;break;
@@ -224,52 +241,65 @@ function newRun(st){st.pHist=[];
   if(st.perks.startPup)for(let i=0;i<st.perks.startPup;i++)st.pups.push(drawPup(st,false));
   return st;}
 function fresh(now){const st={v:1,seed:(Math.random()*4294967296)>>>0,now,stars:0,starsEver:0,total:0,runs:0,perks:{},best:0,playMs:0,sv:2,life:0,pupEver:0};return newRun(st);}
-/* ---- upgrades (one-off, per run) ---- */
+/* ---- upgrades (one-off, per run): item ×3 every 150× the price, everything ×2 (events ×3) every 10,000× ---- */
 const UPS=[];
-W.tiers.forEach((T,i)=>{UPS.push({id:'a'+i,t:i,m:3,cost:T.cost*400,txt:`${T.name} ×3`});UPS.push({id:'b'+i,t:i,m:3,cost:T.cost*6e4,txt:`${T.name} ×3`});});
-[1e6,1e9,1e12,1e15,1e18,1e21].forEach((c,k)=>UPS.push({id:'g'+k,t:-1,m:3,cost:c,txt:'Everything ×3'}));
+const UPM=W.upM||3,UPG=W.upGap||150;
+W.tiers.forEach((T,i)=>{for(let k=0;k<16;k++)UPS.push({id:'a'+i+'_'+k,t:i,m:UPM,cost:T.cost*400*Math.pow(UPG,k),txt:`${T.name} ×${UPM}`});});
+const GG=W.gGap||1e4;for(let k=0;k<20;k++){const m=ADD?2:3;UPS.push({id:'g'+k,t:-1,m,cost:1e6*Math.pow(GG,k),txt:`Everything ×${m}`});}
 UPS.sort((a,b)=>a.cost-b.cost);
-/* ---- multipliers ---- */
-function starMult(st){return 1+0.02*st.stars;}
-function costMult(st){let m=1;st.pups.forEach(p=>{if(p.k==='cost')m*=p.m;});return m;}
-/* milestone rewards: the first two are always speed x2; the rest are drawn at the start of each run */
-/* every item has its own milestone ladder: cheap fast items stretch out, costly slow items come sooner and closer */
+/* ---- milestones: each item has its own ladder, then a new milestone every +100 for good ---- */
 const LADDERS={early:[25,75,150,250,400,550,700,850,1000,1200,1400,1600],mid:[25,50,100,175,275,400,550,700,850,1000,1200,1400],
   late:[10,25,40,60,100,150,200,275,350,450,550,700],top:[5,15,25,40,60,90,125,175,250,325,400,500]};
 const LADDER_OF=['early','early','early','mid','mid','mid','mid','late','late','late','top','top'];
 function ladder(i){return LADDERS[LADDER_OF[i]];}
 function rollMilestones(st){st.msR=W.tiers.map((_,i)=>ladder(i).map((ms,k)=>{
     if(k<2)return {k:'speed',m:2};const r=rng(st);
-    if(r<.34)return {k:'profit',m:W.swing?[2,2,3,5][Math.floor(rng(st)*4)]:(rng(st)<.25?3:2)};
-    if(r<.54)return {k:'speed',m:2};
-    if(r<.74){let t=i;while(t===i)t=Math.floor(rng(st)*W.tiers.length);return {k:'other',t,m:3};}
-    if(r<.88)return {k:'cost',m:0.85};
-    return {k:'all',m:W.swing?(rng(st)<.5?1.5:1.1):1.25};}));}
-function msText(st,i,k){const r=st.msR[i][k];switch(r.k){case 'speed':return 'speed ×2';case 'profit':return `profit ×${r.m}`;
-  case 'other':return `${W.tiers[r.t].name} ×${r.m}`;case 'cost':return 'price −15%';case 'all':return 'everything ×1.25';}return '';}
-function msFx(st){if(!st.msR)rollMilestones(st);const fx=W.tiers.map(()=>({sp:1,pr:1,cost:1}));let all=1;
-  st.tiers.forEach((T,i)=>ladder(i).forEach((ms,k)=>{if(T.n<ms)return;const r=st.msR[i][k];
-    if(r.k==='speed')fx[i].sp*=r.m;else if(r.k==='profit')fx[i].pr*=r.m;else if(r.k==='other')fx[r.t].pr*=r.m;else if(r.k==='cost')fx[i].cost*=r.m;else if(r.k==='all')all*=r.m;}));
-  fx.forEach(f=>f.pr*=all);return fx;}
-function milestoneOf(n){return {sp:1,pr:1};}
-function nextMilestone(n,i){return ladder(i||0).find(m=>m>n)||null;}
-function tierMult(st,i){const T=st.tiers[i];let m=starMult(st)*msFx(st)[i].pr*(st.xm||1)*((st.mod&&st.mod.prof)||1);
-  if(W.syn&&i>0)m*=1+W.syn*st.tiers[i-1].n;
-  UPS.forEach(u=>{if(st.ups[u.id]&&(u.t===i||u.t===-1))m*=u.m;});
-  st.pups.forEach(p=>{if(p.k==='all')m*=p.m;else if(p.k==='tier'&&p.t===i)m*=p.m;else if(p.k==='mgr'&&T.mgr)m*=p.m;});
-  if(!st._away)(st.timed||[]).forEach(b=>{if(b.k==='tx')m*=b.m;else if(b.k==='ttier'&&b.t===i)m*=b.m;});
-  if(st.boost&&st.boost.until>st.now&&st.boost.k==='x')m*=st.boost.m;return m;}
-function tierSpeed(st,i){let s=msFx(st)[i].sp*((st.mod&&st.mod.speed)||1);st.pups.forEach(p=>{if(p.k==='speed'&&p.t===i)s*=p.m;else if(p.k==='allspeed')s*=p.m;else if(p.k==='grpspeed'&&Math.floor(i/4)===p.t)s*=p.m;});
-  if(!st._away)(st.timed||[]).forEach(b=>{if(b.k==='tfast')s*=b.m;});
-  if(st.boost&&st.boost.until>st.now&&st.boost.k==='fast')s*=st.boost.m;return s;}
-function cycle(st,i){return W.tiers[i].t/tierSpeed(st,i);}
-function payout(st,i){return W.tiers[i].rev*st.tiers[i].n*tierMult(st,i);}
-function perSec(st,i){const T=st.tiers[i];if(!T.n)return 0;return payout(st,i)/cycle(st,i);}
-function incomeManaged(st){let s=0;st.tiers.forEach((T,i)=>{if(T.mgr)s+=perSec(st,i);});return s;}
-function incomeAll(st){let s=0;st.tiers.forEach((T,i)=>{s+=perSec(st,i);});return s;}
+    if(!ADD){             // events: big swings, boosts to other items
+      if(r<.34)return {k:'profit',m:rng(st)<.25?3:2};if(r<.54)return {k:'speed',m:2};
+      if(r<.74){let t=i;while(t===i)t=Math.floor(rng(st)*W.tiers.length);return {k:'other',t,m:3};}
+      if(r<.88)return {k:'cost',m:0.85};return {k:'all',m:1.25};}
+    if(W.swing){          // Coffee: bigger, less predictable
+      if(r<.45)return {k:'profit',m:[2,2,3,4][Math.floor(rng(st)*4)]};if(r<.6)return {k:'speed',m:2};
+      if(r<.75){let t=i;while(t===i)t=Math.floor(rng(st)*W.tiers.length);return {k:'other',t,m:2};}
+      if(r<.88)return {k:'cost',m:0.85};return {k:'all',m:1.15};}
+    if(r<.6)return {k:'profit',m:2};if(r<.75)return {k:'speed',m:2};if(r<.9)return {k:'cost',m:0.85};return {k:'all',m:1.1};}));}
+function lastRung(i){const L=ladder(i);return L[L.length-1];}
+function nextMilestone(n,i){const L=ladder(i||0);const x=L.find(m=>m>n);if(x)return x;const b=lastRung(i||0);return b+W.msStep*(Math.floor((n-b)/W.msStep)+1);}
+function msText(st,i,k){if(k>=ladder(i).length)return `profit ×${W.msBeyond}`;const r=st.msR[i][k];switch(r.k){case 'speed':return 'speed ×2';case 'profit':return `profit ×${r.m}`;
+  case 'other':return `${W.tiers[r.t].name} ×${r.m}`;case 'cost':return 'price −15%';case 'all':return `everything ×${r.m}`;}return '';}
+function msInfo(st,i){const n=st.tiers[i].n,L=ladder(i);const next=nextMilestone(n,i);const k=L.indexOf(next);
+  const prev=k>0?L[k-1]:k===0?0:next-W.msStep;return {prev,next,txt:msText(st,i,k<0?L.length:k)};}
+function crossed(i,a,b){return nextMilestone(a,i)<=b;}
+/* ---- all multipliers in one pass ---- */
+function starMult(st){return 1+((st.mod&&st.mod.starPer)||W.starPer)*st.stars;}
+function currentBand(st){return W.current?Math.floor((st.now||0)/W.current)%3:-1;}
+function costMult(st){let m=(st.mod&&st.mod.cost)||1;st.pups.forEach(p=>{if(p.k==='cost')m*=p.m;});return Math.max(m,0.25);}
+function fx(st){if(!st.msR)rollMilestones(st);const N=W.tiers.length;const pr=new Array(N).fill(1),sp=new Array(N).fill(1),cost=new Array(N).fill(1);let all=1;
+  st.tiers.forEach((T,i)=>{const L=ladder(i);for(let k=0;k<L.length&&T.n>=L[k];k++){const r=st.msR[i][k];
+      if(r.k==='speed')sp[i]*=r.m;else if(r.k==='profit')pr[i]*=r.m;else if(r.k==='other')pr[r.t]*=r.m;else if(r.k==='cost')cost[i]*=r.m;else if(r.k==='all')all*=r.m;}
+    const b=L[L.length-1];if(T.n>=b+W.msStep)pr[i]*=Math.pow(W.msBeyond,Math.floor((T.n-b)/W.msStep));});
+  UPS.forEach(u=>{if(st.ups[u.id]){if(u.t<0)all*=u.m;else pr[u.t]*=u.m;}});
+  if(ADD){let aA=0,aS=0,aM=0;const aT=new Array(N).fill(0),aSp=new Array(N).fill(0),aG=[0,0,0];
+    st.pups.forEach(p=>{switch(p.k){case 'all':aA+=p.m;break;case 'tier':aT[p.t]+=p.m;break;case 'speed':aSp[p.t]+=p.m;break;case 'grpspeed':aG[p.t]+=p.m;break;case 'allspeed':aS+=p.m;break;case 'mgr':aM+=p.m;break;}});
+    for(let i=0;i<N;i++){pr[i]*=1+aA+aT[i]+(st.tiers[i].mgr?aM:0);sp[i]*=1+aS+aSp[i]+aG[Math.floor(i/4)];}}
+  else st.pups.forEach(p=>{switch(p.k){case 'all':all*=p.m;break;case 'tier':pr[p.t]*=p.m;break;case 'speed':sp[p.t]*=p.m;break;
+    case 'grpspeed':for(let i=p.t*4;i<p.t*4+4;i++)sp[i]*=p.m;break;case 'allspeed':for(let i=0;i<N;i++)sp[i]*=p.m;break;case 'mgr':for(let i=0;i<N;i++)if(st.tiers[i].mgr)pr[i]*=p.m;break;}});
+  if(!st._away)(st.timed||[]).forEach(b=>{if(b.k==='tx')all*=b.m;else if(b.k==='ttier')pr[b.t]*=b.m;else if(b.k==='tfast')for(let i=0;i<N;i++)sp[i]*=b.m;});
+  const bo=st.boost&&st.boost.until>st.now?st.boost:null;
+  const md=st.mod||{};const g=starMult(st)*(st.xm||1)*(md.prof||1)*all*(bo&&bo.k==='x'?bo.m:1);const cb=currentBand(st);
+  for(let i=0;i<N;i++){pr[i]*=g;if(W.syn&&i>0)pr[i]*=1+W.syn*st.tiers[i-1].n;if(cb>=0&&Math.floor(i/4)===cb)pr[i]*=W.curX;
+    if(md.mgrx&&st.tiers[i].mgr)pr[i]*=md.mgrx;sp[i]*=(md.speed||1)*(bo&&bo.k==='fast'?bo.m:1);}
+  return {pr,sp,cost};}
+function msFx(st){const f=fx(st);return f.cost.map(c=>({cost:c}));}
+function cycle(st,i,f){f=f||fx(st);return W.tiers[i].t/f.sp[i];}
+function payout(st,i,f){f=f||fx(st);return W.tiers[i].rev*st.tiers[i].n*f.pr[i];}
+function perSec(st,i,f){const T=st.tiers[i];if(!T.n)return 0;f=f||fx(st);return payout(st,i,f)/cycle(st,i,f);}
+function incomeManaged(st){const f=fx(st);let s=0;st.tiers.forEach((T,i)=>{if(T.mgr)s+=perSec(st,i,f);});return s;}
+function incomeAll(st){const f=fx(st);let s=0;st.tiers.forEach((T,i)=>{s+=perSec(st,i,f);});return s;}
 /* ---- buying ---- */
-function costN(st,i,k){const T=W.tiers[i];const n=st.tiers[i].n;return T.cost*Math.pow(T.g,n)*(Math.pow(T.g,k)-1)/(T.g-1)*costMult(st)*msFx(st)[i].cost;}
-function maxAfford(st,i){const T=W.tiers[i];const c0=T.cost*Math.pow(T.g,st.tiers[i].n)*costMult(st)*msFx(st)[i].cost;if(st.cash<c0)return 0;
+function unitCost(st,i){let c=1;const L=ladder(i),n=st.tiers[i].n;for(let k=0;k<L.length&&n>=L[k];k++){const r=st.msR[i][k];if(r.k==='cost')c*=r.m;}return c*costMult(st);}
+function costN(st,i,k){const T=W.tiers[i];const n=st.tiers[i].n;return T.cost*Math.pow(T.g,n)*(Math.pow(T.g,k)-1)/(T.g-1)*unitCost(st,i);}
+function maxAfford(st,i){const T=W.tiers[i];const c0=T.cost*Math.pow(T.g,st.tiers[i].n)*unitCost(st,i);if(st.cash<c0)return 0;
   return Math.floor(Math.log(st.cash*(T.g-1)/c0+1)/Math.log(T.g));}
 function allowed(st,i){return !(st.mod&&st.mod.max&&i>=st.mod.max);}
 function buy(st,i,k){if(k<=0||!allowed(st,i))return false;const c=costN(st,i,k);if(c>st.cash)return false;st.cash-=c;st.tiers[i].n+=k;checkGroups(st);return true;}
@@ -277,119 +307,96 @@ function mgrPrice(st,i){return W.mgrCost[i]*costMult(st)*((st.mod&&st.mod.mgr)||
 function buyMgr(st,i){const c=mgrPrice(st,i);if(st.tiers[i].mgr||c>st.cash||!st.tiers[i].n)return false;st.cash-=c;st.tiers[i].mgr=true;return true;}
 function upPrice(st,u){return u.cost*costMult(st);}
 function buyUp(st,id){const u=UPS.find(x=>x.id===id);if(!u||st.ups[id])return false;const c=upPrice(st,u);if(c>st.cash)return false;st.cash-=c;st.ups[id]=true;return true;}
-/* ---- group targets: every earner in a band (or all 12) reaches a count ---- */
-/* a group target offers 3 random power-ups to choose from; if nobody chooses within 3 minutes one is picked */
+/* ---- group targets: every item in a band (or all 12) reaches a count ---- */
 const PICK_MS=180000;
-function offer(st,big,src){const opts=[];let guard=0;while(opts.length<3&&guard++<30){const p=drawPup(st,big);const key=o=>(o.k==='tier'||o.k==='speed')?o.k+o.t:o.k;if(!opts.some(o=>key(o)===key(p)))opts.push(p);}
+function offer(st,big,src){const opts=[];let guard=0;while(opts.length<3&&guard++<30){const p=drawPup(st,big);const key=o=>(o.k==='tier'||o.k==='speed'||o.k==='ttier')?o.k+o.t:o.k;if(!opts.some(o=>key(o)===key(p)))opts.push(p);}
   const pk={src,big,opts,at:st.now||0};(st.picks=st.picks||[]).push(pk);return pk;}
 function choosePup(st,idx,c){const pk=(st.picks||[])[idx];if(!pk)return null;const p=pk.opts[c]||pk.opts[0];p.src=pk.src;
   if(TIMED[p.k])(st.timed=st.timed||[]).push({k:p.k,t:p.t,m:p.m,left:p.d,txt:p.txt});else st.pups.push(p);st.pupCount=(st.pupCount||0)+1;st.pupEver=(st.pupEver||0)+1;st.picks.splice(idx,1);return p;}
 function autoPick(st,force){const got=[];while((st.picks||[]).length&&(force||(st.now||0)-st.picks[0].at>=PICK_MS)){const p=choosePup(st,0,0);got.push(p);}return got;}
 function checkGroups(st){const got=[];
-  W.bands.forEach((B,b)=>{while(st.bandIdx[b]<st.bandT[b].length){const need=st.bandT[b][st.bandIdx[b]];
+  W.bands.forEach((B,b)=>{if(!B.tiers.every(i=>allowed(st,i)))return;while(st.bandIdx[b]<st.bandT[b].length){const need=st.bandT[b][st.bandIdx[b]];
       if(B.tiers.every(i=>st.tiers[i].n>=need)){got.push(offer(st,false,`${B.name}: all at ${need}`));st.bandIdx[b]++;}else break;}});
-  while(st.fullIdx<st.fullT.length){const need=st.fullT[st.fullIdx];
+  while(st.fullIdx<st.fullT.length&&W.tiers.every((_,i)=>allowed(st,i))){const need=st.fullT[st.fullIdx];
     if(st.tiers.every(T=>T.n>=need)){got.push(offer(st,true,`Full set: all 12 at ${need}`));st.fullIdx++;}else break;}
   return got;}
 /* ---- time ---- */
 function earn(st,v){st.cash+=v;st.runEarned+=v;st.total+=v;st.life=(st.life||0)+v;}
 function tick(st,dt,now){st.now=now;if(st.timed&&st.timed.length){st.timed.forEach(b=>b.left-=dt*1000);st.timed=st.timed.filter(b=>b.left>0);}
-  st.tiers.forEach((T,i)=>{if(!T.n)return;if(!T.mgr&&!T.run)return;const c=cycle(st,i);T.prog+=dt/c;
-    if(T.prog>=1){if(T.mgr){const k=Math.floor(T.prog);earn(st,payout(st,i)*k);T.prog-=k;}else{earn(st,payout(st,i));T.prog=0;T.run=false;}}});}
+  const f=fx(st);
+  st.tiers.forEach((T,i)=>{if(!T.n)return;if(!T.mgr&&!T.run)return;const c=cycle(st,i,f);T.prog+=dt/c;
+    if(T.prog>=1){if(T.mgr){const k=Math.floor(T.prog);earn(st,payout(st,i,f)*k);T.prog-=k;}else{earn(st,payout(st,i,f));T.prog=0;T.run=false;}}});}
 function tap(st,i){const T=st.tiers[i];if(!T.n||T.mgr||T.run)return false;T.run=true;return true;}
-/* away time: managed earners keep going at full rate, with no limit */
+/* away time: managed items keep going at full rate, with no limit (timed boosts pause) */
 function away(st,ms){if(ms>=PICK_MS)autoPick(st,true);const s=ms/1000;st._away=true;const v=incomeManaged(st)*s;st._away=false;earn(st,v);return v;}
-/* ---- restarts ---- */
-/* Stars from a run grow with each 10x of that run's earnings, so restarts keep paying off without running away */
-/* Stars come from everything ever earned in this world (a gentle power curve), so every run adds some and a big run adds a lot */
-const SA=28.7,SP=0.15;
-function starsFor(life){return life<=0?0:Math.floor(SA*Math.pow(life/W.starBase,SP));}
-function lifeFor(stars){return W.starBase*Math.pow(stars/SA,1/SP);}
+/* ---- restarts: Stars come from everything ever earned in this world, on a gentle curve ---- */
+function starsFor(life){return life<=0?0:Math.floor(W.sa*Math.pow(life/W.starBase,W.sp));}
+function lifeFor(stars){return W.starBase*Math.pow(stars/W.sa,1/W.sp);}
 function migrate(st){if(st.sv===2)return st;st.life=lifeFor(st.starsEver||0)+(st.runEarned||0);st.sv=2;return st;}
 function pendingStars(st){migrate(st);return Math.max(0,starsFor(st.life)-(st.starsEver||0));}
 function nextStarAt(st){return lifeFor((st.starsEver||0)+pendingStars(st)+1)-st.life;}
 function restart(st){const p=pendingStars(st);st.stars+=p;st.starsEver+=p;st.runs++;st.best=Math.max(st.best||0,st.runEarned);return newRun(st),p;}
-/* restart advice: size of the boost, and whether Stars are still piling up quickly */
 function noteStars(st){const p=pendingStars(st);st.pHist=st.pHist||[];const t=st.now||0;const last=st.pHist[st.pHist.length-1];
   if(!last||t-last.t>=20000){st.pHist.push({t,p});while(st.pHist.length>12)st.pHist.shift();}}
-function advice(st){const p=pendingStars(st);const a=starMult(st),b=1+0.02*(st.stars+p);const gain=b/a-1;
+function advice(st){const p=pendingStars(st);const sp=(st.mod&&st.mod.starPer)||W.starPer;const a=starMult(st),b=1+sp*(st.stars+p);const gain=b/a-1;
   const h=(st.pHist||[]).filter(x=>x.t>=(st.now||0)-120000&&x.t>=(st.runStart||0));const old=h.length?h[0]:null;
-  const climb=old&&p>0&&(st.now-old.t)>=60000?(p-old.p)/p:1;          // share of the ready Stars earned in the last ~2 minutes
-  const goodAt=st.runs===0?1.0:st.runs<8?0.4:0.25;
+  const climb=old&&p>0&&(st.now-old.t)>=60000?(p-old.p)/p:1;
+  const goodAt=st.runs===0?1.0:st.runs<8?0.4:st.runs<20?0.25:0.12;
   if(!p)return {level:0,gain,a,b,p,text:'Keep earning to find '+W.starName};
-  if(gain<0.15)return {level:0,gain,a,b,p,text:'Not yet'};
+  if(gain<Math.min(0.15,goodAt*0.5))return {level:0,gain,a,b,p,text:'Not yet'};
   if(gain<goodAt)return {level:1,gain,a,b,p,text:'Worth it soon'};
   if(climb>0.2)return {level:1,gain,a,b,p,climb,text:'Still climbing, a few more minutes pays off'};
   return {level:2,gain,a,b,p,text:'Good time to restart'};}
 const PERKS=[
  {id:'keepMgr',max:3,cost:[15,60,240],txt:l=>`Keep ${4*l} managers after a restart`},
- {id:'head',max:3,cost:[5,40,300],txt:l=>`Start each run with ${['','1K','1M','1B'][l]} credits`},
+ {id:'head',max:3,cost:[5,40,300],txt:l=>`Start each run with ${['','1K','1M','1B'][l]} ${W.cur}`},
  {id:'startPup',max:2,cost:[25,150],txt:l=>`Start each run with ${l} random power-up${l>1?'s':''}`},
- {id:'luck',max:3,cost:[10,50,200],txt:l=>`Golden asteroids come ${[0,30,60,100][l]}% more often`},
+ {id:'luck',max:3,cost:[10,50,200],txt:l=>`${W.goldName||'Golden asteroids'} come ${[0,30,60,100][l]}% more often`},
  {id:'auto',max:1,cost:[120],txt:()=>`Auto-buy: managed items buy more of themselves when cheap`}];
 function perkCost(st,p){const l=st.perks[p.id]||0;return l>=p.max?null:p.cost[l];}
-function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+0.02*(st.stars-c);return {c,a,b,drop:1-b/a};}
+function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+W.starPer*(st.stars-c);return {c,a,b,drop:1-b/a};}
 function buyPerk(st,id){const p=PERKS.find(x=>x.id===id);const c=perkCost(st,p);if(c==null||st.stars<c)return false;st.stars-=c;st.perks[id]=(st.perks[id]||0)+1;return true;}
-/* ---- golden asteroid ---- */
+/* ---- golden bonus ---- */
 function goldGap(st){return (45+rng(st)*75)*1000/(1+[0,.3,.6,1][st.perks.luck||0])/((st.mod&&st.mod.gold)||1);}
 function goldReward(st){const r=rng(st);const inc=Math.max(incomeAll(st),1);
-  if(r<.45){const v=Math.max(inc*90,st.cash*0.15,50);earn(st,v);return {k:'cash',v,txt:'Ore strike'};}
-  if(r<.8){st.boost={k:'x',m:7,until:st.now+30000};return {k:'x',txt:'Rich seam: ×7 for 30s'};}
-  st.boost={k:'fast',m:3,until:st.now+30000};return {k:'fast',txt:'Overclock: ×3 speed for 30s'};}
-/* auto-buy perk: managed earners top up when a buy costs under 5% of cash */
+  if(r<.45){const v=Math.max(inc*90,st.cash*0.15,50);earn(st,v);return {k:'cash',v,txt:W.goldCash||'Ore strike'};}
+  if(r<.8){st.boost={k:'x',m:7,until:st.now+30000};return {k:'x',txt:(W.goldX||'Rich seam')+': ×7 for 30s'};}
+  st.boost={k:'fast',m:3,until:st.now+30000};return {k:'fast',txt:(W.goldFast||'Overclock')+': ×3 speed for 30s'};}
 function autoBuy(st){if(!st.perks.auto)return;st.tiers.forEach((T,i)=>{if(!T.mgr)return;let k=0;while(k<50&&costN(st,i,1)<st.cash*0.05){buy(st,i,1);k++;}});}
-return {UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,
-  incomeAll,incomeManaged,away,noteStars,advice,allowed,W,msText,msFx,rollMilestones,perkImpact,pendingStars,starsFor,nextStarAt,migrate,restart,starMult,milestoneOf,nextMilestone,ladder,choosePup,autoPick,checkGroups,goldGap,goldReward,autoBuy,rng};
+return {UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,fx,
+  incomeAll,incomeManaged,away,noteStars,advice,allowed,W,msText,msInfo,crossed,msFx,rollMilestones,perkImpact,pendingStars,starsFor,nextStarAt,migrate,restart,starMult,
+  nextMilestone,ladder,choosePup,autoPick,checkGroups,goldGap,goldReward,autoBuy,rng,currentBand,ADD};
 };
 
-
+const BASE_TIERS=[[4,1.07,0.6,1],[60,1.15,3,60],[720,1.14,6,540],[8640,1.13,12,4320],[103680,1.12,24,51840],[1.24e6,1.11,48,622080],[1.49e7,1.10,96,7.46e6],
+  [1.79e8,1.09,192,8.96e7],[2.15e9,1.08,384,1.07e9],[2.58e10,1.07,768,2.97e10],[3.1e11,1.07,1536,3.6e11],[3.72e12,1.07,3072,4.3e12]];
+const G_MAIN=(typeof process!=='undefined'&&process.env&&process.env.GM)?process.env.GM.split(',').map(Number):[1.09,1.15,1.14,1.14,1.13,1.13,1.13,1.13,1.13,1.13,1.13,1.13];   // steeper prices keep the main worlds steady
+const ENV=(typeof process!=='undefined'&&process.env)||{};
+const RR=+(ENV.RR||0.5);   // main worlds: each tier pays back more slowly than the one below, so growth inside a run stays steady
+const mkTiers=(names,cm,tm,rm,wild)=>names.map((name,i)=>{const [c,g,t,r]=BASE_TIERS[i];return {name,cost:c*cm,g:wild?g:G_MAIN[i],t:t*tm,rev:r*rm*tm*(wild?1:Math.pow(RR,Math.max(0,i-1)))};});
+const BAND_T=[10,25,50,100,200,350,550,800,1100,1500,2000,2600],FULL_T=[1,10,25,60,130,250,450,750,1100];
 const DEFS={
- belt:{
- id:'belt',name:'Asteroid Belt',cur:'credits',
- tiers:[
-  {name:'Pickaxe Bot',   cost:4,      g:1.07, t:0.6,   rev:1},
-  {name:'Dust Scoop',    cost:60,     g:1.15, t:3,     rev:60},
-  {name:'Rock Hopper',   cost:720,    g:1.14, t:6,     rev:540},
-  {name:'Laser Drill',   cost:8640,   g:1.13, t:12,    rev:4320},
-  {name:'Ore Hauler',    cost:103680, g:1.12, t:24,    rev:51840},
-  {name:'Magnet Rig',    cost:1.24e6, g:1.11, t:48,    rev:622080},
-  {name:'Ice Harvester', cost:1.49e7, g:1.10, t:96,    rev:7.46e6},
-  {name:'Crystal Cutter',cost:1.79e8, g:1.09, t:192,   rev:8.96e7},
-  {name:'Plasma Bore',   cost:2.15e9, g:1.08, t:384,   rev:1.07e9},
-  {name:'Core Tapper',   cost:2.58e10,g:1.07, t:768,   rev:2.97e10},
-  {name:'Moon Crusher',  cost:3.1e11, g:1.07, t:1536,  rev:3.6e11},
-  {name:'Star Forge',    cost:3.72e12,g:1.07, t:3072,  rev:4.3e12}],
- mgrCost:[60, 1500, 1.2e4, 1.2e5, 1.5e6, 1.8e7, 2.2e8, 2.7e9, 3.3e10, 4e11, 5e12, 6e13],
- bands:[{name:'Inner Belt',tiers:[0,1,2,3]},{name:'Outer Belt',tiers:[4,5,6,7]},{name:'Deep Belt',tiers:[8,9,10,11]}],
- bandTargets:[10,25,50,100,200,350,550,800,1100,1500,2000,2600],   // non-linear, jittered each run
- fullTargets:[1,10,25,60,130,250,450,750,1100],                   // all 12 earners
- milestones:[25,50,100,200,300,400,500,600,700,800,900,1000],     // per-earner: speed x2 (first 4), then profit x2..x4
- starBase:1e10,   // lifetime credits for the first Star
-},
- coffee:{id:'coffee',name:'Coffee Empire',cur:'coins',starName:'Beans',unit:'Bean',syn:0.004,
- blurb:'Slow, big payouts. Each item boosts the one above it, so the order you buy in matters.',
- tiers:[
-  {name:'Coffee Cart',     cost:12,     g:1.08, t:2,    rev:6},
-  {name:'Espresso Bar',    cost:180,    g:1.15, t:9,    rev:360},
-  {name:'Drive-Thru',      cost:2200,   g:1.14, t:18,   rev:3240},
-  {name:'Bakery Corner',   cost:26000,  g:1.13, t:36,   rev:25920},
-  {name:'Roastery',        cost:3.1e5,  g:1.12, t:72,   rev:311040},
-  {name:'Cafe Chain',      cost:3.7e6,  g:1.11, t:144,  rev:3.73e6},
-  {name:'Bean Farm',       cost:4.5e7,  g:1.10, t:288,  rev:4.48e7},
-  {name:'Cold Brew Lab',   cost:5.4e8,  g:1.09, t:576,  rev:5.38e8},
-  {name:'Franchise Office',cost:6.5e9,  g:1.08, t:1152, rev:6.42e9},
-  {name:'Airport Kiosks',  cost:7.7e10, g:1.07, t:2304, rev:1.78e11},
-  {name:'Coffee Fleet',    cost:9.3e11, g:1.07, t:4608, rev:2.16e12},
-  {name:'Global HQ',       cost:1.1e13, g:1.07, t:9216, rev:2.58e13}],
- mgrCost:[180,4500,3.6e4,3.6e5,4.5e6,5.4e7,6.6e8,8.1e9,9.9e10,1.2e12,1.5e13,1.8e14],
- bands:[{name:'Street',tiers:[0,1,2,3]},{name:'City',tiers:[4,5,6,7]},{name:'Global',tiers:[8,9,10,11]}],
- bandTargets:[10,25,50,100,200,350,550,800,1100,1500,2000,2600],
- fullTargets:[1,10,25,60,130,250,450,750,1100],
- milestones:[25,50,100,200,300,400,500,600,700,800,900,1000],
- starBase:1.5e11,swing:true}};
-DEFS.belt.starName='Stars';DEFS.belt.unit='Star';DEFS.belt.blurb='Normal speed. Random group power-ups.';
-const ECONS={belt:ECON_MAKE(DEFS.belt),coffee:ECON_MAKE(DEFS.coffee),event:ECON_MAKE(DEFS.belt)};
+ belt:{id:'belt',name:'Asteroid Belt',cur:'credits',starName:'Stars',unit:'Star',blurb:'Steady and familiar. Random group power-ups.',
+  tiers:mkTiers(['Pickaxe Bot','Dust Scoop','Rock Hopper','Laser Drill','Ore Hauler','Magnet Rig','Ice Harvester','Crystal Cutter','Plasma Bore','Core Tapper','Moon Crusher','Star Forge'],1,1,1),
+  mgrCost:[60,1500,1.2e4,1.2e5,1.5e6,1.8e7,2.2e8,2.7e9,3.3e10,4e11,5e12,6e13],
+  bands:[{name:'Inner Belt',tiers:[0,1,2,3]},{name:'Outer Belt',tiers:[4,5,6,7]},{name:'Deep Belt',tiers:[8,9,10,11]}],
+  bandTargets:BAND_T,fullTargets:FULL_T,starBase:1e5,sa:14,sp:0.23,msBeyond:1.5,upM:2,upGap:1000,gGap:1e5},
+ coffee:{id:'coffee',name:'Coffee Empire',cur:'coins',starName:'Beans',unit:'Bean',syn:0.004,swing:true,goldName:'Golden beans',goldCash:'Tip jar',goldX:'Rush hour',goldFast:'Double shot',
+  blurb:'Slower, bigger swings. Each item boosts the one above it, so the order you buy in matters.',
+  tiers:mkTiers(['Coffee Cart','Espresso Bar','Drive-Thru','Bakery Corner','Roastery','Cafe Chain','Bean Farm','Cold Brew Lab','Franchise Office','Airport Kiosks','Coffee Fleet','Global HQ'],3,3,1),
+  mgrCost:[180,4500,3.6e4,3.6e5,4.5e6,5.4e7,6.6e8,8.1e9,9.9e10,1.2e12,1.5e13,1.8e14],
+  bands:[{name:'Street',tiers:[0,1,2,3]},{name:'City',tiers:[4,5,6,7]},{name:'Global',tiers:[8,9,10,11]}],
+  bandTargets:BAND_T,fullTargets:FULL_T,starBase:3e5,sa:14,sp:0.23,msBeyond:2,upM:2,upGap:1000,gGap:1e5},
+ salvage:{id:'salvage',name:'Deep-Sea Salvage',cur:'pearls',starName:'Relics',unit:'Relic',current:240000,curX:3,goldName:'Treasure chests',goldCash:'Treasure chest',goldX:'Glowing reef',goldFast:'Riptide',
+  blurb:'Fast. A current moves between the Shallows, Reef and Abyss every 4 minutes, and items in the current earn ×3.',
+  tiers:mkTiers(['Snorkel Diver','Net Trawler','Reef Drone','Wreck Diver','Sonar Buoy','Salvage Crane','Mini Sub','Pearl Farm','Deep Rover','Trench Lab','Kraken Hunter','Sunken City'],2,0.5,1),
+  mgrCost:[300,7500,6e4,6e5,7.5e6,9e7,1.1e9,1.35e10,1.65e11,2e12,2.5e13,3e14],
+  bands:[{name:'Shallows',tiers:[0,1,2,3]},{name:'Reef',tiers:[4,5,6,7]},{name:'Abyss',tiers:[8,9,10,11]}],
+  bandTargets:BAND_T,fullTargets:FULL_T,starBase:1.5e5,sa:14,sp:0.23,msBeyond:1.5,upM:2,upGap:1000,gGap:1e5}};
+DEFS.event=Object.assign({},DEFS.belt,{tiers:mkTiers(DEFS.belt.tiers.map(T=>T.name),1,1,1,true),id:'event',stack:'mult',starPer:0.05,msBeyond:2,sa:14,sp:0.12,starBase:1e8,upM:3,upGap:150,gGap:1e4});
+const ECONS={belt:ECON_MAKE(DEFS.belt),coffee:ECON_MAKE(DEFS.coffee),salvage:ECON_MAKE(DEFS.salvage),event:ECON_MAKE(DEFS.event)};
 const ECON=ECONS.belt;
+if(typeof process!=='undefined'&&process.env&&process.env.SP){for(const k of ['belt','coffee','salvage'])Object.assign(DEFS[k],{sp:+process.env.SP,sa:+(process.env.SA||14),upM:+(process.env.UPM||3),upGap:+(process.env.UPG||150),gGap:+(process.env.GG||1e4),starBase:+(process.env.SB||DEFS[k].starBase)});for(const k of ['belt','coffee','salvage'])ECONS[k]=ECON_MAKE(DEFS[k]);}
 if(typeof module!=='undefined')module.exports=Object.assign(ECON,{ECONS,DEFS});
 
 /* ===================== SOUND: generated music for each world + action sounds (no files) ===================== */
@@ -420,6 +427,10 @@ const SONGS={
      if(st16===0||st16===10){c.slice(1).forEach(n=>tone(t,hz(n),b*5,{type:'triangle',g:0.028,a:0.01,r:b*4,cut:1800}));}
      if(st16%4===0)tone(t,hz(c[0]-12+[0,7,5,3][st16/4]),b*3.5,{type:'sine',g:0.09,a:0.01,r:b*2});
      if(st16%4===2)hat(t+sw,0.035,0.06);if(st16===4||st16===12)hat(t,0.05,0.12);}},
+ salvage:{bpm:76,chords:[[52,55,59,62,66],[48,52,55,59,62],[45,48,52,55,59],[47,50,54,57,62]],       // Em9 Cmaj7 Am7 Bm7: deep and flowing
+   play(t,s,b,ch){const bar=Math.floor(s/16)%4,st16=s%16,c=ch[bar];
+     if(st16===0){tone(t,hz(c[0]-24),b*16,{type:'sine',g:0.07,a:1.2,r:1.5});c.slice(1,4).forEach(n=>tone(t,hz(n),b*16,{type:'triangle',g:0.022,a:2,r:2,cut:1200}));}
+     if(st16%3===0)tone(t,hz(c[(st16/3)%c.length]+12),b*2.5,{type:'sine',g:0.035,a:0.02,r:b*2,fx:true});}},
  event:{bpm:112,chords:[[50,53,57,62],[46,50,53,58],[48,52,55,60],[45,49,52,57]],                    // Dm Bb C A: upbeat pulse
    play(t,s,b,ch){const bar=Math.floor(s/16)%4,st16=s%16,c=ch[bar];
      tone(t,hz(c[st16%c.length]+12),b*0.9,{type:'square',g:0.022,a:0.005,r:b*0.6,cut:1400,fx:st16%4===0});
@@ -447,12 +458,13 @@ return {
  get:k=>st[k],
  world(w){world=SONGS[w]?w:'belt';},
  play(name){if(!st.sfx||!ctx||!FX[name])return;try{FX[name]();}catch(e){}},
+ sleep(){if(ctx&&ctx.state==='running')ctx.suspend();},
  wake(){if((st.music||st.sfx)&&init()){ctx.resume();if(st.music&&!timer)startMusic();}}};
 })();
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V1.05.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.00.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -464,13 +476,15 @@ let P,st;const now=()=>Date.now();
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null;}}
 function save(){P.saved=now();try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}}
 const raw=load();
-if(raw&&raw.v===2)P=raw;else if(raw&&raw.v===1)P={v:2,cur:'belt',w:{belt:raw},ev:null,tok:0,evBadges:[],saved:raw.saved};
-else P={v:2,cur:'belt',w:{belt:ECONS.belt.fresh(now())},ev:null,tok:0,evBadges:[],saved:now()};
-P.evBadges=P.evBadges||[];P.tok=P.tok||0;P.audio=P.audio||{music:false,sfx:false};
+/* V2: a fresh start with the rebalanced game. Sound settings, event badges and event tokens carry over. */
+if(raw&&raw.v===3)P=raw;
+else{const old=raw&&raw.v===2?raw:null;P={v:3,cur:'belt',w:{belt:ECONS.belt.fresh(now())},ev:null,tok:old?(old.tok||0)+(old.ev?old.ev.tok||0:0):0,evBadges:old?old.evBadges||[]:[],audio:old&&old.audio,saved:now(),season:!!raw,unl:{}};}
+P.evBadges=P.evBadges||[];P.tok=P.tok||0;P.audio=P.audio||{music:false,sfx:false};P.unl=P.unl||{};
+const TOK_CAP=60;   // most tokens one event can give
 function econOf(id){return ECONS[id];}
 function stateOf(id){return id==='event'?(P.ev&&P.ev.st):P.w[id];}
 function worldIds(){return Object.keys(P.w).concat(P.ev?['event']:[]);}
-function sharedMult(id){let other=0;for(const k in P.w)if(k!==id)other+=P.w[k].starsEver||0;return (1+0.005*other)*(1+0.01*P.tok);}
+function sharedMult(id){let other=0;for(const k in P.w)if(k!==id)other+=P.w[k].starsEver||0;return (1+0.1*Math.sqrt(other/100))*(1+0.01*P.tok);}   // a small bonus that grows slowly
 /* away earnings build up per world and are collected when you next open that world */
 function redeem(id){const S=stateOf(id);if(!S)return null;const X=econOf(id);const t=now();const gap=t-(S.seen||t);S.seen=t;if(gap<2000)return null;
   S.xm=sharedMult(id);S.now=t;const v=X.away(S,gap);S.tiers.forEach(T=>{if(!T.mgr&&T.run){T.run=false;T.prog=0;}});
@@ -485,7 +499,11 @@ const TWISTS=[
  {id:'hire',name:'Hiring Spree',txt:'Managers cost half.',mod:{mgr:0.5}},
  {id:'lucky',name:'Lucky Belt',txt:'Group targets are half as high.',mod:{band:0.5}},
  {id:'rush',name:'Gold Rush',txt:'Golden asteroids come three times as often.',mod:{gold:3}},
- {id:'storm',name:'Meteor Storm',txt:'Twice as fast, and golden asteroids twice as often.',mod:{speed:2,gold:2}}];
+ {id:'storm',name:'Meteor Storm',txt:'Twice as fast, and golden asteroids twice as often.',mod:{speed:2,gold:2}},
+ {id:'cheap',name:'Clearance Sale',txt:'Everything costs half.',mod:{cost:0.5}},
+ {id:'overtime',name:'Overtime',txt:'Managed items earn ×3.',mod:{mgrx:3}},
+ {id:'snowball',name:'Snowball',txt:'Event Stars are worth 10% each instead of 5%.',mod:{starPer:0.1}},
+ {id:'bigbang',name:'Big Bang',txt:'Everything earns ×5, but group targets are 50% higher.',mod:{prof:5,band:1.5}}];
 function eventWindow(t){const d=new Date(t);const back=(d.getDay()-5+7)%7;const s=new Date(d.getFullYear(),d.getMonth(),d.getDate()-back);
   const start=s.getTime(),end=new Date(s.getFullYear(),s.getMonth(),s.getDate()+4).getTime(),next=new Date(s.getFullYear(),s.getMonth(),s.getDate()+7).getTime();
   return {id:Math.round(start/DAY),start,end,next,live:t<end};}
@@ -508,11 +526,12 @@ function chalGen(k){const S=P.ev.st;const max=(S.mod&&S.mod.max)||12;const X=ECO
   if(ty==='rate'){const cur=ECONS.event.incomeAll(S);if(cur>=c.need)c.need=Math.pow(10,Math.ceil(Math.log10(cur*4)));}
   c.ty=ty;c.k=k;c.tok=5+3*k;c.base=0;c.base=ty==='earn'?S.total:ty==='gold'?P.ev.gold:ty==='pup'?(S.pupEver||0):0;return c;}
 function fillChal(){while(P.ev.chal.length<3)P.ev.chal.push(chalGen(P.ev.k++));}
-function checkChal(){if(!P.ev)return;let got=false;P.ev.chal=P.ev.chal.map(c=>{if(chalValue(c)>=c.need){P.ev.tok+=c.tok;P.ev.done++;got=true;
-    toast(`<b>Challenge done</b> ${esc(chalText(c))} · +${c.tok} tokens`,'star');AUDIO.play('challenge');return chalGen(P.ev.k++);}return c;});if(got)save();}
+function checkChal(){if(!P.ev)return;let got=false;P.ev.chal=P.ev.chal.map(c=>{if(chalValue(c)>=c.need){const g=Math.max(0,Math.min(c.tok,TOK_CAP-P.ev.tok));P.ev.tok+=g;P.ev.done++;got=true;
+    toast(`<b>Challenge done</b> ${esc(chalText(c))} · ${g?'+'+g+' tokens':'token limit reached'}`,'star');AUDIO.play('challenge');return chalGen(P.ev.k++);}return c;});if(got)save();}
+function eventsOpen(){return (P.w.belt.runs||0)>=1;}
 function eventCheck(){const t=now();const w=eventWindow(t);
   if(P.ev&&(P.ev.id!==w.id||!w.live))finishEvent();
-  if(w.live&&!P.ev){const tw=twistFor(w.id);const S=ECONS.event.fresh(t);S.seed=(w.id*7919)>>>0;S.mod=tw.mod;S.seen=t;ECONS.event.newRun(S);
+  if(w.live&&!P.ev&&eventsOpen()&&P.lastEv!==w.id){P.lastEv=w.id;const tw=twistFor(w.id);const S=ECONS.event.fresh(t);S.seed=(w.id*7919)>>>0;S.mod=tw.mod;S.seen=t;ECONS.event.newRun(S);
     P.ev={id:w.id,end:w.end,tw:tw.id,st:S,tok:0,gold:0,k:0,chal:[],done:0};fillChal();save();}
   return w;}
 function finishEvent(){const e=P.ev;if(!e)return;const tw=TWISTS.find(x=>x.id===e.tw)||TWISTS[0];P.ev=null;P.tok+=e.tok;
@@ -527,7 +546,8 @@ let awayMsg=null;{const r=redeem(P.cur);if(r&&r.gap>60000)awayMsg=r;}
 let mode=1,tab='earners';
 const TIER_COL=['#C9B79C','#B7A48B','#9FB0C4','#E0B060','#D98C5A','#8FA7D8','#9AE0F0','#C79AF0','#F08AC0','#F2B84B','#E6E0D2','#FFD37A'];
 const CUP_COL=['#D7B48A','#A8744A','#E0A15B','#F0C27A','#8C5A3A','#C98B5E','#7FB26B','#9BD3E6','#E6C07B','#F2B84B','#B5A0E6','#FFD37A'];
-function rockSVG(i){if(P.cur==='coffee'){const c=CUP_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="5" width="8" height="8" fill="${c}"/><rect x="3" y="5" width="8" height="2" fill="#fff" opacity=".3"/><rect x="11" y="7" width="2" height="4" fill="${c}"/><rect x="4" y="13" width="6" height="1" fill="#0E1022" opacity=".4"/><rect x="5" y="2" width="1" height="2" fill="#fff" opacity=".5"/><rect x="8" y="1" width="1" height="3" fill="#fff" opacity=".5"/></svg>`;}const c=TIER_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h7l3 3v6l-3 3H5l-3-3V5z" fill="${c}"/><path d="M4 2h7l3 3v2H2V5z" fill="#fff" opacity=".22"/><rect x="5" y="6" width="2" height="2" fill="#0E1022" opacity=".35"/><rect x="9" y="9" width="3" height="2" fill="#0E1022" opacity=".35"/><rect x="10" y="4" width="1" height="1" fill="#fff" opacity=".7"/></svg>`;}
+const SEA_COL=['#9EE7F5','#6FD3E6','#5FB8E0','#4F9ED6','#7CC8B8','#5FB39A','#8FA7D8','#B79AF0','#6F7FD8','#4F6FC0','#E0A0C0','#FFD37A'];
+function rockSVG(i){if(P.cur==='salvage'){const c=SEA_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 9c0-3 2-5 5-5s5 2 5 5-2 4-5 4-5-1-5-4z" fill="${c}"/><rect x="6" y="7" width="2" height="2" fill="#0E1022" opacity=".45"/><rect x="9" y="8" width="1" height="1" fill="#fff" opacity=".7"/><rect x="4" y="3" width="1" height="1" fill="#fff" opacity=".5"/><rect x="12" y="2" width="1" height="1" fill="#fff" opacity=".4"/><rect x="5" y="13" width="6" height="1" fill="#0E1022" opacity=".35"/></svg>`;}if(P.cur==='coffee'){const c=CUP_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="5" width="8" height="8" fill="${c}"/><rect x="3" y="5" width="8" height="2" fill="#fff" opacity=".3"/><rect x="11" y="7" width="2" height="4" fill="${c}"/><rect x="4" y="13" width="6" height="1" fill="#0E1022" opacity=".4"/><rect x="5" y="2" width="1" height="2" fill="#fff" opacity=".5"/><rect x="8" y="1" width="1" height="3" fill="#fff" opacity=".5"/></svg>`;}const c=TIER_COL[i];return `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h7l3 3v6l-3 3H5l-3-3V5z" fill="${c}"/><path d="M4 2h7l3 3v2H2V5z" fill="#fff" opacity=".22"/><rect x="5" y="6" width="2" height="2" fill="#0E1022" opacity=".35"/><rect x="9" y="9" width="3" height="2" fill="#0E1022" opacity=".35"/><rect x="10" y="4" width="1" height="1" fill="#fff" opacity=".7"/></svg>`;}
 /* ---- build static rows once ---- */
 function buildEarners(){$('#earners').innerHTML=W.tiers.map((T,i)=>`
  <div class="row" id="r${i}" data-i="${i}">
@@ -538,13 +558,18 @@ function buildEarners(){$('#earners').innerHTML=W.tiers.map((T,i)=>`
    <div class="acts"><button class="buy" data-buy="${i}" id="buy${i}"><small id="buyn${i}">Buy 1</small><b id="cost${i}"></b></button>
      <button class="mgr" data-mgr="${i}" id="mgr${i}"></button></div>
  </div>`).join('');}
-function unlockCoffee(){return (P.w.belt.runs||0)>=3;}
+const UNLOCK={coffee:{need:500,from:'belt'},salvage:{need:500,from:'coffee'}};
+function unlocked(id){const u=UNLOCK[id];if(!u)return true;const S=P.w[u.from];return !!S&&(S.starsEver||0)>=u.need;}
+function unlockCoffee(){return unlocked('coffee');}
+function checkUnlocks(){['coffee','salvage'].forEach(id=>{if(!P.unl[id]&&unlocked(id)){P.unl[id]=1;toast(`<b>${esc(ECONS[id].W.name)} unlocked</b> Find it on the Worlds tab.`,'star');AUDIO.play('challenge');}});
+  if(!P.unl.event&&eventsOpen()){P.unl.event=1;toast('<b>Weekly events unlocked</b> A new one opens every Friday. Find it on the Worlds tab.','star');}}
+const WNUM={belt:1,coffee:2,salvage:3};
 function audioBtns(){const m=$('#musBtn'),x=$('#sfxBtn');m.setAttribute('aria-label',P.audio.music?'Music is on. Turn it off':'Music is off. Turn it on');x.setAttribute('aria-label',P.audio.sfx?'Sounds are on. Turn them off':'Sounds are off. Turn them on');m.setAttribute('aria-pressed',String(P.audio.music));x.setAttribute('aria-pressed',String(P.audio.sfx));}
-function switchWorld(id,quiet){if(id==='coffee'&&!P.w.coffee){if(!unlockCoffee())return;P.w.coffee=ECONS.coffee.fresh(now());}
+function switchWorld(id,quiet){if(UNLOCK[id]&&!P.w[id]){if(!unlocked(id))return;P.w[id]=ECONS[id].fresh(now());}
   if(id==='event'&&!P.ev)return;if(st)st.seen=now();P.cur=id;AUDIO.world(id);E=econOf(id);W=E.W;st=stateOf(id);st.now=now();st.nextGold=Math.max(st.nextGold||0,now()+15000);
   $('#gold').hidden=true;const r=redeem(id);buildEarners();labels();if(!quiet){setTab('earners');if(r&&r.gap>30000)welcome(r);else toast(`<b>${esc(id==='event'?'Weekly event':W.name)}</b> ${id==='event'?'Finish challenges for tokens.':esc(W.blurb)}`);}save();}
 function labels(){const ev=P.cur==='event';const tw=ev?TWISTS.find(x=>x.id===P.ev.tw):null;
-  $('#wname').textContent=ev?`Weekly event · ${tw.name}`:`World ${P.cur==='belt'?1:2} · ${W.name}`;$('#curlbl').textContent=W.cur;
+  $('#wname').textContent=ev?`Weekly event · ${tw.name}`:`World ${WNUM[P.cur]} · ${W.name}`;$('#curlbl').textContent=W.cur;
   $('#starlbl').textContent=ev?'Tokens':W.starName;$('[data-tab="stars"] .tl').textContent=ev?'Event':W.starName;document.body.dataset.world=P.cur;}
 function setTab(t){tab=t;$$('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));$$('section.pane').forEach(p=>p.hidden=p.id!=='p-'+t);render(true);}
 /* ---- toasts ---- */
@@ -555,7 +580,7 @@ function amount(i){if(mode==='max')return Math.max(1,E.maxAfford(st,i));if(mode=
 document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap]');if(!b)return;
   if(b.dataset.tap!=null){E.tap(st,+b.dataset.tap);return;}
   if(b.dataset.buy!=null){const i=+b.dataset.buy;const before=(st.picks||[]).length;const n0=st.tiers[i].n;if(E.buy(st,i,amount(i))){const got=(st.picks||[]).slice(before);announce(got);
-    const hit=E.ladder(i).some(m=>n0<m&&st.tiers[i].n>=m);AUDIO.play(got.length?'offer':hit?'milestone':'buy');}render();return;}
+    const hit=E.crossed(i,n0,st.tiers[i].n);AUDIO.play(got.length?'offer':hit?'milestone':'buy');}render();return;}
   if(b.dataset.mgr!=null){const i=+b.dataset.mgr;if(E.buyMgr(st,i)&&(AUDIO.play('mgr'),1))toast(`<b>Manager hired</b> ${esc(W.tiers[i].name)} runs by itself now, even while you're away.`);render();return;}
   if(b.dataset.pick!=null){const [pi,c]=b.dataset.pick.split(':').map(Number);const p=E.choosePup(st,pi,c);if(p){toast(`<b>Power-up!</b> ${esc(p.txt)}`,'pup');AUDIO.play('pick');save();render(true);}return;}
   if(b.dataset.up){if(E.buyUp(st,b.dataset.up))render(true);return;}
@@ -595,6 +620,7 @@ function render(full){const t=now();
   const pe=$('#pend');if(ev){const a=E.advice(st);pe.textContent=`Ends in ${fmtT((P.ev.end-t)/1000)} · ${P.ev.done} done`+(a.p?` · +${a.p} Event Stars`:'');pe.className='pill'+(a.level===2?' lv2':'');}
   else{const a=E.advice(st);const sh=a.text.split(',')[0].replace(' to restart','');pe.textContent=a.p?`${sh} · +${fmt(a.p)} ★ → ×${a.b.toFixed(2)}`:a.text;pe.className='pill lv'+a.level;}
   const eb=$('#evpill');eb.hidden=!P.ev||ev;if(P.ev&&!ev)eb.textContent=`Event · ${TWISTS.find(x=>x.id===P.ev.tw).name} · ${fmtT((P.ev.end-t)/1000)}`;
+  const cb=E.currentBand(st);const cp=$('#curpill');cp.hidden=cb<0;if(cb>=0){const left=W.current-(t%W.current);cp.textContent=`Current: ${W.bands[cb].name} ×${W.curX} · ${mmss(left)}`;}
   if(tab==='earners'){
     W.tiers.forEach((T,i)=>{const S=st.tiers[i];const row=$('#r'+i);
       $('#own'+i).textContent=S.n;const cyc=E.cycle(st,i);const fast=cyc<0.25;
@@ -605,8 +631,8 @@ function render(full){const t=now();
       const ban=!E.allowed(st,i);row.hidden=ban;if(ban)return;
       const k=amount(i);const c=E.costN(st,i,k);$('#buyn'+i).textContent=mode==='next'?`Buy ${k} → ${S.n+k}`:`Buy ${k}`;$('#cost'+i).textContent=fmt(c);$('#buy'+i).disabled=c>st.cash;
       const m=$('#mgr'+i);if(S.mgr){m.textContent='Managed';m.disabled=true;m.className='mgr on';}else{const mc=E.mgrPrice(st,i);m.innerHTML=`<small>Manager</small>${fmt(mc)}`;m.disabled=mc>st.cash||!S.n;m.className='mgr';}
-      const LD=E.ladder(i);const nm=E.nextMilestone(S.n,i);const ms=$('#ms'+i);if(nm&&S.n){const prev=[0,...LD].filter(x=>x<=S.n).pop();const idx=LD.indexOf(nm);
-        ms.innerHTML=`<i style="width:${Math.min(100,(S.n-prev)/(nm-prev)*100)}%"></i><span>${S.n}/${nm} → ${esc(E.msText(st,i,idx))}</span>`;}else if(!S.n)ms.innerHTML=`<span>0/${LD[0]} → speed ×2</span>`;else ms.innerHTML='';});
+      const mi=E.msInfo(st,i);const ms=$('#ms'+i);ms.innerHTML=`<i style="width:${S.n?Math.min(100,(S.n-mi.prev)/(mi.next-mi.prev)*100):0}%"></i><span>${S.n}/${mi.next} → ${esc(mi.txt)}</span>`;
+      row.classList.toggle('hot',cb>=0&&Math.floor(i/4)===cb);});
     renderGroups();renderChal();}
   if(full||t-lastFull>700){lastFull=t;renderBadges();
     if(tab==='upgrades')renderUps();if(tab==='powerups')renderPups();if(tab==='stars')(P.cur==='event'?renderEvent():renderStars());if(tab==='worlds')renderWorlds();}
@@ -627,11 +653,12 @@ function renderGroups(){$('#groups').innerHTML=groupsHTML();}
 function renderUps(){const list=E.UPS.filter(u=>!st.ups[u.id]&&(u.t<0||E.allowed(st,u.t))).slice(0,10);const owned=E.UPS.filter(u=>st.ups[u.id]).length;
   $('#p-upgrades').innerHTML=`<p class="lead">One-off boosts for this run. ${owned} bought.</p>`+list.map(u=>{const c=E.upPrice(st,u);const lock=u.t>=0&&!st.tiers[u.t].n;
     return `<div class="card"><div><b>${esc(u.txt)}</b><small>${u.t<0?'Every item':lock?'Own one first':'One item'}</small></div><button class="buy" data-up="${u.id}" ${c>st.cash||lock?'disabled':''}><small>Buy</small><b>${fmt(c)}</b></button></div>`;}).join('');}
-function aggHTML(){const g={};const add=(key,label,m,mul)=>{g[key]=g[key]||{label,v:mul?1:0,n:0,mul};g[key].v=mul?g[key].v*m:g[key].v+m;g[key].n++;};
-  st.pups.forEach(p=>{switch(p.k){case 'all':add('all','Everything',p.m,1);break;case 'tier':add('t'+p.t,W.tiers[p.t].name,p.m,1);break;
-    case 'speed':add('s'+p.t,W.tiers[p.t].name+' speed',p.m,1);break;case 'grpspeed':add('g'+p.t,W.bands[p.t].name+' items speed',p.m,1);break;
-    case 'allspeed':add('as','Everything speed',p.m,1);break;case 'cost':add('c','Prices',p.m,1);break;case 'mgr':add('m','Managed items',p.m,1);break;}});
-  const rows=Object.values(g).map(x=>`<div class="card pupc"><div><b>${esc(x.label)} ${x.label==='Prices'?'−'+Math.round((1-x.v)*100)+'%':'×'+(+x.v.toFixed(2))}</b><small>from ${x.n} pick${x.n>1?'s':''}</small></div></div>`);
+function aggHTML(){const g={};const M=!E.ADD;const add=(key,label,m,mul)=>{mul=mul||M;g[key]=g[key]||{label,v:mul?1:0,n:0,mul};g[key].v=mul?g[key].v*m:g[key].v+m;g[key].n++;};
+  st.pups.forEach(p=>{switch(p.k){case 'all':add('all','Everything',p.m);break;case 'tier':add('t'+p.t,W.tiers[p.t].name,p.m);break;
+    case 'speed':add('s'+p.t,W.tiers[p.t].name+' speed',p.m);break;case 'grpspeed':add('g'+p.t,W.bands[p.t].name+' items speed',p.m);break;
+    case 'allspeed':add('as','Everything speed',p.m);break;case 'cost':add('c','Prices',p.m,1);break;case 'mgr':add('m','Managed items',p.m);break;}});
+  const val=x=>x.label==='Prices'?'−'+Math.round((1-x.v)*100)+'%':x.mul?'×'+(+x.v.toFixed(2)):'+'+Math.round(x.v*100)+'%';
+  const rows=Object.values(g).map(x=>`<div class="card pupc"><div><b>${esc(x.label)} ${val(x)}</b><small>from ${x.n} pick${x.n>1?'s':''}${!x.mul&&x.label!=='Prices'?' · power-ups of the same kind add together':''}</small></div></div>`);
   (st.timed||[]).forEach(x=>rows.unshift(`<div class="card pupc timedc"><div><b>${esc(x.txt.replace(/ for \d+ minutes$/,''))}</b><small>${fmtT(x.left/1000)} left · only counts while you're playing</small></div></div>`));
   return rows.join('');}
 function picksHTML(){const pk=st.picks||[];if(!pk.length)return '';const t=now();
@@ -650,14 +677,15 @@ function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(
    <h3>Challenges</h3>${chalHTML()}<p class="muted small">${P.ev.done} challenge${P.ev.done===1?'':'s'} finished so far.</p>
    <h3>Event Stars</h3><p class="lead">Stuck? Restart the event to bank Event Stars. Each adds 2% to event earnings, for this event only. Tokens and finished challenges are kept.</p>
    <div class="advice lv${a.level}"><b>${esc(a.text.replace('Stars','Event Stars'))}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
-   <button class="go wide" id="restartBtn" ${a.p?'':'disabled'}>Restart for ${a.p} Event Stars</button><p class="muted small">Event Stars: ${st.stars} (×${E.starMult(st).toFixed(2)}). Event restarts: ${st.runs}.</p>`;}
-function renderWorlds(){const w=eventWindow(now());const cr=P.w.belt.runs||0;const card=(id,name,tag,txt,on,lock,btn)=>`<div class="wcard${on?' on':''}${lock?' lock':''}"><span class="tag">${tag}</span><b>${esc(name)}</b><small>${txt}</small>${btn?`<button class="ghost small" data-world="${id}">${btn}</button>`:''}</div>`;
+   <button class="go wide" id="restartBtn" ${a.p?'':'disabled'}>Restart for ${a.p} Event Stars</button><p class="muted small">Event Stars: ${st.stars} (×${E.starMult(st).toFixed(2)}). Event restarts: ${st.runs}. An event gives at most ${TOK_CAP} tokens.</p>
+   <button class="ghost wide" id="exportBtn">Copy progress code</button>`;}
+function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||0,cs=P.w.coffee?P.w.coffee.starsEver||0:0;const card=(id,name,tag,txt,on,lock,btn)=>`<div class="wcard${on?' on':''}${lock?' lock':''}"><span class="tag">${tag}</span><b>${esc(name)}</b><small>${txt}</small>${btn?`<button class="ghost small" data-world="${id}">${btn}</button>`:''}</div>`;
   const tw=P.ev?TWISTS.find(x=>x.id===P.ev.tw):twistFor(eventWindow(w.next).id);
-  $('#p-worlds').innerHTML=`<p class="lead">Each world plays at its own speed with its own twist. ${esc(ECONS.belt.W.starName)} and Beans from one world add 0.5% each to the others, and event tokens add 1% each to all of them.</p><div class="worlds">
-   ${card('belt','Asteroid Belt',P.cur==='belt'?'Playing':'World 1','Normal speed. Random group power-ups.',P.cur==='belt',false,P.cur==='belt'?'':'Go to the Belt')}
-   ${card('coffee','Coffee Empire',P.cur==='coffee'?'Playing':unlockCoffee()?'World 2':'Locked','Slow, big payouts. Each item boosts the one above it, so the order you buy in matters.'+(unlockCoffee()?'':` Unlocks after 3 Belt restarts (${cr}/3).`),P.cur==='coffee',!unlockCoffee(),unlockCoffee()&&P.cur!=='coffee'?(P.w.coffee?'Go to Coffee':'Open Coffee Empire'):'')}
-   ${P.ev?card('event','Weekly event: '+tw.name,P.cur==='event'?'Playing':'Live now',esc(tw.txt)+` Ends in ${fmtT((P.ev.end-now())/1000)}.`,P.cur==='event',false,P.cur==='event'?'':'Play the event'):card('','Next event: '+tw.name,'Opens Friday',`${esc(tw.txt)} Starts in ${fmtT((w.next-now())/1000)} and runs for 4 days.`,false,true,'')}
-   ${card('','Deep-Sea Salvage','Coming later','Fast. Dive deeper for more, but pressure can push you back.',false,true,'')}
+  const wc=(id,num,short)=>{const X=ECONS[id].W,on=unlocked(id),u=UNLOCK[id];return card(id,X.name,P.cur===id?'Playing':on?'World '+num:'Locked',esc(X.blurb)+(on?'':` Unlocks when ${esc(ECONS[u.from].W.name)} reaches ${u.need} ${esc(ECONS[u.from].W.starName)} (${fmt(u.from==='belt'?bs:cs)}/${u.need}).`),P.cur===id,!on,on&&P.cur!==id?(P.w[id]?'Go to '+short:'Open '+X.name):'');};
+  $('#p-worlds').innerHTML=`<p class="lead">Each world plays at its own speed with its own twist. ${esc(ECONS.belt.W.starName)}, Beans and Relics from your other worlds give a small bonus that grows slowly (×${sharedMult(P.cur).toFixed(2)} here now), and event tokens add 1% each to every world.</p><div class="worlds">
+   ${card('belt','Asteroid Belt',P.cur==='belt'?'Playing':'World 1',esc(ECONS.belt.W.blurb),P.cur==='belt',false,P.cur==='belt'?'':'Go to the Belt')}
+   ${wc('coffee',2,'Coffee')}${wc('salvage',3,'the Deep Sea')}
+   ${!eventsOpen()?card('','Weekly events','Locked','Short, wild events every Friday to Monday. Unlock by restarting the Belt once.',false,true,''):P.ev?card('event','Weekly event: '+tw.name,P.cur==='event'?'Playing':'Live now',esc(tw.txt)+` Ends in ${fmtT((P.ev.end-now())/1000)}.`,P.cur==='event',false,P.cur==='event'?'':'Play the event'):card('','Next event: '+tw.name,'Opens Friday',`${esc(tw.txt)} Starts in ${fmtT((w.next-now())/1000)} and runs for 4 days.`,false,true,'')}
    ${card('','Wizard\'s Tower','Coming later','Stack spells with cooldowns so they multiply.',false,true,'')}
   </div>${P.evBadges.length?`<h3>Event badges</h3><div class="evb">${P.evBadges.slice(-12).reverse().map(b=>`<span>${esc(b.name)} · ${b.tok} tokens</span>`).join('')}</div>`:''}`;}
 const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',auto:'less tapping on long sessions'};
@@ -665,7 +693,7 @@ function renderStars(){const p=E.pendingStars(st);
   const a=E.advice(st),SN=W.starName;
   $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>${SN} · each adds 2% to ${esc(W.name)} earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
    <div class="advice lv${a.level}"><b>${esc(a.text)}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
-   <p class="lead">${SN} come from everything you've ever earned in ${esc(W.name)}, so every run adds some and a big run adds more. Next ${W.unit} in ${fmt(E.nextStarAt(st))} ${W.cur}. The advice says "Good time" once the boost is big (double on your first restart, then +40%, then +25% after 8 restarts) and ${SN} have stopped piling up quickly.</p>
+   <p class="lead">${SN} come from everything you've ever earned in ${esc(W.name)}, so every run adds some and a big run adds more. Next ${W.unit} in ${fmt(E.nextStarAt(st))} ${W.cur}. The advice says "Good time" once the boost is big (double on your first restart, then +40%, easing to +12% as you restart more) and ${SN} have stopped piling up quickly.</p>
    <button class="go wide" id="restartBtn" ${p?'':'disabled'}>Restart for ${p} ${SN}</button>
    <h3>Perks</h3><p class="muted">Perks cost ${SN}, and spent ${SN} stop adding their 2%. Pick the ones that suit how you play.</p>`+
    E.PERKS.map(pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;
@@ -693,7 +721,7 @@ function loop(){const t=now();let dt=(t-last)/1000;last=t;
   evT+=dt;if(evT>10){evT=0;const had=!!P.ev;eventCheck();if(!had&&P.ev)toast(`<b>Weekly event is live</b> ${esc(TWISTS.find(x=>x.id===P.ev.tw).name)}. Find it on the Worlds tab.`,'star');}
   if(dt>5){const r=redeem(P.cur);if(r&&r.gap>30000)welcome(r);dt=0;}
   st.xm=sharedMult(P.cur);E.tick(st,dt,t);E.autoBuy(st);E.noteStars(st);E.autoPick(st).forEach(p=>toast(`<b>Power-up picked for you</b> ${esc(p.txt)}`,'pup'));st.seen=t;
-  checkChal();goldCheck();render();saveT+=dt;if(saveT>5){saveT=0;save();}}
+  checkChal();checkUnlocks();goldCheck();render();saveT+=dt;if(saveT>5){saveT=0;save();}}
 AUDIO.world(P.cur);AUDIO.set('sfx',P.audio.sfx);if(P.audio.music)AUDIO.set('music',true);audioBtns();
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>AUDIO.wake(),{once:false,passive:true}));
 buildEarners();labels();stars();setTab('earners');
@@ -703,9 +731,10 @@ setInterval(loop,100);
 let hiddenAt=0;
 function welcome(r){const others=worldIds().filter(id=>id!==r.id).length;
   openModal(`<h2>Welcome back</h2><p>${esc(r.name[0].toUpperCase()+r.name.slice(1))} kept working for <b>${fmtT(r.gap/1000)}</b>.</p>${r.v>0?`<div class="bigstat"><span>+${fmt(r.v)}</span><small>${esc(r.cur)}</small></div>`:'<p class="muted">Hire managers so items keep working while you\'re away.</p>'}${others?'<p class="muted small">Your other worlds are saving up too. Collect when you visit them.</p>':''}<div class="mact"><button class="go" id="awayOk">Collect</button></div>`);}
-document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=now();save();}else if(hiddenAt){const gap=now()-hiddenAt;hiddenAt=0;
-  if(gap>2000){const r=redeem(P.cur);last=now();if(r&&r.gap>30000)welcome(r);render(true);save();}}});addEventListener('pagehide',save);
-if(awayMsg)welcome(awayMsg);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=now();AUDIO.sleep();save();}else if(hiddenAt){const gap=now()-hiddenAt;hiddenAt=0;
+  AUDIO.wake();if(gap>2000){const r=redeem(P.cur);last=now();if(r&&r.gap>30000)welcome(r);render(true);save();}}});addEventListener('pagehide',save);
+if(P.season){P.season=false;save();openModal(`<h2>A fresh start</h2><p>Asteroid Belt Idle has been rebalanced, so everyone starts again from the first Pickaxe Bot.</p><ul class="muted"><li>The Belt grows steadily: restarts pay off every time, without running away.</li><li>Items never max out. After each item's milestone list, a new milestone comes every +100.</li><li>Unlock Coffee Empire at 500 Stars, then the new Deep-Sea Salvage at 500 Beans.</li><li>Weekly events unlock after your first restart, and they're the wild ones.</li></ul><p>Your sound settings, event badges and <b>+${P.tok}%</b> event bonus are kept.</p><div class="mact"><button class="go" id="awayOk">Let's go</button></div>`);}
+else if(awayMsg)welcome(awayMsg);
 window.__belt={st:()=>st,E:()=>E,P:()=>P,save,switchWorld,eventCheck,finishEvent};
 })();
 
