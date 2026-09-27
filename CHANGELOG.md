@@ -43,5 +43,6 @@ Called Clover's Code Garden in V1.00.00.
 ## Asteroid Belt Idle (idle game, `idle/` folder)
 | Version | Date | Commit | What's in it |
 |---|---|---|---|
+| V1.01.01 | 2026-09-27 | b4f5e10 | Fix: on phones the timer bar and earner name ran under the buy buttons. Long names now shorten neatly and the per-second rate is hidden on narrow screens. |
 | V1.01.00 | 2026-09-27 | 57e42c8 | All 12 earners shown and buyable in any order. Next buy (straight to the next milestone). Buy bar stays on screen when scrolling. Milestone rewards now vary each run: speed, profit, boosts to another earner, price cuts, or everything ×1.25. Group tags on earners and member lists on group cards. Badges on tabs when upgrades, new power-ups or Stars are ready. Warning when a perk would cut the Star bonus by more than 20%. Away earnings shown whenever you come back, including from the background. |
 | V1.00.00 | 2026-09-27 | 2cce76a | World 1 Asteroid Belt: 12 earners, managers, milestones, upgrades, random group power-ups with climbing targets (3 belts + full set), golden asteroids, restarts for Stars, Star perks, unlimited away earnings. Other worlds shown as coming next. |
