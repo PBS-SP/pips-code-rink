@@ -67,7 +67,9 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .row.idle .rock{box-shadow:0 0 0 2px var(--ore);animation:nudge 1.4s ease-in-out infinite}
 @keyframes nudge{50%{box-shadow:0 0 0 4px rgba(242,184,75,.35)}}
 .own{position:absolute;right:-4px;bottom:-4px;min-width:26px;padding:1px 6px;border-radius:8px;background:var(--ink);border:1px solid var(--line);font:700 12px var(--disp);font-variant-numeric:tabular-nums}
-.mid{display:grid;gap:4px;min-width:0}
+.mid{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;min-width:0}
+.nm{min-width:0;overflow:hidden}.nm span:first-child{min-width:0;flex:0 1 auto}.gtag{flex:none}.rate{flex:none}
+.bar span{overflow:hidden;text-overflow:ellipsis;padding-inline:4px}.ms span{white-space:nowrap}
 .nm{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 15px var(--disp);letter-spacing:.02em}
 .nm span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rate{color:var(--muted);font:600 12px var(--disp);white-space:nowrap}
@@ -124,7 +126,7 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
   #groups{grid-template-columns:1fr}
 }
 @media (max-width:520px){.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}.tabs button{min-width:0;padding:8px 2px;font-size:12.5px;letter-spacing:0}.modes span{display:none}}
-@media (max-width:420px){.row{grid-template-columns:52px minmax(0,1fr) 92px;gap:8px;padding:7px}.rock{width:52px;height:52px}.rock svg{width:38px;height:38px}.acts{width:92px}.nm{font-size:14px}}
+@media (max-width:420px){.row{grid-template-columns:52px minmax(0,1fr) 92px;gap:8px;padding:7px}.rock{width:52px;height:52px}.rock svg{width:38px;height:38px}.acts{width:92px}.nm{font-size:14px}.rate{display:none}}
 </style>
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="app">
@@ -379,7 +381,7 @@ function render(full){const t=now();
       const k=amount(i);const c=E.costN(st,i,k);$('#buyn'+i).textContent=mode==='next'?`Buy ${k} → ${S.n+k}`:`Buy ${k}`;$('#cost'+i).textContent=fmt(c);$('#buy'+i).disabled=c>st.cash;
       const m=$('#mgr'+i);if(S.mgr){m.textContent='Managed';m.disabled=true;m.className='mgr on';}else{const mc=E.mgrPrice(st,i);m.innerHTML=`<small>Manager</small>${fmt(mc)}`;m.disabled=mc>st.cash||!S.n;m.className='mgr';}
       const nm=E.nextMilestone(S.n);const ms=$('#ms'+i);if(nm&&S.n){const prev=[0,...W.milestones].filter(x=>x<=S.n).pop();const idx=W.milestones.indexOf(nm);
-        ms.innerHTML=`<i style="width:${Math.min(100,(S.n-prev)/(nm-prev)*100)}%"></i><span>${S.n}/${nm} → ${esc(E.msText(st,i,idx))}</span>`;}else if(!S.n)ms.innerHTML=`<span>First milestone at 25 → speed ×2</span>`;else ms.innerHTML='';});
+        ms.innerHTML=`<i style="width:${Math.min(100,(S.n-prev)/(nm-prev)*100)}%"></i><span>${S.n}/${nm} → ${esc(E.msText(st,i,idx))}</span>`;}else if(!S.n)ms.innerHTML=`<span>0/25 → speed ×2</span>`;else ms.innerHTML='';});
     renderGroups();}
   if(full||t-lastFull>700){lastFull=t;renderBadges();
     if(tab==='upgrades')renderUps();if(tab==='powerups')renderPups();if(tab==='stars')renderStars();}
@@ -391,7 +393,7 @@ function renderBadges(){const ups=E.UPS.some(u=>!st.ups[u.id]&&E.upPrice(st,u)<=
   set('upgrades',ups);set('powerups',tab==='powerups'?0:Math.max(0,newP));set('stars',(p>=Math.max(20,st.stars*0.25)||perk)?true:0);}
 function groupLine(label,idx,targets,tiers){if(idx>=targets.length)return `<div class="grp done"><b>${label}</b><span>All targets reached</span></div>`;
   const need=targets[idx];const have=tiers.filter(i=>st.tiers[i].n>=need).length;
-  const mem=tiers.length>4?`<div class="mem">${tiers.filter(i=>st.tiers[i].n<need).length} earners still below ${need}</div>`:
+  const mem=tiers.length>4?`<div class="mem">${tiers.filter(i=>st.tiers[i].n<need).length} earner${tiers.filter(i=>st.tiers[i].n<need).length===1?'':'s'} still below ${need}</div>`:
     `<div class="mem">${tiers.map(i=>`<span class="${st.tiers[i].n>=need?'ok':'need'}">${esc(W.tiers[i].name)} ${st.tiers[i].n}</span>`).join('')}</div>`;
   return `<div class="grp"><b>${label}</b><span>All ${tiers.length} at <em>${need}</em></span><span class="gp"><i style="width:${have/tiers.length*100}%"></i></span><span class="gc">${have}/${tiers.length}</span>${mem}</div>`;}
 function renderGroups(){const all=W.tiers.map((_,i)=>i);
@@ -412,7 +414,7 @@ function renderStars(){const p=E.pendingStars(st);
    E.PERKS.map(pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;
      const impact=im?(c>st.stars?`<small>Needs ${c} Stars</small>`:`<small class="${risky?'warn':''}">Bonus ×${im.a.toFixed(2)} → ×${im.b.toFixed(2)} (−${Math.round(im.drop*100)}%)</small>`):'';
      return `<div class="card"><div><b>${esc(pk.txt(Math.min(pk.max,l+(l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max} · ${PERK_TIP[pk.id]}</small>${impact}</div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy${risky?' risky':''}" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>${risky?'Big cut':'Buy'}</small><b>${c} ★</b></button>`}</div>`;}).join('')+
-   `<p class="muted small">Runs so far: ${st.runs}. Best run: ${fmt(st.best||0)} credits. Lifetime: ${fmt(st.total)} credits. Version V1.01.00.</p>`;}
+   `<p class="muted small">Runs so far: ${st.runs}. Best run: ${fmt(st.best||0)} credits. Lifetime: ${fmt(st.total)} credits. Version V1.01.01.</p>`;}
 /* ---- golden asteroid ---- */
 function goldCheck(){const g=$('#gold');const t=now();if(!g.hidden)return;if(t>=st.nextGold){g.hidden=false;const y=12+Math.random()*60;g.style.top=y+'%';g.classList.remove('fly');void g.offsetWidth;g.classList.add('fly');
   setTimeout(()=>{if(!g.hidden){g.hidden=true;st.nextGold=now()+E.goldGap(st);}},11000);}}
