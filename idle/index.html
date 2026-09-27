@@ -19,7 +19,7 @@ body{margin:0;background:var(--ink);color:var(--text);font:500 15px/1.4 var(--bo
 button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation}
 button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 /* HUD */
-.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:linear-gradient(var(--ink) 70%,transparent);padding-block:6px 10px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:end}
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);padding-block:6px 8px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:end}
 .world{font:600 12px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--ice);grid-column:1/-1}
 .cash{font:700 clamp(30px,8vw,46px)/1 var(--disp);color:var(--ore2);font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .cash small{font:600 14px var(--body);color:var(--muted);margin-left:6px;letter-spacing:0}
@@ -31,11 +31,11 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .pill.ready{color:var(--ink);background:var(--star);border-color:var(--star)}
 #boost{color:var(--ink);background:var(--ore);border-color:var(--ore)}
 /* tabs */
-.tabs{display:flex;gap:4px;background:var(--deep);border:1px solid var(--line);border-radius:12px;padding:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 112px);z-index:4;overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;gap:4px;background:var(--deep);box-shadow:0 -12px 0 var(--ink);border:1px solid var(--line);border-radius:12px;padding:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hudH,112px));z-index:4;overflow-x:auto;scrollbar-width:none}
 .tabs button{flex:1;min-width:max-content;padding:9px 12px;border-radius:9px;background:transparent;color:var(--muted);font:600 14px var(--disp);letter-spacing:.04em}
 .tabs button[aria-selected="true"]{background:var(--panel2);color:var(--text)}
 /* buy amount */
-.modes{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.modes{display:flex;gap:6px;align-items:center;justify-content:flex-end;position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hudH,112px) + var(--tabH,46px));z-index:3;background:var(--ink);padding-block:8px 6px;box-shadow:0 8px 10px -6px var(--ink)}
 .modes span{font:600 12px var(--body);color:var(--muted);margin-right:auto}
 .modes button{padding:6px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line);font:600 13px var(--disp)}
 .modes button[aria-pressed="true"]{background:var(--ore);color:var(--ink);border-color:var(--ore)}
@@ -46,6 +46,17 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .grp .gp{grid-column:1/3;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;align-self:center}.grp .gp i{display:block;height:100%;background:var(--ice)}
 .grp .gc{grid-row:2;grid-column:3;font:600 12px var(--disp);color:var(--text)}
 .grp.done{opacity:.6}
+/* tab badges, group tags, members, perk warnings */
+.tabs button{position:relative}
+.badge{position:absolute;top:3px;right:5px;min-width:9px;height:9px;border-radius:9px;background:var(--ore);font:700 9px/9px var(--disp);color:var(--ink);font-style:normal;padding:0 2px}
+.badge:not(:empty){min-width:15px;height:15px;line-height:15px;top:1px;right:2px}
+.gtag{font:600 10px var(--disp);letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:6px;margin-right:auto;margin-left:6px;align-self:center}
+.gtag.g0{color:#9AE6C8;background:rgba(95,211,154,.14)}.gtag.g1{color:var(--ice);background:rgba(127,227,240,.13)}.gtag.g2{color:var(--star);background:rgba(201,167,255,.15)}
+.mem{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.mem span{font:600 11px var(--body);padding:1px 6px;border-radius:6px;background:var(--panel2)}
+.mem span.ok{color:var(--muted);opacity:.7}.mem span.need{color:var(--ink);background:var(--ore)}
+.card small.warn{color:var(--ore)}
+.buy.risky{background:#6B3A2A;color:#FFD9C7}
 /* earner rows */
 #earners{display:grid;gap:8px}
 .row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px}
@@ -57,7 +68,7 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 @keyframes nudge{50%{box-shadow:0 0 0 4px rgba(242,184,75,.35)}}
 .own{position:absolute;right:-4px;bottom:-4px;min-width:26px;padding:1px 6px;border-radius:8px;background:var(--ink);border:1px solid var(--line);font:700 12px var(--disp);font-variant-numeric:tabular-nums}
 .mid{display:grid;gap:4px;min-width:0}
-.nm{display:flex;justify-content:space-between;gap:8px;font:600 15px var(--disp);letter-spacing:.02em}
+.nm{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font:600 15px var(--disp);letter-spacing:.02em}
 .nm span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rate{color:var(--muted);font:600 12px var(--disp);white-space:nowrap}
 .bar{position:relative;height:24px;background:var(--deep);border-radius:7px;overflow:hidden;cursor:pointer}
@@ -124,13 +135,13 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
     <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span></div>
   </header>
   <nav class="tabs" role="tablist">
-    <button data-tab="earners" role="tab">Earners</button><button data-tab="upgrades" role="tab">Upgrades</button>
-    <button data-tab="powerups" role="tab">Power-ups</button><button data-tab="stars" role="tab">Stars</button><button data-tab="worlds" role="tab">Worlds</button>
+    <button data-tab="earners" role="tab">Earners</button><button data-tab="upgrades" role="tab">Upgrades<i class="badge" hidden></i></button>
+    <button data-tab="powerups" role="tab">Power-ups<i class="badge" hidden></i></button><button data-tab="stars" role="tab">Stars<i class="badge" hidden></i></button><button data-tab="worlds" role="tab">Worlds</button>
   </nav>
   <section class="pane" id="p-earners">
     <div class="main">
       <div class="pane">
-        <div class="modes"><span>Tap a rock to collect. Managers do it for you.</span><button data-mode="1" aria-pressed="true">×1</button><button data-mode="10" aria-pressed="false">×10</button><button data-mode="100" aria-pressed="false">×100</button><button data-mode="max" aria-pressed="false">Max</button></div>
+        <div class="modes"><span>Tap a rock to collect. Managers do it for you.</span><button data-mode="1" aria-pressed="true">×1</button><button data-mode="10" aria-pressed="false">×10</button><button data-mode="100" aria-pressed="false">×100</button><button data-mode="max" aria-pressed="false">Max</button><button data-mode="next" aria-pressed="false">Next</button></div>
         <div id="earners"></div>
       </div>
       <aside class="side"><h3 style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ice)">Group targets</h3><div id="groups"></div></aside>
@@ -202,7 +213,7 @@ function newRun(st){
   st.tiers=W.tiers.map((_,i)=>({n:i===0?1:0,mgr:!!(st.perks.keepMgr&&i<4*st.perks.keepMgr),prog:0,run:false}));
   st.ups={};st.pups=[];st.bandIdx=[0,0,0];st.fullIdx=0;
   st.bandT=W.bands.map(()=>jitter(st,W.bandTargets));st.fullT=jitter(st,W.fullTargets,0.85,1.15);
-  st.boost=null;st.nextGold=(st.now||0)+ (40+rng(st)*60)*1000;
+  rollMilestones(st);st.boost=null;st.nextGold=(st.now||0)+ (40+rng(st)*60)*1000;
   if(st.perks.startPup)for(let i=0;i<st.perks.startPup;i++)st.pups.push(drawPup(st,false));
   return st;}
 function fresh(now){const st={v:1,seed:(Math.random()*4294967296)>>>0,now,stars:0,starsEver:0,total:0,runs:0,perks:{},best:0,playMs:0};return newRun(st);}
@@ -214,13 +225,27 @@ UPS.sort((a,b)=>a.cost-b.cost);
 /* ---- multipliers ---- */
 function starMult(st){return 1+0.02*st.stars;}
 function costMult(st){let m=1;st.pups.forEach(p=>{if(p.k==='cost')m*=p.m;});return m;}
-function milestoneOf(n){let sp=1,pr=1;W.milestones.forEach((ms,k)=>{if(n>=ms){if(k<4)sp*=2;else pr*=2;}});return {sp,pr};}
+/* milestone rewards: the first two are always speed x2; the rest are drawn at the start of each run */
+function rollMilestones(st){st.msR=W.tiers.map((_,i)=>W.milestones.map((ms,k)=>{
+    if(k<2)return {k:'speed',m:2};const r=rng(st);
+    if(r<.34)return {k:'profit',m:rng(st)<.25?3:2};
+    if(r<.54)return {k:'speed',m:2};
+    if(r<.74){let t=i;while(t===i)t=Math.floor(rng(st)*W.tiers.length);return {k:'other',t,m:3};}
+    if(r<.88)return {k:'cost',m:0.85};
+    return {k:'all',m:1.25};}));}
+function msText(st,i,k){const r=st.msR[i][k];switch(r.k){case 'speed':return 'speed ×2';case 'profit':return `profit ×${r.m}`;
+  case 'other':return `${W.tiers[r.t].name} ×${r.m}`;case 'cost':return 'price −15%';case 'all':return 'everything ×1.25';}return '';}
+function msFx(st){if(!st.msR)rollMilestones(st);const fx=W.tiers.map(()=>({sp:1,pr:1,cost:1}));let all=1;
+  st.tiers.forEach((T,i)=>W.milestones.forEach((ms,k)=>{if(T.n<ms)return;const r=st.msR[i][k];
+    if(r.k==='speed')fx[i].sp*=r.m;else if(r.k==='profit')fx[i].pr*=r.m;else if(r.k==='other')fx[r.t].pr*=r.m;else if(r.k==='cost')fx[i].cost*=r.m;else if(r.k==='all')all*=r.m;}));
+  fx.forEach(f=>f.pr*=all);return fx;}
+function milestoneOf(n){return {sp:1,pr:1};}
 function nextMilestone(n){return W.milestones.find(m=>m>n)||null;}
-function tierMult(st,i){const T=st.tiers[i];let m=starMult(st)*milestoneOf(T.n).pr;
+function tierMult(st,i){const T=st.tiers[i];let m=starMult(st)*msFx(st)[i].pr;
   UPS.forEach(u=>{if(st.ups[u.id]&&(u.t===i||u.t===-1))m*=u.m;});
   st.pups.forEach(p=>{if(p.k==='all')m*=p.m;else if(p.k==='tier'&&p.t===i)m*=p.m;else if(p.k==='mgr'&&T.mgr)m*=p.m;});
   if(st.boost&&st.boost.until>st.now&&st.boost.k==='x')m*=st.boost.m;return m;}
-function tierSpeed(st,i){let s=milestoneOf(st.tiers[i].n).sp;st.pups.forEach(p=>{if(p.k==='speed'&&p.t===i)s*=p.m;});
+function tierSpeed(st,i){let s=msFx(st)[i].sp;st.pups.forEach(p=>{if(p.k==='speed'&&p.t===i)s*=p.m;});
   if(st.boost&&st.boost.until>st.now&&st.boost.k==='fast')s*=st.boost.m;return s;}
 function cycle(st,i){return W.tiers[i].t/tierSpeed(st,i);}
 function payout(st,i){return W.tiers[i].rev*st.tiers[i].n*tierMult(st,i);}
@@ -228,8 +253,8 @@ function perSec(st,i){const T=st.tiers[i];if(!T.n)return 0;return payout(st,i)/c
 function incomeManaged(st){let s=0;st.tiers.forEach((T,i)=>{if(T.mgr)s+=perSec(st,i);});return s;}
 function incomeAll(st){let s=0;st.tiers.forEach((T,i)=>{s+=perSec(st,i);});return s;}
 /* ---- buying ---- */
-function costN(st,i,k){const T=W.tiers[i];const n=st.tiers[i].n;return T.cost*Math.pow(T.g,n)*(Math.pow(T.g,k)-1)/(T.g-1)*costMult(st);}
-function maxAfford(st,i){const T=W.tiers[i];const c0=T.cost*Math.pow(T.g,st.tiers[i].n)*costMult(st);if(st.cash<c0)return 0;
+function costN(st,i,k){const T=W.tiers[i];const n=st.tiers[i].n;return T.cost*Math.pow(T.g,n)*(Math.pow(T.g,k)-1)/(T.g-1)*costMult(st)*msFx(st)[i].cost;}
+function maxAfford(st,i){const T=W.tiers[i];const c0=T.cost*Math.pow(T.g,st.tiers[i].n)*costMult(st)*msFx(st)[i].cost;if(st.cash<c0)return 0;
   return Math.floor(Math.log(st.cash*(T.g-1)/c0+1)/Math.log(T.g));}
 function buy(st,i,k){if(k<=0)return false;const c=costN(st,i,k);if(c>st.cash)return false;st.cash-=c;st.tiers[i].n+=k;checkGroups(st);return true;}
 function mgrPrice(st,i){return W.mgrCost[i]*costMult(st);}
@@ -263,6 +288,7 @@ const PERKS=[
  {id:'luck',max:3,cost:[10,50,200],txt:l=>`Golden asteroids come ${[0,30,60,100][l]}% more often`},
  {id:'auto',max:1,cost:[120],txt:()=>`Auto-buy: managed earners buy themselves when cheap`}];
 function perkCost(st,p){const l=st.perks[p.id]||0;return l>=p.max?null:p.cost[l];}
+function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+0.02*(st.stars-c);return {c,a,b,drop:1-b/a};}
 function buyPerk(st,id){const p=PERKS.find(x=>x.id===id);const c=perkCost(st,p);if(c==null||st.stars<c)return false;st.stars-=c;st.perks[id]=(st.perks[id]||0)+1;return true;}
 /* ---- golden asteroid ---- */
 function goldGap(st){return (45+rng(st)*75)*1000/(1+[0,.3,.6,1][st.perks.luck||0]);}
@@ -273,7 +299,7 @@ function goldReward(st){const r=rng(st);const inc=Math.max(incomeAll(st),1);
 /* auto-buy perk: managed earners top up when a buy costs under 5% of cash */
 function autoBuy(st){if(!st.perks.auto)return;st.tiers.forEach((T,i)=>{if(!T.mgr)return;let k=0;while(k<50&&costN(st,i,1)<st.cash*0.05){buy(st,i,1);k++;}});}
 return {W,UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,
-  incomeAll,incomeManaged,away,pendingStars,starsFor,restart,starMult,milestoneOf,nextMilestone,checkGroups,goldGap,goldReward,autoBuy,rng};
+  incomeAll,incomeManaged,away,msText,msFx,rollMilestones,perkImpact,pendingStars,starsFor,restart,starMult,milestoneOf,nextMilestone,checkGroups,goldGap,goldReward,autoBuy,rng};
 })();
 if(typeof module!=='undefined')module.exports=ECON;
 
@@ -303,7 +329,7 @@ function rockSVG(i){const c=TIER_COL[i];return `<svg viewBox="0 0 16 16" aria-hi
 function buildEarners(){$('#earners').innerHTML=W.tiers.map((T,i)=>`
  <div class="row" id="r${i}" data-i="${i}">
    <button class="rock" data-tap="${i}" aria-label="Collect from ${esc(T.name)}">${rockSVG(i)}<b class="own" id="own${i}">0</b></button>
-   <div class="mid"><div class="nm"><span>${esc(T.name)}</span><span class="rate" id="rate${i}"></span></div>
+   <div class="mid"><div class="nm"><span>${esc(T.name)}</span><span class="gtag g${Math.floor(i/4)}">${['Inner','Outer','Deep'][Math.floor(i/4)]}</span><span class="rate" id="rate${i}"></span></div>
      <div class="bar" data-tap="${i}"><i id="bar${i}"></i><span id="pay${i}"></span></div>
      <div class="ms" id="ms${i}"></div></div>
    <div class="acts"><button class="buy" data-buy="${i}" id="buy${i}"><small id="buyn${i}">Buy 1</small><b id="cost${i}"></b></button>
@@ -314,14 +340,16 @@ function setTab(t){tab=t;$$('.tabs button').forEach(b=>b.setAttribute('aria-sele
 function toast(html,cls=''){const d=document.createElement('div');d.className='toast '+cls;d.innerHTML=html;$('#toasts').appendChild(d);setTimeout(()=>d.classList.add('out'),3400);setTimeout(()=>d.remove(),4000);}
 function announce(got){got.forEach(p=>toast(`<b>Power-up!</b> ${esc(p.txt)}<small>${esc(p.src)}</small>`,'pup'));}
 /* ---- actions ---- */
-function amount(i){if(mode==='max')return Math.max(1,E.maxAfford(st,i));return mode;}
+function amount(i){if(mode==='max')return Math.max(1,E.maxAfford(st,i));if(mode==='next'){const nm=E.nextMilestone(st.tiers[i].n);return nm?nm-st.tiers[i].n:1;}return mode;}
 document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap]');if(!b)return;
   if(b.dataset.tap!=null){E.tap(st,+b.dataset.tap);return;}
   if(b.dataset.buy!=null){const i=+b.dataset.buy;const before=st.pups.length;if(E.buy(st,i,amount(i))){announce(st.pups.slice(before));}render();return;}
   if(b.dataset.mgr!=null){const i=+b.dataset.mgr;if(E.buyMgr(st,i))toast(`<b>Manager hired</b> ${esc(W.tiers[i].name)} runs by itself now, even while you're away.`);render();return;}
   if(b.dataset.up){if(E.buyUp(st,b.dataset.up))render(true);return;}
-  if(b.dataset.perk){if(E.buyPerk(st,b.dataset.perk)){save();render(true);}return;}
-  if(b.dataset.mode){mode=b.dataset.mode==='max'?'max':+b.dataset.mode;$$('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();return;}
+  if(b.dataset.perk){const pk=E.PERKS.find(x=>x.id===b.dataset.perk);const im=E.perkImpact(st,pk);
+    if(im&&im.drop>0.2&&!b.dataset.sure){openModal(`<h2>Big cut to your bonus</h2><p>This perk spends <b>${im.c}</b> of your <b>${st.stars}</b> Stars. All earnings go from <b>×${im.a.toFixed(2)}</b> to <b>×${im.b.toFixed(2)}</b>, a ${Math.round(im.drop*100)}% cut.</p><p>${PERK_TIP[pk.id][0].toUpperCase()+PERK_TIP[pk.id].slice(1)}. It may be worth waiting until you have more Stars.</p><div class="mact"><button class="ghost" id="rsNo">Wait</button><button class="go" data-perk="${pk.id}" data-sure="1">Buy anyway</button></div>`);return;}
+    if(E.buyPerk(st,b.dataset.perk)){closeModal();save();render(true);}return;}
+  if(b.dataset.mode){mode=['max','next'].includes(b.dataset.mode)?b.dataset.mode:+b.dataset.mode;$$('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();return;}
   if(b.dataset.tab){setTab(b.dataset.tab);return;}
   if(b.id==='restartBtn'){openRestart();return;}
   if(b.id==='rsYes'){const p=E.restart(st);st.now=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} Stars. Everything earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
@@ -342,25 +370,30 @@ function render(full){const t=now();
   const bst=st.boost&&st.boost.until>t?st.boost:null;$('#boost').hidden=!bst;if(bst)$('#boost').textContent=(bst.k==='x'?'Rich seam ×7':'Overclock ×3 speed')+' · '+Math.ceil((bst.until-t)/1000)+'s';
   const p=E.pendingStars(st);$('#pend').textContent=p?`+${p} Stars ready`:'Beat your best run to earn Stars';$('#pend').classList.toggle('ready',p>=Math.max(20,st.stars*0.25));
   if(tab==='earners'){
-    let nextLocked=false;
-    W.tiers.forEach((T,i)=>{const S=st.tiers[i];const row=$('#r'+i);const visible=i===0||st.tiers[i-1].n>0||S.n>0;
-      row.hidden=!visible&&nextLocked;row.classList.toggle('locked',!visible);if(!visible)nextLocked=true;
+    W.tiers.forEach((T,i)=>{const S=st.tiers[i];const row=$('#r'+i);
       $('#own'+i).textContent=S.n;const cyc=E.cycle(st,i);const fast=cyc<0.25;
       $('#bar'+i).style.width=(S.n?(fast&&(S.mgr||S.run)?100:Math.min(100,S.prog*100)):0)+'%';
       $('#pay'+i).textContent=S.n?`${fmt(E.payout(st,i))} · ${fmtT(cyc)}`:'';
       $('#rate'+i).textContent=S.n?fmt(E.perSec(st,i))+'/s':'';
       row.classList.toggle('idle',S.n>0&&!S.mgr&&!S.run);row.classList.toggle('auto',S.mgr);
-      const k=amount(i);const c=E.costN(st,i,k);$('#buyn'+i).textContent=mode==='max'?`Buy ${k}`:`Buy ${k}`;$('#cost'+i).textContent=fmt(c);$('#buy'+i).disabled=c>st.cash;
+      const k=amount(i);const c=E.costN(st,i,k);$('#buyn'+i).textContent=mode==='next'?`Buy ${k} → ${S.n+k}`:`Buy ${k}`;$('#cost'+i).textContent=fmt(c);$('#buy'+i).disabled=c>st.cash;
       const m=$('#mgr'+i);if(S.mgr){m.textContent='Managed';m.disabled=true;m.className='mgr on';}else{const mc=E.mgrPrice(st,i);m.innerHTML=`<small>Manager</small>${fmt(mc)}`;m.disabled=mc>st.cash||!S.n;m.className='mgr';}
       const nm=E.nextMilestone(S.n);const ms=$('#ms'+i);if(nm&&S.n){const prev=[0,...W.milestones].filter(x=>x<=S.n).pop();const idx=W.milestones.indexOf(nm);
-        ms.innerHTML=`<i style="width:${Math.min(100,(S.n-prev)/(nm-prev)*100)}%"></i><span>${S.n}/${nm} → ${idx<4?'speed ×2':'profit ×2'}</span>`;}else ms.innerHTML='';});
+        ms.innerHTML=`<i style="width:${Math.min(100,(S.n-prev)/(nm-prev)*100)}%"></i><span>${S.n}/${nm} → ${esc(E.msText(st,i,idx))}</span>`;}else if(!S.n)ms.innerHTML=`<span>First milestone at 25 → speed ×2</span>`;else ms.innerHTML='';});
     renderGroups();}
-  if(full||t-lastFull>700){lastFull=t;
+  if(full||t-lastFull>700){lastFull=t;renderBadges();
     if(tab==='upgrades')renderUps();if(tab==='powerups')renderPups();if(tab==='stars')renderStars();}
 }
+function renderBadges(){const ups=E.UPS.some(u=>!st.ups[u.id]&&E.upPrice(st,u)<=st.cash&&(u.t<0||st.tiers[u.t].n));
+  const newP=st.pups.length-(st.seenPups||0);if(tab==='powerups')st.seenPups=st.pups.length;
+  const p=E.pendingStars(st);const perk=E.PERKS.some(pk=>{const c=E.perkCost(st,pk);return c!=null&&c<=st.stars;});
+  const set=(t,v)=>{const el=$(`[data-tab="${t}"] .badge`);el.hidden=!v;el.textContent=v===true?'':v;};
+  set('upgrades',ups);set('powerups',tab==='powerups'?0:Math.max(0,newP));set('stars',(p>=Math.max(20,st.stars*0.25)||perk)?true:0);}
 function groupLine(label,idx,targets,tiers){if(idx>=targets.length)return `<div class="grp done"><b>${label}</b><span>All targets reached</span></div>`;
-  const need=targets[idx];const have=tiers.filter(i=>st.tiers[i].n>=need).length;const low=Math.min(...tiers.map(i=>st.tiers[i].n));
-  return `<div class="grp"><b>${label}</b><span>All ${tiers.length} at <em>${need}</em></span><span class="gp"><i style="width:${have/tiers.length*100}%"></i></span><span class="gc">${have}/${tiers.length}</span></div>`;}
+  const need=targets[idx];const have=tiers.filter(i=>st.tiers[i].n>=need).length;
+  const mem=tiers.length>4?`<div class="mem">${tiers.filter(i=>st.tiers[i].n<need).length} earners still below ${need}</div>`:
+    `<div class="mem">${tiers.map(i=>`<span class="${st.tiers[i].n>=need?'ok':'need'}">${esc(W.tiers[i].name)} ${st.tiers[i].n}</span>`).join('')}</div>`;
+  return `<div class="grp"><b>${label}</b><span>All ${tiers.length} at <em>${need}</em></span><span class="gp"><i style="width:${have/tiers.length*100}%"></i></span><span class="gc">${have}/${tiers.length}</span>${mem}</div>`;}
 function renderGroups(){const all=W.tiers.map((_,i)=>i);
   $('#groups').innerHTML=W.bands.map((B,b)=>groupLine(B.name,st.bandIdx[b],st.bandT[b],B.tiers)).join('')+groupLine('Full set',st.fullIdx,st.fullT,all);}
 function renderUps(){const list=E.UPS.filter(u=>!st.ups[u.id]).slice(0,10);const owned=E.UPS.filter(u=>st.ups[u.id]).length;
@@ -370,13 +403,16 @@ function renderPups(){const P=st.pups;
   $('#p-powerups').innerHTML=`<p class="lead">Get every earner in a group to the target count and a random power-up drops. Targets climb faster each time, and they shift a little every run.</p>
    <div id="groups2">${W.bands.map((B,b)=>groupLine(B.name,st.bandIdx[b],st.bandT[b],B.tiers)).join('')}${groupLine('Full set',st.fullIdx,st.fullT,W.tiers.map((_,i)=>i))}</div>
    <h3>Active this run (${P.length})</h3>${P.length?P.map(p=>`<div class="card pupc"><div><b>${esc(p.txt)}</b><small>${esc(p.src||'Start-of-run perk')}</small></div></div>`).join(''):'<p class="muted">None yet. The first one usually drops within a few minutes.</p>'}`;}
+const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',auto:'less tapping on long sessions'};
 function renderStars(){const p=E.pendingStars(st);
   $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>Stars · each adds 2% to all earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
    <p class="lead">Restarting resets the run and banks Stars for how far you got past your best run so far (${fmt(st.best||0)} credits). ${p>=Math.max(20,st.stars*0.25)?'<b class="ok">Now is a good time.</b>':'A restart pays off most once the ready Stars are at least a quarter of what you have.'}</p>
    <button class="go wide" id="restartBtn" ${p?'':'disabled'}>Restart for ${p} Stars</button>
    <h3>Perks</h3><p class="muted">Perks cost Stars, and spent Stars stop adding their 2%. Pick the ones that suit how you play.</p>`+
-   E.PERKS.map(pk=>{const l=st.perks[pk.id]||0;const c=E.perkCost(st,pk);return `<div class="card"><div><b>${esc(pk.txt(Math.min(pk.max,l+ (l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max}</small></div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>Buy</small><b>${c} ★</b></button>`}</div>`;}).join('')+
-   `<p class="muted small">Runs so far: ${st.runs}. Best run: ${fmt(st.best||0)} credits. Lifetime: ${fmt(st.total)} credits.</p>`;}
+   E.PERKS.map(pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;
+     const impact=im?(c>st.stars?`<small>Needs ${c} Stars</small>`:`<small class="${risky?'warn':''}">Bonus ×${im.a.toFixed(2)} → ×${im.b.toFixed(2)} (−${Math.round(im.drop*100)}%)</small>`):'';
+     return `<div class="card"><div><b>${esc(pk.txt(Math.min(pk.max,l+(l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max} · ${PERK_TIP[pk.id]}</small>${impact}</div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy${risky?' risky':''}" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>${risky?'Big cut':'Buy'}</small><b>${c} ★</b></button>`}</div>`;}).join('')+
+   `<p class="muted small">Runs so far: ${st.runs}. Best run: ${fmt(st.best||0)} credits. Lifetime: ${fmt(st.total)} credits. Version V1.01.00.</p>`;}
 /* ---- golden asteroid ---- */
 function goldCheck(){const g=$('#gold');const t=now();if(!g.hidden)return;if(t>=st.nextGold){g.hidden=false;const y=12+Math.random()*60;g.style.top=y+'%';g.classList.remove('fly');void g.offsetWidth;g.classList.add('fly');
   setTimeout(()=>{if(!g.hidden){g.hidden=true;st.nextGold=now()+E.goldGap(st);}},11000);}}
@@ -386,12 +422,17 @@ function stars(){const c=$('#sky');const dpr=Math.min(2,devicePixelRatio||1);con
   (function f(){x.clearRect(0,0,w,h);pts.forEach(p=>{if(!reduce){p.x-=(0.05+p.z*0.25)*dpr;if(p.x<0)p.x=w;}x.fillStyle=`rgba(237,235,255,${0.25+p.z*0.6})`;const s=(p.z>0.85?2:1)*dpr;x.fillRect(p.x,p.y,s,s);});requestAnimationFrame(f);})();}
 /* ---- loop ---- */
 let last=now(),saveT=0;
-function loop(){const t=now();let dt=(t-last)/1000;last=t;if(dt>5){st.now=t;E.away(st,dt*1000);dt=0;}
+function loop(){const t=now();let dt=(t-last)/1000;last=t;if(dt>5){st.now=t;const v=E.away(st,dt*1000);if(dt>30)welcome(dt*1000,v);dt=0;}
   E.tick(st,dt,t);E.autoBuy(st);goldCheck();render();saveT+=dt;if(saveT>5){saveT=0;save();}}
 buildEarners();stars();setTab('earners');
+function sticky(){const h=$('.hud').offsetHeight,tb=$('.tabs').offsetHeight;document.documentElement.style.setProperty('--hudH',h+'px');document.documentElement.style.setProperty('--tabH',tb+'px');}
+sticky();addEventListener('resize',sticky);setInterval(sticky,1500);
 setInterval(loop,100);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else{last=now();}});addEventListener('pagehide',save);
-if(awayMsg)openModal(`<h2>Welcome back</h2><p>You were away for <b>${fmtT(awayMsg.gap/1000)}</b>.</p><div class="bigstat"><span>+${fmt(awayMsg.v)}</span><small>credits from your managers</small></div>${awayMsg.v?'':'<p class="muted">Hire managers so earners keep working while you\'re away.</p>'}<div class="mact"><button class="go" id="awayOk">Collect</button></div>`);
+let hiddenAt=0;
+function welcome(gap,v){openModal(`<h2>Welcome back</h2><p>You were away for <b>${fmtT(gap/1000)}</b>.</p><div class="bigstat"><span>+${fmt(v)}</span><small>credits from your managers</small></div>${v?'':'<p class="muted">Hire managers so earners keep working while you\'re away.</p>'}<div class="mact"><button class="go" id="awayOk">Collect</button></div>`);}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=now();save();}else if(hiddenAt){const gap=now()-hiddenAt;hiddenAt=0;
+  if(gap>2000){st.now=now();const v=E.away(st,gap);st.tiers.forEach(T=>{if(!T.mgr&&T.run){T.run=false;T.prog=0;}});last=now();if(gap>30000)welcome(gap,v);render(true);save();}}});addEventListener('pagehide',save);
+if(awayMsg)welcome(awayMsg.gap,awayMsg.v);
 window.__belt={st:()=>st,E,save};
 })();
 
