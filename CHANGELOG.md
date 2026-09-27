@@ -43,6 +43,7 @@ Called Clover's Code Garden in V1.00.00.
 ## Asteroid Belt Idle (idle game, `idle/` folder)
 | Version | Date | Commit | What's in it |
 |---|---|---|---|
+| V1.03.00 | 2026-09-27 | b533d27 | Group targets now let you choose 1 of 3 random power-ups (auto-picked after 3 minutes or while away); the Power-ups badge counts picks waiting. Each item has its own milestone ladder (cheap items stretch out, costly items come sooner). "Earners" renamed to items. Group label sits beside the item name so milestone rewards show in full. In events, items, group targets and upgrades that aren't part of the event are hidden. |
 | V1.02.01 | 2026-09-27 | 6dcc0e8 | Fix: in the Tight Quarters event, earners 7 to 12 looked buyable but did nothing. They now show as locked for the week, and group targets that can't be reached say so. |
 | V1.02.00 | 2026-09-27 | eb58c72 | World 2 Coffee Empire (unlocks after 3 Belt restarts): slower, bigger payouts, each earner boosts the one above it, own restart currency (Beans). Weekly events worked out from the date: open Friday to Monday with a random twist, three random challenges at a time, tokens that become a permanent +1% each for every world, and a badge per event. Restart advice now shows the real boost and says Not yet / Worth it soon / Good time, and waits while Stars are still piling up quickly. Worlds share a small bonus. |
 | V1.01.01 | 2026-09-27 | b4f5e10 | Fix: on phones the timer bar and earner name ran under the buy buttons. Long names now shorten neatly and the per-second rate is hidden on narrow screens. |
