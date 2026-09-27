@@ -74,6 +74,7 @@ body[data-world="event"]{--ice:#FFB36B}
 #earners{display:grid;gap:8px}
 .row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px}
 .row.locked{opacity:.45;filter:saturate(.3)}
+.row.banned{opacity:.45;filter:saturate(.2)}.row.banned .bar{visibility:hidden}
 .row.locked .acts,.row.locked .bar,.row.locked .ms{visibility:hidden}
 .rock{position:relative;width:62px;height:62px;border-radius:12px;background:var(--deep);display:grid;place-items:center;padding:6px}
 .rock svg{width:44px;height:44px;image-rendering:pixelated}
@@ -353,7 +354,7 @@ if(typeof module!=='undefined')module.exports=Object.assign(ECON,{ECONS,DEFS});
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V1.02.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V1.02.01';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -483,6 +484,7 @@ function render(full){const t=now();
       $('#pay'+i).textContent=S.n?`${fmt(E.payout(st,i))} · ${fmtT(cyc)}`:'';
       $('#rate'+i).textContent=S.n?fmt(E.perSec(st,i))+'/s':'';
       row.classList.toggle('idle',S.n>0&&!S.mgr&&!S.run);row.classList.toggle('auto',S.mgr);
+      const ban=!E.allowed(st,i);row.classList.toggle('banned',ban);if(ban){$('#buyn'+i).textContent='Not this week';$('#cost'+i).textContent='Locked';$('#buy'+i).disabled=true;const m0=$('#mgr'+i);m0.innerHTML='<small>Event rule</small>Only 6';m0.disabled=true;m0.className='mgr';$('#ms'+i).innerHTML='<span>Tight Quarters: only the first 6 earners</span>';return;}
       const k=amount(i);const c=E.costN(st,i,k);$('#buyn'+i).textContent=mode==='next'?`Buy ${k} → ${S.n+k}`:`Buy ${k}`;$('#cost'+i).textContent=fmt(c);$('#buy'+i).disabled=c>st.cash;
       const m=$('#mgr'+i);if(S.mgr){m.textContent='Managed';m.disabled=true;m.className='mgr on';}else{const mc=E.mgrPrice(st,i);m.innerHTML=`<small>Manager</small>${fmt(mc)}`;m.disabled=mc>st.cash||!S.n;m.className='mgr';}
       const nm=E.nextMilestone(S.n);const ms=$('#ms'+i);if(nm&&S.n){const prev=[0,...W.milestones].filter(x=>x<=S.n).pop();const idx=W.milestones.indexOf(nm);
@@ -501,14 +503,15 @@ function groupLine(label,idx,targets,tiers){if(idx>=targets.length)return `<div 
   const mem=tiers.length>4?`<div class="mem">${tiers.filter(i=>st.tiers[i].n<need).length} earner${tiers.filter(i=>st.tiers[i].n<need).length===1?'':'s'} still below ${need}</div>`:
     `<div class="mem">${tiers.map(i=>`<span class="${st.tiers[i].n>=need?'ok':'need'}">${esc(W.tiers[i].name)} ${st.tiers[i].n}</span>`).join('')}</div>`;
   return `<div class="grp"><b>${label}</b><span>All ${tiers.length} at <em>${need}</em></span><span class="gp"><i style="width:${have/tiers.length*100}%"></i></span><span class="gc">${have}/${tiers.length}</span>${mem}</div>`;}
-function renderGroups(){const all=W.tiers.map((_,i)=>i);
-  $('#groups').innerHTML=W.bands.map((B,b)=>groupLine(B.name,st.bandIdx[b],st.bandT[b],B.tiers)).join('')+groupLine('Full set',st.fullIdx,st.fullT,all);}
+function groupsHTML(){const all=W.tiers.map((_,i)=>i);const ok=t=>t.every(i=>E.allowed(st,i));const off=n=>`<div class="grp done"><b>${n}</b><span>Not part of this event</span></div>`;
+  return W.bands.map((B,b)=>ok(B.tiers)?groupLine(B.name,st.bandIdx[b],st.bandT[b],B.tiers):off(B.name)).join('')+(ok(all)?groupLine('Full set',st.fullIdx,st.fullT,all):off('Full set'));}
+function renderGroups(){$('#groups').innerHTML=groupsHTML();}
 function renderUps(){const list=E.UPS.filter(u=>!st.ups[u.id]).slice(0,10);const owned=E.UPS.filter(u=>st.ups[u.id]).length;
   $('#p-upgrades').innerHTML=`<p class="lead">One-off boosts for this run. ${owned} bought.</p>`+list.map(u=>{const c=E.upPrice(st,u);const lock=u.t>=0&&!st.tiers[u.t].n;
     return `<div class="card"><div><b>${esc(u.txt)}</b><small>${u.t<0?'Every earner':lock?'Own one first':'One earner'}</small></div><button class="buy" data-up="${u.id}" ${c>st.cash||lock?'disabled':''}><small>Buy</small><b>${fmt(c)}</b></button></div>`;}).join('');}
 function renderPups(){const P=st.pups;
   $('#p-powerups').innerHTML=`<p class="lead">Get every earner in a group to the target count and a random power-up drops. Targets climb faster each time, and they shift a little every run.</p>
-   <div id="groups2">${W.bands.map((B,b)=>groupLine(B.name,st.bandIdx[b],st.bandT[b],B.tiers)).join('')}${groupLine('Full set',st.fullIdx,st.fullT,W.tiers.map((_,i)=>i))}</div>
+   <div id="groups2">${groupsHTML()}</div>
    <h3>Active this run (${P.length})</h3>${P.length?P.map(p=>`<div class="card pupc"><div><b>${esc(p.txt)}</b><small>${esc(p.src||'Start-of-run perk')}</small></div></div>`).join(''):'<p class="muted">None yet. The first one usually drops within a few minutes.</p>'}`;}
 function chalHTML(){if(P.cur!=='event')return '';return P.ev.chal.map(c=>{const v=Math.max(0,chalValue(c));const pct=Math.min(100,v/c.need*100);
   return `<div class="grp chal"><b>${esc(chalText(c))}</b><span>+${c.tok} tokens</span><span class="gp"><i style="width:${pct}%"></i></span><span class="gc">${Math.floor(pct)}%</span></div>`;}).join('');}
