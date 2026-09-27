@@ -1,4 +1,8 @@
-# Pip's Code Rink: versions
+# Versions
+
+Two games share one engine: **Pip's Code Rink** (the penguin game, main folder) and **Clover's Code Garden** (the bunny game, `bunny/` folder).
+
+## Pip's Code Rink
 
 Numbering: **V major.minor.patch**
 - **Major** (V2.00.00): a big change, like a new world or a redesign
@@ -9,6 +13,7 @@ To roll back, restore the commit listed for that version.
 
 | Version | Date | Commit | What's in it |
 |---|---|---|---|
+| V1.01.02 | 2026-09-27 | dc1fe01 | Behind the scenes only: the game code now also powers Clover's Code Garden. Nothing looks different. |
 | V1.01.01 | 2026-09-27 | 56aac7c | Uses "device" instead of "iPad" throughout. Tablet fixes: program list fits when the tablet is sideways (repeat block + and − were cut off), Pip's keyboard fits on upright tablets. Now checked on 13 screen sizes including small and large tablets, upright and sideways. |
 | V1.01.00 | 2026-09-26 | a16d231 | Restart button in levels (back to the level's starting code, stars kept). Reopening a finished level asks Keep my program / Start fresh and shows the missing star. Full QWERTY Pip's keyboard with ( ) _ : keys. Version number in the Parent Corner. |
 | V1.00.00 | 2026-09-26 | 761b532 | Known-good baseline. Worlds 1-3 (Frozen Pond, Loop Lagoon, Power Play), daily puzzles, hard mode for Worlds 2 and 3, code buttons for Python levels (typing optional), phone and tablet layouts, offline app, Parent Corner, passcode. |
@@ -24,3 +29,8 @@ To roll back, restore the commit listed for that version.
 | fb9e175 | Bigger rink on phones |
 | c6c70dc | Fit small phones |
 | 756251b | Phone layout and passcode |
+
+## Clover's Code Garden (bunny game, `bunny/` folder)
+| Version | Date | Commit | What's in it |
+|---|---|---|---|
+| V1.00.00 | 2026-09-27 | dc1fe01 | First release. World 1 Spring Meadow: 10 levels (carrots, burrow, hop, lily pads, hay bales, the goose, read-the-code, first Python with code buttons). Bunny wardrobe (bunnies and bows), badges, Parent Corner, offline app, same passcode. |
