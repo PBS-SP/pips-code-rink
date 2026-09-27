@@ -1,6 +1,6 @@
 # Versions
 
-Two games share one engine: **Pip's Code Rink** (the penguin game, main folder) and **Clover's Code Garden** (the bunny game, `bunny/` folder).
+Two games share one engine: **Pip's Code Rink** (the penguin game, main folder) and **Fluffy's Code Garden** (the bunny game, `bunny/` folder).
 
 ## Pip's Code Rink
 
@@ -30,7 +30,10 @@ To roll back, restore the commit listed for that version.
 | c6c70dc | Fit small phones |
 | 756251b | Phone layout and passcode |
 
-## Clover's Code Garden (bunny game, `bunny/` folder)
+## Fluffy's Code Garden (bunny game, `bunny/` folder)
+
+Called Clover's Code Garden in V1.00.00.
 | Version | Date | Commit | What's in it |
 |---|---|---|---|
+| V1.01.00 | 2026-09-27 | b2fe60d | The bunny is now Fluffy, with a cuter round face, big sparkly eyes, pink cheeks, a pom-pom tail and a bow on one ear. Game renamed Fluffy's Code Garden. Fluffy only holds a carrot after picking one up (levels 1-1, 1-4, 1-6, 1-7 and 1-8 now have a carrot to collect first). She bounces as she moves and does a happy wiggle when she gets home. New home-screen icon. |
 | V1.00.00 | 2026-09-27 | dc1fe01 | First release. World 1 Spring Meadow: 10 levels (carrots, burrow, hop, lily pads, hay bales, the goose, read-the-code, first Python with code buttons). Bunny wardrobe (bunnies and bows), badges, Parent Corner, offline app, same passcode. |
