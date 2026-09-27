@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Clover's Code Garden</title>
+<title>Fluffy's Code Garden</title>
 <meta name="description" content="A bunny coding game.">
 <meta name="theme-color" content="#2B2346">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -736,7 +736,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
 }
 @media (min-width:601px) and (orientation:portrait){body.kb #boardWrap{max-height:24vh}body.kb .goals{display:none}body.kb .play{grid-template-rows:auto minmax(0,1fr)}}
 
-/* ---- Clover's Code Garden colours: soft plum night, sunny and pink accents ---- */
+/* ---- Fluffy's Code Garden colours: soft plum night, sunny and pink accents ---- */
 :root{
   --night:#2B2346; --night-2:#1F1934; --panel:#3B3162; --panel-2:#4F4380; --line:#6D5FA6;
   --text:#FFF8FD; --muted:#D3C6EA; --ice:#BDE8A0; --snow:#F4FBEF;
@@ -868,8 +868,8 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
 <div id="toast" hidden></div>
 <script>
 const RINK_KEY='clover-code-garden.v1';
-/* Clover's Code Garden: settings read by the shared game code */
-const THEME={version:'V1.00.00',title:"Clover's Code Garden",daily:false,pyLevel:'1-10',hard:false,
+/* Fluffy's Code Garden: settings read by the shared game code */
+const THEME={version:'V1.01.00',title:"Fluffy's Code Garden",daily:false,pyLevel:'1-10',hard:false,
   learnHTML:"<p><b>What she's learning.</b> World 1 is <b>sequences</b>: planning steps in order, picking things up and bringing them home, hopping over things, puzzles where steps change the meadow (sinking lily pads, hay-bale bridges), timing with the goose, reading code to predict what it does, and a first taste of real Python using code buttons (typing optional).</p>"};
 
 /* ===================== GAME ENGINE (pure logic, no drawing) ===================== */
@@ -1098,32 +1098,32 @@ function genDaily(day,tierIdx,mechPool){
 /* =====================================================================
    CLOVER'S CODE GARDEN — LEVELS
    Map legend (one string per row, all rows the same length):
-     P  Clover's start     N  burrow (home)      .  meadow     ,  flowers
+     P  Fluffy's start     N  burrow (home)      .  meadow     ,  flowers
      *  golden carrot      o  carrot to pick up   W  pond       #  rock
      T  bush               B  hay bale (push it; into the pond = bridge)
-     c  lily pad (sinks after Clover hops off)    =  mud (slide)
-   Clover must carry carrots home: walk into the burrow holding them.
-   pucks: carrots Clover starts with (default 0 here); need: carrots to bring home (default 1).
-   hop() jumps over one square (a pond or rock, not a bush), the way Clover faces.
+     c  lily pad (sinks after Fluffy hops off)    =  mud (slide)
+   Fluffy must carry carrots home: walk into the burrow holding them.
+   pucks: carrots Fluffy starts with (default 0 here); need: carrots to bring home (default 1).
+   hop() jumps over one square (a pond or rock, not a bush), the way Fluffy faces.
    ===================================================================== */
 const MOVES=['right','left','up','down'];
 const ALL_CMDS=[...MOVES,'hop','wait','repeat'];
 const WORLDS=[
-{ n:1, name:'Spring Meadow', idea:'Sequences', blurb:'A program is a list of steps. Clover does them in order, one at a time, and the order is everything.',
+{ n:1, name:'Spring Meadow', idea:'Sequences', blurb:'A program is a list of steps. Fluffy does them in order, one at a time, and the order is everything.',
   levels:[
- { id:'1-1', title:'Home Time', mode:'blocks', blocks:[...MOVES], newBlocks:[...MOVES], pucks:1,
-   map:['P..,,,',
+ { id:'1-1', title:'Home Time', mode:'blocks', blocks:[...MOVES], newBlocks:[...MOVES], pucks:0,
+   map:['P.o,,,',
         ',,.#.N',
-        ',*...,'],
-   mission:'Clover is holding a carrot. Take her home to the burrow!',
+        ',,.*.,'],
+   mission:'Pick up the carrot, then take it home to the burrow!',
    learn:'A program is a list of steps that runs in order.',
-   hints:['A rock is in the way. Which row is clear?','Go down to the bottom row, past the rock, then back up to the burrow.'] },
+   hints:['Walk onto the carrot to pick it up. Then find a way past the rock.','After the carrot, go down to the bottom row, past the rock, then back up to the burrow.'] },
 
  { id:'1-2', title:'Carrot Patch', mode:'blocks', blocks:[...MOVES], pucks:0,
    map:['N,,#,,',
         '.,,o,,',
         'P..,*.'],
-   mission:'Pick up the carrot first, then bring it home.',
+   mission:'Another carrot to fetch! Which way is quickest?',
    learn:'Plans have parts: first get the carrot, then go home.',
    hints:['Walk onto the carrot to pick it up.','After the carrot, the burrow is up and to the left.'] },
 
@@ -1136,41 +1136,41 @@ const WORLDS=[
    learn:'Finding a path around things in the way.',
    hints:['The carrot is behind the rocks. Go down and around.','The burrow is at the bottom. Can you come back the same way?'] },
 
- { id:'1-4', title:'Big Hop', mode:'blocks', blocks:[...MOVES,'hop'], newBlocks:['hop'], pucks:1,
+ { id:'1-4', title:'Big Hop', mode:'blocks', blocks:[...MOVES,'hop'], newBlocks:['hop'], pucks:0,
    map:[',,*,,,,',
-        'P.W.W.N',
+        'P.WoW.N',
         ',,,,,,,'],
-   mission:'Bunnies can hop! hop() jumps over one square, the way Clover is facing.',
+   mission:'Bunnies can hop! hop() jumps over one square, the way Fluffy is facing.',
    learn:'A new command can make a program shorter.',
-   hints:['Clover faces the way she last moved.','Move right once, then hop over the pond.'] },
+   hints:['Fluffy faces the way she last moved.','Move right once, then hop over the pond onto the carrot.'] },
 
  { id:'1-5', title:'Carrot Pair', mode:'blocks', blocks:[...MOVES,'hop'], pucks:0, need:2,
    map:['o,,#,,o',
         '.,,.*,.',
         'P..W..N'],
-   mission:'Bring TWO carrots home. Clover can carry both at once.',
+   mission:'Bring TWO carrots home. Fluffy can carry both at once.',
    learn:'Planning a program that does two jobs.',
    hints:['Pick up both carrots before you go home.','One carrot is top-left and one is top-right. The burrow is bottom-right.'] },
 
- { id:'1-6', title:'Lily Pads', mode:'blocks', blocks:[...MOVES], mech:'cracked', pucks:1,
+ { id:'1-6', title:'Lily Pads', mode:'blocks', blocks:[...MOVES], mech:'cracked', pucks:0,
    map:['WWWWWN',
-        'P.cc.,',
+        'Pocc.,',
         'W,*WW,'],
-   mission:'Lily pads sink after Clover steps off. You only get one trip across!',
+   mission:'Lily pads sink after Fluffy steps off. You only get one trip across!',
    learn:'Each step changes the world, so later steps depend on earlier ones.',
    hints:['If you step on a lily pad to reach the golden carrot, can you get back?','Reach the golden carrot from the flowers below first. Then go up onto the lily pads and across.'] },
 
- { id:'1-7', title:'Hay Bridge', mode:'blocks', blocks:[...MOVES,'hop'], mech:'push', pucks:1,
+ { id:'1-7', title:'Hay Bridge', mode:'blocks', blocks:[...MOVES,'hop'], mech:'push', pucks:0,
    map:['T,,,WW,*',
         'P.B.WW.N',
-        'T,,,WW,,'],
+        'T,,,WWo,'],
    mission:'Push the hay bale into the pond to make a bridge. The pond is too wide to hop in one go!',
    learn:'Changing the world to make a path.',
-   hints:['Walk into the hay bale to push it.','Push it into the first pond square, stand on the bridge, then hop over the second.'] },
+   hints:['Walk into the hay bale to push it. The carrot is on the other side of the pond.','Push the bale into the first pond square, stand on the bridge, then hop over the second.'] },
 
- { id:'1-8', title:'Silly Goose', mode:'blocks', blocks:[...MOVES,'wait'], newBlocks:['wait'], pucks:1,
+ { id:'1-8', title:'Silly Goose', mode:'blocks', blocks:[...MOVES,'wait'], newBlocks:['wait'], pucks:0,
    map:['T,.T,,T',
-        'P,.,,,N',
+        'Po.,,,N',
         'T,.T,*T',
         'T#.#,#T'],
    zam:[[2,3],[2,2],[2,1],[2,0]],
@@ -1178,13 +1178,13 @@ const WORLDS=[
    learn:'Timing: sometimes the right step is to wait.',
    hints:['Watch where the goose is after each step. Press Step to go slowly.','Move right once, then wait() once, then cross.'] },
 
- { id:'1-9', title:'Where Will Clover Go?', mode:'predict', pucks:1,
+ { id:'1-9', title:'Where Will Fluffy Go?', mode:'predict', pucks:0,
    map:[',,,,,,',
         'P.W..,',
         ',,,#,,',
         ',,,,,N'],
    program:'right()\nhop()\nright()\ndown()\ndown()',
-   mission:'Read the program. Where will Clover stop? Tap that square, then press Check.',
+   mission:'Read the program. Where will Fluffy stop? Tap that square, then press Check.',
    learn:'Reading code and predicting what it does.',
    hints:['Follow the program one line at a time with your finger.','hop() jumps over the pond and lands two squares along.'] },
 
@@ -2447,7 +2447,7 @@ $$('.inswitch').forEach(b=>b.onclick=()=>{if(cur.sp&&cur.sp.on)return;S.codeIn=b
 
 /* ---- words: penguin game -> bunny game (display text only, never code) ---- */
 const BUN_WORDS=[
- [/Pip's Code Rink/g,"Clover's Code Garden"],[/Code Rink/g,'Code Garden'],[/Today's Rink/g,"Today's Garden"],
+ [/Pip's Code Rink/g,"Fluffy's Code Garden"],[/Code Rink/g,'Code Garden'],[/Today's Rink/g,"Today's Garden"],
  [/\bScore and grab the fish\b/g,'Get home and grab the golden carrot'],[/\bScored with the fish\b/g,'Home with the golden carrot'],
  [/\bScored, missed the fish\b/g,'Home, but missed the golden carrot'],[/\bMissed the fish\b/g,'Missed the golden carrot'],
  [/\bScore a goal\b/g,'Take a carrot home'],[/\bScore (\d+) goals\b/g,'Take $1 carrots home'],[/\bScored!/g,'Home!'],
@@ -2459,7 +2459,7 @@ const BUN_WORDS=[
  [/\bHelmets\b/g,'Bows'],[/\bHelmet\b/g,'Bow'],[/\bhelmets\b/g,'bows'],[/\bhelmet\b/g,'bow'],[/\bPlayers\b/g,'Bunnies'],[/\bLocker\b/g,'Wardrobe'],
  [/Stars \(incl\. daily\)/g,'Stars'], [/Try Today's Rink for fresh puzzles!/g,'More worlds are coming soon!'],[/moving up the team/g,'growing into a great coder'],[/\blocker\b/g,'wardrobe'],[/\bteam passcode\b/g,'garden passcode'],
  [/\bthe boards\b/g,'the fence'],[/\bboards\b/g,'fence'],
- [/\bPip\b/g,'Clover'],[/\bhim\b/g,'her'],[/\bHe\b/g,'She'],[/\bhe\b/g,'she'],[/\bhis\b/g,'her'],[/\bHis\b/g,'Her']];
+ [/\bPip\b/g,'Fluffy'],[/\bhim\b/g,'her'],[/\bHe\b/g,'She'],[/\bhe\b/g,'she'],[/\bhis\b/g,'her'],[/\bHis\b/g,'Her']];
 function TX(s){if(!s||typeof s!=='string')return s;let o=s;for(const [re,to] of BUN_WORDS)o=o.replace(re,to);return o;}
 (function(){const SKIP='code,pre,textarea,input,script,style,.cc,.py,.pline,.cchip,.codeview,.pkb,.cn,.prompt .pblk';
   const fixText=n=>{const p=n.parentElement;if(!p||p.closest(SKIP))return;const v=n.nodeValue,t=TX(v);if(t!==v)n.nodeValue=t;};
@@ -2476,7 +2476,7 @@ Object.assign(OBST,{null:'fence','#':'rock','T':'bush','G':'gate','B':'hay bale'
 Object.assign(BLOCKS,{
  right:{kind:'move',icon:'right',say:'move one square right'},left:{kind:'move',icon:'left',say:'move one square left'},
  up:{kind:'move',icon:'up',say:'move one square up'},down:{kind:'move',icon:'down',say:'move one square down'},
- hop:{kind:'move',icon:'jump',say:'hop over one square (a pond or a rock), the way Clover faces'},
+ hop:{kind:'move',icon:'jump',say:'hop over one square (a pond or a rock), the way Fluffy faces'},
  wait:{kind:'time',icon:'wait',say:'stay still for one step'}});
 PAL_GROUPS[0][0]='Move';PAL_GROUPS[2][1].push('hop');
 RANKS.splice(0,RANKS.length,'Seedling','Sprout','Hopper','Nibbler','Digger','Explorer','Meadow Scout','Garden Helper','Burrow Builder','Carrot Captain','Garden Star','Legend');
@@ -2487,7 +2487,7 @@ RANKS.splice(0,RANKS.length,'Seedling','Sprout','Hopper','Nibbler','Digger','Exp
   const nb=BADGES.filter(b=>keep[b.id]).map(b=>({id:b.id,name:keep[b.id][0],desc:keep[b.id][1]}));BADGES.splice(0,BADGES.length,...nb);}
 Object.keys(CHARS).forEach(k=>delete CHARS[k]);
 Object.assign(CHARS,{
- pip:{name:'Clover',what:'Bunny',K:'#6A5870',W:'#FFFFFF',I:'#FFB3CB',E:'#2A1E2E',N:'#FF6F9E',T:'#F1E9F4',C:'#FFD0E0',req:null},
+ pip:{name:'Fluffy',what:'Bunny',K:'#6A5870',W:'#FFFFFF',I:'#FFB3CB',E:'#2A1E2E',N:'#FF6F9E',T:'#F1E9F4',C:'#FFD0E0',req:null},
  hazel:{name:'Hazel',what:'Brown bunny',K:'#5A3B24',W:'#D29A69',I:'#F6BFA8',E:'#1E140C',N:'#E8768E',T:'#F7E9D8',C:'#EBB08F',req:{stars:10}},
  pepper:{name:'Pepper',what:'Grey bunny',K:'#3F4552',W:'#AEB7C4',I:'#F4B6C8',E:'#171B22',N:'#F07CA0',T:'#E9EDF2',C:'#D9C2CF',req:{stars:20}},
  coco:{name:'Coco',what:'Chocolate bunny',K:'#3A2418',W:'#8A5638',I:'#E9A3A0',E:'#140C08',N:'#F08AA0',T:'#F3E2D2',C:'#B97A60',req:{badge:'hattrick'}},
@@ -2495,35 +2495,35 @@ Object.assign(CHARS,{
  py:{name:'Py Bunny',what:'Python bunny',K:'#2B5B84',W:'#FFE873',I:'#6FA8DC',E:'#1B2330',N:'#3776AB',T:'#FFF6C2',C:'#FFD34D',req:{py:1}}});
 COSTUMES.splice(0,COSTUMES.length,
  {id:'red',name:'Strawberry Bow',color:'#F0507A',req:null},{id:'blue',name:'Bluebell Bow',color:'#4F8CE8',req:{xp:60}},
- {id:'green',name:'Clover Bow',color:'#3FBF6E',req:{stars:9}},{id:'gold',name:'Sunflower Bow',color:'#FFC933',req:{badge:'hattrick'}},
+ {id:'green',name:'Meadow Bow',color:'#3FBF6E',req:{stars:9}},{id:'gold',name:'Sunflower Bow',color:'#FFC933',req:{badge:'hattrick'}},
  {id:'purple',name:'Lavender Bow',color:'#A77BEA',req:{badge:'debug'}},{id:'crystal',name:'Rainbow Bow',color:'#5FE0D8',req:{badge:'perfect1'}},
  {id:'python',name:'Python Bow',color:'#3776AB',req:{py:1}});
 Object.keys(TILE_INFO).forEach(k=>delete TILE_INFO[k]);
-Object.assign(TILE_INFO,{'N':'Burrow: Clover\'s home. Walk in holding a carrot to bring it home.','o':'Carrot: walk onto it to pick it up.',
- '*':'Golden carrot: grab it for a star.','W':'Pond: Clover falls in. Hop over it!','#':'Rock: Clover bumps into it, but can hop over it.',
- 'T':'Bush: too tall to hop over.','c':'Lily pad: sinks after Clover steps off.','B':'Hay bale: push it. Push it into the pond to make a bridge.',
- '=':'Mud: Clover slides until something stops her.'});
+Object.assign(TILE_INFO,{'N':'Burrow: Fluffy\'s home. Walk in holding a carrot to bring it home.','o':'Carrot: walk onto it to pick it up.',
+ '*':'Golden carrot: grab it for a star.','W':'Pond: Fluffy falls in. Hop over it!','#':'Rock: Fluffy bumps into it, but can hop over it.',
+ 'T':'Bush: too tall to hop over.','c':'Lily pad: sinks after Fluffy steps off.','B':'Hay bale: push it. Push it into the pond to make a bridge.',
+ '=':'Mud: Fluffy slides until something stops her.'});
 FUTURE.splice(0,FUTURE.length,
  {n:2,name:'Summer Garden',idea:'Loops',blurb:'Repeat steps without writing them again.'},
  {n:3,name:'Autumn Woods',idea:'Choosing commands',blurb:'Lots of commands. Pick the best ones.'},
- {n:4,name:'Winter Warren',idea:'If / else',blurb:'Clover checks the path and decides what to do.'},
+ {n:4,name:'Winter Warren',idea:'If / else',blurb:'Fluffy checks the path and decides what to do.'},
  {n:'S',name:'Build-a-Garden',idea:'Sandbox',blurb:'Make your own puzzles.'});
 Object.keys(WORLD_UNLOCK).forEach(k=>delete WORLD_UNLOCK[k]);
 
 /* ---- gentle wording for things that go wrong ---- */
 function failText(sim){const ev=sim.events[sim.events.length-1];const n=ev?ev.i+1:0;
   if(sim.result==='incomplete'){const f=sim.final;
-    if(cur.w.need>1&&f.scored>0)return {t:'Not all home!',m:`Clover brought ${f.scored} of ${cur.w.need} carrots home, then ran out of steps.`};
-    if(f.pucks>0)return {t:'Nearly!',m:`Clover has a carrot, but she isn't home yet. Add more steps to reach the burrow.`};
-    return {t:'Out of steps!',m:`Clover did all ${run.acts.length} step${run.acts.length===1?'':'s'}, but no carrot is home yet. Add more steps.`};}
+    if(cur.w.need>1&&f.scored>0)return {t:'Not all home!',m:`Fluffy brought ${f.scored} of ${cur.w.need} carrots home, then ran out of steps.`};
+    if(f.pucks>0)return {t:'Nearly!',m:`Fluffy has a carrot, but she isn't home yet. Add more steps to reach the burrow.`};
+    return {t:'Out of steps!',m:`Fluffy did all ${run.acts.length} step${run.acts.length===1?'':'s'}, but no carrot is home yet. Add more steps.`};}
   const ob=ev.obstacle||'something';const where=ob==='fence'?'the fence at the edge of the meadow':'a '+ob;
   switch(ev.end){
-    case 'bump':if(ev.landing)return {t:'Bad landing!',m:`On step ${n}, Clover couldn't land on ${ob==='fence'?'the fence':'a '+ob}. She needs a clear square two ahead.`};
-      return {t:'Bonk!',m:`On step ${n} (${ev.act}), Clover ${ev.jump?'couldn\'t hop over':'bumped into'} ${where}.`};
-    case 'stuck':return {t:'Stuck!',m:`On step ${n}, Clover pushed the hay bale, but ${ob==='fence'?'the fence':'a '+ob} was behind it.`};
-    case 'water':return {t:'Splash!',m:`On step ${n}, Clover fell in the pond. Bunnies don't like getting wet! Try hop() over it.`};
-    case 'nopuck':return {t:'No carrot!',m:`On step ${n}, Clover got home with no carrot. Pick one up first!`};
-    case 'zamboni':return {t:'Honk honk!',m:`On step ${n}, Clover bumped into the goose. Try wait() to let it pass.`};}
+    case 'bump':if(ev.landing)return {t:'Bad landing!',m:`On step ${n}, Fluffy couldn't land on ${ob==='fence'?'the fence':'a '+ob}. She needs a clear square two ahead.`};
+      return {t:'Bonk!',m:`On step ${n} (${ev.act}), Fluffy ${ev.jump?'couldn\'t hop over':'bumped into'} ${where}.`};
+    case 'stuck':return {t:'Stuck!',m:`On step ${n}, Fluffy pushed the hay bale, but ${ob==='fence'?'the fence':'a '+ob} was behind it.`};
+    case 'water':return {t:'Splash!',m:`On step ${n}, Fluffy fell in the pond. Bunnies don't like getting wet! Try hop() over it.`};
+    case 'nopuck':return {t:'No carrot!',m:`On step ${n}, Fluffy got home with no carrot. Pick one up first!`};
+    case 'zamboni':return {t:'Honk honk!',m:`On step ${n}, Fluffy bumped into the goose. Try wait() to let it pass.`};}
   return {t:'Not yet',m:'Try again!'};}
 
 /* ---- art: garden tiles ---- */
@@ -2567,34 +2567,27 @@ function drawZamboni(c,x,y,s){const p=s/16;const R=(cx,cy,w,h,col)=>{c.fillStyle
   R(2,8,11,5,'#FFFFFF');R(3,7,9,1,'#FFFFFF');R(1,9,1,3,'#FFFFFF');R(10,3,2,5,'#FFFFFF');R(10,1,4,3,'#FFFFFF');R(14,2,2,1,'#FF9A2E');R(14,3,1,1,'#E07A10');
   R(12,2,1,1,'#1B2330');R(4,9,6,2,'#E1E7EE');R(3,12,10,1,'#C9D2DC');R(5,13,1,2,'#FF9A2E');R(9,13,1,2,'#FF9A2E');R(4,15,3,1,'#FF9A2E');R(8,15,3,1,'#FF9A2E');}
 
-/* ---- art: the bunny ---- */
-const BUN=[
- "........KK.KK...",
- ".......KIK.KIK..",
- ".......KIK.KIK..",
- ".......KIK.KIK..",
- ".......KWKHKWK..",
- "......KWWHHHWWK.",
- ".....KWWWWWWWEWK",
- "..KKKWWWWWWWWWNK",
- ".KWWWWWWWWWWCWK.",
- "KWWWWWWWWWWWWK..",
- "TTWWWWWWWWWWWK..",
- "TTWWWWWWWWWWK...",
- ".KWWWWWWWWWWK...",
- "..KWWKKKKWWK....",
- "..KKK....KKK....",
- "................"];
+/* ---- art: Fluffy (20x20 chibi bunny, ears up, bow on one ear) ---- */
+const BUN=['.....KK......KK.....','.....KWK....KWK.....','....KWIK....KIWK....','....KWIK....KIWK....','....KWIWKKKKWIWK....',
+ '.....KIWWWWWWIHH.HH.','...KKWWWWWWWWWHHHHH.','...KWWWWWWWWWWHHKHH.','..KWWWWWWWWWWWWWWK..','..KWWSEWWWWWWSEWWK..',
+ '..KWWEEWWWWWWEEWWK..','..KWWEEWWNNWWEEWWK..','...KCCWWWMMWWWCCK...','...KWWWWWWWWWWWKK...','..KTWWWWWWWWWWK.....',
+ '.KTTTWWWWWWWWWWK....','.KWTTKWWWWWWWWWK....','..KKK.KWWWWWWWK.....','.....KKKKKKKKKK.....','....................'];
+let BUN_HAPPY=0;
 function drawSprite(c,x,y,s,o={}){
   const ch=CHARS[o.char||S.char]||CHARS.pip;const hc=(COSTUMES.find(k=>k.id===(o.costume||S.costume))||COSTUMES[0]).color;
-  const sc=o.scale==null?1:o.scale;const p=s/16*sc;const ox=x+(s-16*p)/2,oy=y+(s-16*p)*(o.sink?1:0.5);
-  const col={K:ch.K,W:ch.W,I:ch.I,E:ch.E,N:ch.N,T:ch.T,C:ch.C,H:hc};const left=o.face==='left';
+  const G=BUN.length,sc=o.scale==null?1:o.scale;const p=s/G*sc;let ox=x+(s-G*p)/2,oy=y+(s-G*p)*(o.sink?1:0.5);
+  if(typeof Bd!=='undefined'&&c===Bd.ctx){const t=performance.now();
+    if(t-BUN_HAPPY<1800){ox+=Math.sin(t/55)*p*1.1;oy-=Math.abs(Math.sin(t/140))*p*2.2;}
+    else if(cur.running)oy-=Math.abs(Math.sin(t/95))*p*1.4;}
+  const col={K:ch.K,W:ch.W,I:ch.I,E:ch.E,S:'#FFFFFF',N:ch.N,T:ch.T,C:ch.C,M:'#B84A72',H:hc};const left=o.face==='left';
   c.globalAlpha=o.alpha==null?1:o.alpha;
-  const px=(cx,cy,color)=>{const X=left?15-cx:cx;c.fillStyle=color;c.fillRect(Math.floor(ox+X*p),Math.floor(oy+cy*p),Math.ceil(p),Math.ceil(p))};
-  for(let r=0;r<16;r++){const row=BUN[r];for(let cc=0;cc<16;cc++){const k=row[cc];if(!k||k==='.')continue;px(cc,r,col[k]);}}
-  px(13,5,'rgba(255,255,255,.9)');
-  if(o.puck){px(13,11,'#FF8A2A');px(14,11,'#FF8A2A');px(13,12,'#FF8A2A');px(14,12,'#F07A1E');px(14,13,'#F07A1E');px(12,10,'#46C065');px(13,10,'#46C065');}
+  const px=(cx,cy,color)=>{const X=left?G-1-cx:cx;c.fillStyle=color;c.fillRect(Math.floor(ox+X*p),Math.floor(oy+cy*p),Math.ceil(p),Math.ceil(p))};
+  for(let r=0;r<G;r++){const row=BUN[r];for(let cc=0;cc<G;cc++){const k=row[cc];if(!k||k==='.')continue;px(cc,r,col[k]);}}
+  if(o.puck){[[16,14,'#46C065'],[17,13,'#46C065'],[15,15,'#FF8A2A'],[16,15,'#FF8A2A'],[15,16,'#FF8A2A'],[16,16,'#F07A1E'],[16,17,'#F07A1E'],[15,15,'#FFB066']].forEach(([a,b,k])=>px(a,b,k));}
   c.globalAlpha=1;}
+/* her picture outside levels never shows a carrot she hasn't picked up */
+function avatarTo(canvas,opts={}){const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;c.clearRect(0,0,canvas.width,canvas.height);drawSprite(c,0,0,canvas.width,Object.assign({puck:false},opts));}
+{const _os=onSuccess;onSuccess=function(sim){BUN_HAPPY=performance.now();return _os.apply(this,arguments);};}
 /* Python lessons unlock after the Python level in World 1 */
 </script>
 <script>
