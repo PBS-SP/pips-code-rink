@@ -1,5 +1,5 @@
 // Offline support for Fluffy's Code Garden. Bump VERSION when the game changes.
-const VERSION='bunny-2026-09-27-2';
+const VERSION='bunny-2026-09-27-3';
 const FILES=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('bunny-')&&x!==VERSION).map(x=>caches.delete(x)))).then(()=>self.clients.claim()));});

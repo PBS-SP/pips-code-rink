@@ -735,6 +735,36 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
   .pkb .k{height:44px}
 }
 @media (min-width:601px) and (orientation:portrait){body.kb #boardWrap{max-height:24vh}body.kb .goals{display:none}body.kb .play{grid-template-rows:auto minmax(0,1fr)}}
+
+/* ---- tablets and bigger: more of the program in view ---- */
+@media (min-width:601px){
+  /* many commands: group them into tabs, like the phone */
+  .paltabs:not([hidden]){display:flex;gap:4px;background:var(--night-2);border-radius:8px;padding:3px;flex:none}
+  .paltabs button{flex:1;min-width:0;min-height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);font:800 14px var(--ui);cursor:pointer;padding:0 4px}
+  .paltabs button[aria-pressed="true"]{background:var(--panel-2);color:var(--text)}
+  .palette.grouped .blk.offtab{display:none}
+  .cpad.tabbed .ctabs{display:flex;gap:4px;background:var(--night-2);border-radius:8px;padding:3px}
+  .cpad .ctabs button{flex:1;min-width:0;min-height:34px;border:0;border-radius:6px;background:transparent;color:var(--muted);font:800 14px var(--ui);cursor:pointer;padding:0 4px}
+  .cpad .ctabs button[aria-pressed="true"]{background:var(--panel-2);color:var(--text)}
+  .cpad .offtab{display:none}
+  .cols{display:none}
+}
+@media (min-width:601px) and (min-height:521px){
+  #progHead{flex-wrap:nowrap}
+  #progHead h3,#progHead .count{white-space:nowrap}
+  /* slimmer blocks and program steps */
+  .palette .blk{height:46px;font-size:17px;padding:0 13px 0 10px}
+  .row{min-height:48px;padding:1px 3px}
+  .bcell .blk{height:40px;font-size:16px}
+}
+@media (min-width:601px) and (min-height:521px) and (orientation:landscape){
+  #palHead{display:none}
+  .palette.grouped+* {margin-top:0}
+}
+@media (min-width:601px) and (min-height:521px) and (orientation:landscape) and (max-width:1300px){
+  #progHead h3{display:none}
+  #progHead .mode button{padding:0 10px}
+}
 </style>
 </head><body>
 <div id="app">
@@ -814,7 +844,7 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
           <div class="target" id="targetBoxB" hidden></div>
           <div class="paltabs" id="palTabs" hidden></div>
           <div class="palette" id="palette"></div>
-          <div class="phead"><h3>Your program</h3><span class="count" id="count"></span><span class="grow"></span><span class="mode" id="modeSw1"></span><button class="btn small ghost" id="btnClear">Clear</button></div>
+          <div class="phead" id="progHead"><h3>Your program</h3><span class="count" id="count"></span><span class="grow"></span><span class="mode" id="modeSw1"></span><button class="btn small ghost" id="btnClear">Clear</button></div>
           <div class="cols"><span></span><span>Blocks</span><span>Python</span><span></span></div>
           <div class="prog" id="prog"></div>
           <div class="progerr" id="progErr" hidden></div>
@@ -1552,7 +1582,7 @@ function hardChip(L,n){return L.mode==='speed'?`Hard · ${L.speed.secs}s, higher
 
 'use strict';
 /* ===================== DATA ===================== */
-const TH=Object.assign({version:'V1.01.02',title:"Pip's Code Rink",daily:true,pyLevel:'1-12'},typeof THEME==='object'?THEME:{});
+const TH=Object.assign({version:'V1.01.03',title:"Pip's Code Rink",daily:true,pyLevel:'1-12'},typeof THEME==='object'?THEME:{});
 const APP_VERSION=TH.version;
 function TX(s){return s;}
 const LEVELS=[];WORLDS.forEach(W=>W.levels.forEach(L=>{L.world=W.n;L.key=L.id;if(L.target&&!L.solution)L.solution=L.target;LEVELS.push(L);}));
@@ -1970,14 +2000,16 @@ function rowsHTML(lines,{edit=true,mini=false}={}){
   while(stack.length)h+=slot(stack.pop(),n);
   if(edit)h+=`<div class="slot end" data-at="${n}" data-d="0"><span class="txt">${n?'+ Add at the end':'Tap a block above, or drag it here. Pip runs your program from top to bottom.'}</span></div>`;
   return h;}
-const PAL_GROUPS=[['Skate',['right','left','up','down']],['Steer',['forward','turn_left','turn_right']],['Moves',['dash','jump','wait']],['Puck',['shoot','pass_puck']],['Loop',['repeat']]];
+const BLOCK_ORDER=['left','right','up','down','forward','turn_left','turn_right','dash','jump','hop','wait','shoot','pass_puck','repeat'];
+function orderBlocks(bs){return (bs||[]).slice().sort((a,b)=>BLOCK_ORDER.indexOf(a)-BLOCK_ORDER.indexOf(b));}
+const PAL_GROUPS=[['Skate',['left','right','up','down']],['Steer',['forward','turn_left','turn_right']],['Moves',['dash','jump','wait']],['Puck',['shoot','pass_puck']],['Loop',['repeat']]];
 function renderPalTabs(){const L=cur.L,el=$('#palTabs');const groups=PAL_GROUPS.map(([n,bs])=>[n,bs.filter(b=>L.blocks.includes(b))]).filter(g=>g[1].length);
   const many=L.blocks.length>6;el.hidden=!many;$('#palette').classList.toggle('grouped',many);if(!many)return;
   if(!groups.some(g=>g[0]===cur.palTab))cur.palTab=groups[0][0];
   el.innerHTML=groups.map(([n])=>`<button data-tab="${n}" aria-pressed="${cur.palTab===n}">${n}</button>`).join('');
   $$('#palette .blk').forEach(b=>{const g=groups.find(x=>x[1].includes(b.dataset.b));b.classList.toggle('offtab',!!g&&g[0]!==cur.palTab);});
   const vis=groups.find(g=>g[0]===cur.palTab)[1].length;$('#palette').style.setProperty('--nt',Math.max(3,vis));}
-function renderPalette(){const L=cur.L;$('#palette').style.setProperty('--n',Math.min(6,L.blocks.length));$('#palette').innerHTML=L.blocks.map(b=>{const B=BLOCKS[b];const isNew=(L.newBlocks||[]).includes(b)&&!(S.lv[L.key]&&S.lv[L.key].done);
+function renderPalette(){const L=cur.L;$('#palette').style.setProperty('--n',Math.min(6,L.blocks.length));$('#palette').innerHTML=orderBlocks(L.blocks).map(b=>{const B=BLOCKS[b];const isNew=(L.newBlocks||[]).includes(b)&&!(S.lv[L.key]&&S.lv[L.key].done);
   return `<button class="blk${isNew?' new':''}" data-kind="${B.kind}" data-b="${b}" aria-label="Add ${b} block: ${B.say}">${icon(B.icon,'#fff')}<span>${b}</span></button>`;}).join('');}
 function renderProgPal(){}
 function renderProg(){$('#prog').innerHTML=rowsHTML(cur.lines);markCursor();renderCount(cur.lines.length,'#count');
@@ -2550,7 +2582,7 @@ function objLabel(L){const o=objOf(L),g=L.map.join('');
     case 'cones':return 'Knock down every cone';case 'pass':return 'Score off a pass';case 'iceonly':return 'Stay on the ice (no snow)';
     case 'without':return `Don't use ${o.block}()`;case 'budget':return `Use ${o.block}() ${o.max===1?'only once':o.max+' times or fewer'}`;}return 'Bonus';}
 function pyCount(){return LEVELS.filter(L=>S.lv[L.key]&&S.lv[L.key].py).length;}
-function levelCommands(L){const c=(L.blocks||[]).filter(b=>b!=='repeat').map(b=>b+'()');if((L.blocks||[]).includes('repeat'))c.push('for i in range(3):');return c;}
+function levelCommands(L){const c=orderBlocks(L.blocks).filter(b=>b!=='repeat').map(b=>b+'()');if((L.blocks||[]).includes('repeat'))c.push('for i in range(3):');return c;}
 
 /* ---- star rules ---- */
 function starGoals(L){const par=cur.par;
@@ -2720,7 +2752,7 @@ function cbShift(dir){if(cbBusy())return;const lines=cur.text.split('\n');const 
 function cbCount(delta){if(cbBusy())return;cur.cbN=Math.max(1,Math.min(20,(cur.cbN||3)+delta));SFX.add();renderCpad();}
 function cbSelect(li){const lines=cur.text.split('\n');li=Math.max(0,Math.min(lines.length-1,li));let c=0;for(let k=0;k<li;k++)c+=lines[k].length+1;cur.caret=c+lines[li].length;
   SFX.key();renderCodeView();renderCpad();}
-function renderCpad(){const el=$('#cpad');if(!el||el.hidden||!cur.L)return;const L=cur.L,bl=L.blocks||[];const calls=bl.filter(b=>b!=='repeat'),loop=bl.includes('repeat');
+function renderCpad(){const el=$('#cpad');if(!el||el.hidden||!cur.L)return;const L=cur.L,bl=L.blocks||[];const calls=orderBlocks(bl).filter(b=>b!=='repeat'),loop=bl.includes('repeat');
   const groups=PAL_GROUPS.map(([n,bs])=>[n,bs.filter(b=>bl.includes(b))]).filter(g=>g[1].length);
   const tabs=calls.length+(loop?1:0)>6&&groups.length>1;if(tabs&&!groups.some(g=>g[0]===cur.cpTab))cur.cpTab=groups[0][0];
   const off=b=>{if(!tabs)return '';const g=groups.find(x=>x[1].includes(b));return g&&g[0]!==cur.cpTab?' offtab':'';};
