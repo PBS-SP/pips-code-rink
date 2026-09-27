@@ -358,7 +358,7 @@ const PERKS=[
  {id:'msBoost',max:3,cost:[100,800,6000],txt:l=>`Milestone profit rewards ×${[2,2.25,2.5,2.75][l]} instead of ×2`},
  {id:'startPup',max:3,cost:[30,200,1500],txt:l=>`Start each run with ${l} random power-up${l>1?'s':''}`},
  {id:'choice4',max:1,cost:[800],txt:()=>`Choose from 4 power-ups instead of 3`},
- {id:'quick',max:3,cost:[150,600,2500],txt:l=>['','Quick buy: a "Buy all upgrades" button','Quick buy: a "Hire all managers" button','Quick buy: a "Next milestones" button (every item to its next milestone)'][l]}];
+ {id:'quick',max:3,cost:W.quickCost||[150,600,2500],txt:l=>['','Quick buy: a "Buy all upgrades" button','Quick buy: a "Hire all managers" button','Quick buy: a "Next milestones" button (every item to its next milestone)'][l]}];
 /* quick buy: one tap does many buys (the player still decides when) */
 function buyAllUps(st){let n=0;UPS.slice().sort((a,b)=>upPrice(st,a)-upPrice(st,b)).forEach(u=>{if(!st.ups[u.id]&&(u.t<0||(st.tiers[u.t].n&&allowed(st,u.t)))&&buyUp(st,u.id))n++;});return n;}
 function hireAll(st){let n=0;st.tiers.map((_,i)=>i).sort((a,b)=>mgrPrice(st,a)-mgrPrice(st,b)).forEach(i=>{if(allowed(st,i)&&buyMgr(st,i))n++;});return n;}
@@ -410,7 +410,7 @@ const DEFS={
   mgrCost:[300,7500,6e4,6e5,7.5e6,9e7,1.1e9,1.35e10,1.65e11,2e12,2.5e13,3e14],
   bands:[{name:'Shallows',tiers:[0,1,2,3]},{name:'Reef',tiers:[4,5,6,7]},{name:'Abyss',tiers:[8,9,10,11]}],
   bandTargets:BAND_T,fullTargets:FULL_T,starBase:1.5e5,sa:14,sp:0.23,msBeyond:1.5,upM:2,upGap:1000,gGap:1e5}};
-DEFS.event=Object.assign({},DEFS.belt,{tiers:mkTiers(DEFS.belt.tiers.map(T=>T.name),1,1,1,true),id:'event',stack:'mult',starPer:0.05,msBeyond:2,sa:14,sp:0.12,starBase:1e8,upM:3,upGap:150,gGap:1e4});
+DEFS.event=Object.assign({},DEFS.belt,{tiers:mkTiers(DEFS.belt.tiers.map(T=>T.name),1,1,1,true),id:'event',stack:'mult',quickCost:[50,200,800],starPer:0.05,msBeyond:2,sa:14,sp:0.12,starBase:1e8,upM:3,upGap:150,gGap:1e4});
 const ECONS={belt:ECON_MAKE(DEFS.belt),coffee:ECON_MAKE(DEFS.coffee),salvage:ECON_MAKE(DEFS.salvage),event:ECON_MAKE(DEFS.event)};
 const ECON=ECONS.belt;
 if(typeof process!=='undefined'&&process.env&&process.env.SP){for(const k of ['belt','coffee','salvage'])Object.assign(DEFS[k],{sp:+process.env.SP,sa:+(process.env.SA||14),upM:+(process.env.UPM||3),upGap:+(process.env.UPG||150),gGap:+(process.env.GG||1e4),starBase:+(process.env.SB||DEFS[k].starBase)});for(const k of ['belt','coffee','salvage'])ECONS[k]=ECON_MAKE(DEFS[k]);}
@@ -481,7 +481,7 @@ return {
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.02.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.03.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -695,9 +695,10 @@ function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(
    <div class="advice lv1"><b>${esc(tw.name)}</b><span>${esc(tw.txt)} Ends in ${fmtT((P.ev.end-now())/1000)}.</span></div>
    <p class="lead">Challenges appear three at a time. Finish one and a harder one takes its place. When the event ends, every token becomes +1% earnings in every world, for good.</p>
    <h3>Challenges</h3>${chalHTML()}<p class="muted small">${P.ev.done} challenge${P.ev.done===1?'':'s'} finished so far.</p>
-   <h3>Event Stars</h3><p class="lead">Stuck? Restart the event to bank Event Stars. Each adds 2% to event earnings, for this event only. Tokens and finished challenges are kept.</p>
+   <h3>Event Stars</h3><p class="lead">Stuck? Restart the event to bank Event Stars. Each adds ${Math.round(((st.mod&&st.mod.starPer)||W.starPer)*100)}% to event earnings, for this event only. Tokens and finished challenges are kept.</p>
    <div class="advice lv${a.level}"><b>${esc(a.text.replace('Stars','Event Stars'))}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
    <button class="go wide" id="restartBtn" ${a.p?'':'disabled'}>Restart for ${a.p} Event Stars</button><p class="muted small">Event Stars: ${st.stars} (×${E.starMult(st).toFixed(2)}). Event restarts: ${st.runs}. An event gives at most ${TOK_CAP} tokens.</p>
+   <h3>Quick buy for this event</h3><p class="muted">Bought with Event Stars, only for this event. It ends with the event.</p>${perkCard(E.PERKS.find(x=>x.id==='quick'))}
    <button class="ghost wide" data-export>Copy progress code</button>`;}
 function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||0,cs=P.w.coffee?P.w.coffee.starsEver||0:0;const card=(id,name,tag,txt,on,lock,btn)=>`<div class="wcard${on?' on':''}${lock?' lock':''}"><span class="tag">${tag}</span><b>${esc(name)}</b><small>${txt}</small>${btn?`<button class="ghost small" data-world="${id}">${btn}</button>`:''}</div>`;
   const tw=P.ev?TWISTS.find(x=>x.id===P.ev.tw):twistFor(eventWindow(w.next).id);
@@ -709,6 +710,9 @@ function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||
    ${card('','Wizard\'s Tower','Coming later','Stack spells with cooldowns so they multiply.',false,true,'')}
   </div>${P.evBadges.length?`<h3>Event badges</h3><div class="evb">${P.evBadges.slice(-12).reverse().map(b=>`<span>${esc(b.name)} · ${b.tok} tokens</span>`).join('')}</div>`:''}`;}
 const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',goldLen:'bigger bursts for active play',msBoost:'every item earns more as it grows',choice4:'more say over your power-ups',quick:'fewer taps, you still choose when'};
+const perkCard=pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;
+     const impact=im?(c>st.stars?`<small>Needs ${c} ${SNm()}</small>`:`<small class="${risky?'warn':''}">Bonus ×${im.a.toFixed(2)} → ×${im.b.toFixed(2)} (−${Math.round(im.drop*100)}%)</small>`):'';
+     return `<div class="card"><div><b>${esc(pk.txt(Math.min(pk.max,l+(l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max} · ${PERK_TIP[pk.id]}</small>${impact}</div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy${risky?' risky':''}" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>${risky?'Big cut':'Buy'}</small><b>${c} ★</b></button>`}</div>`;};
 function renderStars(){const p=E.pendingStars(st);
   const a=E.advice(st),SN=W.starName;
   $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>${SN} · each adds 2% to ${esc(W.name)} earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
@@ -716,9 +720,7 @@ function renderStars(){const p=E.pendingStars(st);
    <p class="lead">${SN} come from everything you've ever earned in ${esc(W.name)}, so every run adds some and a big run adds more. Next ${W.unit} in ${fmt(E.nextStarAt(st))} ${W.cur}. The advice says "Good time" once the boost is big (double on your first restart, then +40%, easing to +12% as you restart more) and ${SN} have stopped piling up quickly.</p>
    <button class="go wide" id="restartBtn" ${p?'':'disabled'}>Restart for ${p} ${SN}</button>
    <h3>Perks</h3><p class="muted">Perks cost ${SN}, and spent ${SN} stop adding their 2%. Pick the ones that suit how you play.</p>`+
-   E.PERKS.map(pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;
-     const impact=im?(c>st.stars?`<small>Needs ${c} ${W.starName}</small>`:`<small class="${risky?'warn':''}">Bonus ×${im.a.toFixed(2)} → ×${im.b.toFixed(2)} (−${Math.round(im.drop*100)}%)</small>`):'';
-     return `<div class="card"><div><b>${esc(pk.txt(Math.min(pk.max,l+(l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max} · ${PERK_TIP[pk.id]}</small>${impact}</div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy${risky?' risky':''}" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>${risky?'Big cut':'Buy'}</small><b>${c} ★</b></button>`}</div>`;}).join('')+
+   E.PERKS.map(perkCard).join('')+
    `<p class="muted small">Runs so far: ${st.runs}. Best run: ${fmt(st.best||0)} ${W.cur}. Lifetime: ${fmt(st.total)} ${W.cur}. Shared bonus from other worlds and events: ×${sharedMult(P.cur).toFixed(2)}. Version ${VERSION}.</p>
    <button class="ghost wide" data-export>Copy progress code</button><p class="muted small">Paste the code to Claude for a check-up on how your game is going.</p>`;}
 function progressCode(){const w={};const r3=v=>+(+v||0).toPrecision(3);
