@@ -63,6 +63,7 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .evb{display:flex;flex-wrap:wrap;gap:6px}.evb span{font:600 12px var(--body);padding:3px 9px;border-radius:8px;background:var(--panel);border:1px solid #4B3F86;color:var(--star)}
 body[data-world="coffee"]{--ore:#E9A86A;--ore2:#FFD2A6;--ice:#9EE0B8}
 body[data-world="salvage"]{--ore:#5FD3C8;--ore2:#A6F0E6;--ice:#7FB8F0;--ink:#081424;--deep:#0D1C33;--panel:#11243F;--panel2:#18304F;--line:#24456E}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.quick button{flex:1;min-width:140px}.quick button:disabled{opacity:.45}
 .curpill{color:var(--ink);background:var(--ice);border-color:var(--ice);font-variant-numeric:tabular-nums}.row.hot{border-color:var(--ice);box-shadow:0 0 0 1px var(--ice) inset}
 body[data-world="event"]{--ice:#FFB36B}
 /* tab badges, group tags, members, perk warnings */
@@ -169,7 +170,7 @@ body[data-world="event"]{--ice:#FFB36B}
     <div class="main">
       <div class="pane">
         <div class="modes"><span>Tap an item to collect. Managers do it for you.</span><button data-mode="1" aria-pressed="true">×1</button><button data-mode="10" aria-pressed="false">×10</button><button data-mode="100" aria-pressed="false">×100</button><button data-mode="max" aria-pressed="false">Max</button><button data-mode="next" aria-pressed="false">Next</button></div>
-        <div id="earners"></div>
+        <div id="quick" class="quick" hidden></div><div id="earners"></div>
       </div>
       <aside class="side"><h3 id="chalHead" hidden style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ore)">Event challenges</h3><div id="chal" hidden></div><h3 style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ice)">Group targets</h3><div id="groups"></div></aside>
     </div>
@@ -357,7 +358,16 @@ const PERKS=[
  {id:'msBoost',max:3,cost:[100,800,6000],txt:l=>`Milestone profit rewards ×${[2,2.25,2.5,2.75][l]} instead of ×2`},
  {id:'startPup',max:3,cost:[30,200,1500],txt:l=>`Start each run with ${l} random power-up${l>1?'s':''}`},
  {id:'choice4',max:1,cost:[800],txt:()=>`Choose from 4 power-ups instead of 3`},
- {id:'auto',max:3,cost:[300,2000,15000],txt:l=>['',`Auto-buy: managed items buy 1 more every 5s when it costs under 1% of your ${W.cur}`,`Auto-buy: up to 5 every 2s when under 2%`,`Auto-buy: up to 20 every half second when under 5%`][l]}];
+ {id:'quick',max:3,cost:[150,600,2500],txt:l=>['','Quick buy: a "Buy all upgrades" button','Quick buy: a "Hire all managers" button','Quick buy: a "Next milestones" button (every item to its next milestone)'][l]}];
+/* quick buy: one tap does many buys (the player still decides when) */
+function buyAllUps(st){let n=0;UPS.slice().sort((a,b)=>upPrice(st,a)-upPrice(st,b)).forEach(u=>{if(!st.ups[u.id]&&(u.t<0||(st.tiers[u.t].n&&allowed(st,u.t)))&&buyUp(st,u.id))n++;});return n;}
+function hireAll(st){let n=0;st.tiers.map((_,i)=>i).sort((a,b)=>mgrPrice(st,a)-mgrPrice(st,b)).forEach(i=>{if(allowed(st,i)&&buyMgr(st,i))n++;});return n;}
+function nextAll(st){let n=0;const done={};for(;;){let best=-1,bc=Infinity;
+    st.tiers.forEach((T,i)=>{if(done[i]||!T.n||!allowed(st,i))return;const c=costN(st,i,nextMilestone(T.n,i)-T.n);if(c<=st.cash&&c<bc){bc=c;best=i;}});
+    if(best<0)break;done[best]=1;const T=st.tiers[best];buy(st,best,nextMilestone(T.n,best)-T.n);n++;}return n;}
+function quickCan(st){const ups=UPS.some(u=>!st.ups[u.id]&&(u.t<0||(st.tiers[u.t].n&&allowed(st,u.t)))&&upPrice(st,u)<=st.cash);
+  const mgr=st.tiers.some((T,i)=>!T.mgr&&T.n&&allowed(st,i)&&mgrPrice(st,i)<=st.cash);
+  const next=st.tiers.some((T,i)=>T.n&&allowed(st,i)&&costN(st,i,nextMilestone(T.n,i)-T.n)<=st.cash);return {ups,mgr,next};}
 function perkCost(st,p){const l=st.perks[p.id]||0;return l>=p.max?null:p.cost[l];}
 function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+W.starPer*(st.stars-c);return {c,a,b,drop:1-b/a};}
 function buyPerk(st,id){const p=PERKS.find(x=>x.id===id);const c=perkCost(st,p);if(c==null||st.stars<c)return false;st.stars-=c;st.perks[id]=(st.perks[id]||0)+1;return true;}
@@ -372,7 +382,7 @@ function autoBuy(st){const L=Math.min(3,st.perks.auto||0);if(!L)return;const t=s
   const frac=[0,.01,.02,.05][L],most=[0,1,5,20][L];st.tiers.forEach((T,i)=>{if(!T.mgr)return;let k=0;while(k<most&&costN(st,i,1)<st.cash*frac){buy(st,i,1);k++;}});}
 return {UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,fx,
   incomeAll,incomeManaged,away,noteStars,advice,allowed,W,msText,msInfo,crossed,msFx,rollMilestones,perkImpact,pendingStars,starsFor,nextStarAt,migrate,restart,starMult,
-  nextMilestone,ladder,choosePup,autoPick,checkGroups,goldGap,goldReward,autoBuy,rng,currentBand,ADD};
+  nextMilestone,ladder,choosePup,autoPick,checkGroups,goldGap,goldReward,autoBuy,buyAllUps,hireAll,nextAll,quickCan,rng,currentBand,ADD};
 };
 
 const BASE_TIERS=[[4,1.07,0.6,1],[60,1.15,3,60],[720,1.14,6,540],[8640,1.13,12,4320],[103680,1.12,24,51840],[1.24e6,1.11,48,622080],[1.49e7,1.10,96,7.46e6],
@@ -471,7 +481,7 @@ return {
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.01.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.02.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -597,6 +607,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.dataset.mode){mode=['max','next'].includes(b.dataset.mode)?b.dataset.mode:+b.dataset.mode;$$('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();return;}
   if(b.id==='musBtn'||b.id==='sfxBtn'){const k=b.id==='musBtn'?'music':'sfx';P.audio[k]=!P.audio[k];AUDIO.set(k,P.audio[k]);audioBtns();save();if(k==='sfx')AUDIO.play('buy');return;}
   if(b.dataset.tab){setTab(b.dataset.tab);return;}
+  if(b.dataset.quick){const k=b.dataset.quick;const before=(st.picks||[]).length;const n=k==='ups'?E.buyAllUps(st):k==='mgr'?E.hireAll(st):E.nextAll(st);
+    if(n){AUDIO.play(k==='mgr'?'mgr':'milestone');toast(`<b>Quick buy</b> ${k==='ups'?`${n} upgrade${n>1?'s':''} bought`:k==='mgr'?`${n} manager${n>1?'s':''} hired`:`${n} item${n>1?'s':''} reached a milestone`}`);announce((st.picks||[]).slice(before));}render(true);return;}
   if(b.dataset.tchip!=null){const x=(st.timed||[])[+b.dataset.tchip];if(x)toast(`<b>${esc(x.txt.replace(/ for \d+ minutes$/,''))}</b> ${mmss(x.left)} left. The clock only runs while you play.`,'pup');return;}
   if(b.dataset.export!=null){const c=progressCode();openModal(`<h2>Progress code</h2><p>Copy this and paste it to Claude to get a check-up on how your game is going. It doesn't change your game.</p><textarea id="codeBox" readonly rows="6">${esc(c)}</textarea><div class="mact"><button class="ghost" id="rsNo">Close</button><button class="go" id="copyCode">Copy</button></div>`);return;}
   if(b.id==='copyCode'){const ta=$('#codeBox');const done=()=>{b.textContent='Copied';toast('<b>Copied</b> Paste it into your chat.');};
@@ -628,7 +640,8 @@ function render(full){const t=now();
   else{const a=E.advice(st);const sh=a.text.split(',')[0].replace(' to restart','');pe.textContent=a.p?`${sh} · +${fmt(a.p)} ★ → ×${a.b.toFixed(2)}`:a.text;pe.className='pill lv'+a.level;}
   const eb=$('#evpill');eb.hidden=!P.ev||ev;if(P.ev&&!ev)eb.textContent=`Event · ${TWISTS.find(x=>x.id===P.ev.tw).name} · ${fmtT((P.ev.end-t)/1000)}`;
   const cb=E.currentBand(st);const cp=$('#curpill');cp.hidden=cb<0;if(cb>=0){const left=W.current-(t%W.current);cp.textContent=`Current: ${W.bands[cb].name} ×${W.curX} · ${mmss(left)}`;}
-  if(tab==='earners'){
+  if(tab==='earners'){const q=$('#quick');const L=st.perks.quick||0;q.hidden=L<2;if(L>=2){const can=E.quickCan(st);
+    const h=(L>=2?`<button class="ghost small" data-quick="mgr" ${can.mgr?'':'disabled'}>Hire all managers</button>`:'')+(L>=3?`<button class="ghost small" data-quick="next" ${can.next?'':'disabled'}>Next milestones</button>`:'');if(q.innerHTML!==h)q.innerHTML=h;}
     W.tiers.forEach((T,i)=>{const S=st.tiers[i];const row=$('#r'+i);
       $('#own'+i).textContent=S.n;const cyc=E.cycle(st,i);const fast=cyc<0.25;
       $('#bar'+i).style.width=(S.n?(fast&&(S.mgr||S.run)?100:Math.min(100,S.prog*100)):0)+'%';
@@ -658,7 +671,7 @@ function groupsHTML(){const all=W.tiers.map((_,i)=>i);const ok=t=>t.every(i=>E.a
   return W.bands.map((B,b)=>ok(B.tiers)?groupLine(B.name,st.bandIdx[b],st.bandT[b],B.tiers):'').join('')+(ok(all)?groupLine('Full set',st.fullIdx,st.fullT,all):'');}
 function renderGroups(){$('#groups').innerHTML=groupsHTML();}
 function renderUps(){const list=E.UPS.filter(u=>!st.ups[u.id]&&(u.t<0||E.allowed(st,u.t))).slice(0,10);const owned=E.UPS.filter(u=>st.ups[u.id]).length;
-  $('#p-upgrades').innerHTML=`<p class="lead">One-off boosts for this run. ${owned} bought.</p>`+list.map(u=>{const c=E.upPrice(st,u);const lock=u.t>=0&&!st.tiers[u.t].n;
+  $('#p-upgrades').innerHTML=`<p class="lead">One-off boosts for this run. ${owned} bought.</p>`+((st.perks.quick||0)>=1?`<button class="go wide" data-quick="ups" ${E.quickCan(st).ups?'':'disabled'}>Buy all upgrades I can afford</button>`:'')+list.map(u=>{const c=E.upPrice(st,u);const lock=u.t>=0&&!st.tiers[u.t].n;
     return `<div class="card"><div><b>${esc(u.txt)}</b><small>${u.t<0?'Every item':lock?'Own one first':'One item'}</small></div><button class="buy" data-up="${u.id}" ${c>st.cash||lock?'disabled':''}><small>Buy</small><b>${fmt(c)}</b></button></div>`;}).join('');}
 function aggHTML(){const g={};const M=!E.ADD;const add=(key,label,m,mul)=>{mul=mul||M;g[key]=g[key]||{label,v:mul?1:0,n:0,mul};g[key].v=mul?g[key].v*m:g[key].v+m;g[key].n++;};
   st.pups.forEach(p=>{switch(p.k){case 'all':add('all','Everything',p.m);break;case 'tier':add('t'+p.t,W.tiers[p.t].name,p.m);break;
@@ -695,7 +708,7 @@ function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||
    ${!eventsOpen()?card('','Weekly events','Locked','Short, wild events every Friday to Monday. Unlock by restarting the Belt once.',false,true,''):P.ev?card('event','Weekly event: '+tw.name,P.cur==='event'?'Playing':'Live now',esc(tw.txt)+` Ends in ${fmtT((P.ev.end-now())/1000)}.`,P.cur==='event',false,P.cur==='event'?'':'Play the event'):card('','Next event: '+tw.name,'Opens Friday',`${esc(tw.txt)} Starts in ${fmtT((w.next-now())/1000)} and runs for 4 days.`,false,true,'')}
    ${card('','Wizard\'s Tower','Coming later','Stack spells with cooldowns so they multiply.',false,true,'')}
   </div>${P.evBadges.length?`<h3>Event badges</h3><div class="evb">${P.evBadges.slice(-12).reverse().map(b=>`<span>${esc(b.name)} · ${b.tok} tokens</span>`).join('')}</div>`:''}`;}
-const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',goldLen:'bigger bursts for active play',msBoost:'every item earns more as it grows',choice4:'more say over your power-ups',auto:'less tapping on long sessions'};
+const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',goldLen:'bigger bursts for active play',msBoost:'every item earns more as it grows',choice4:'more say over your power-ups',quick:'fewer taps, you still choose when'};
 function renderStars(){const p=E.pendingStars(st);
   const a=E.advice(st),SN=W.starName;
   $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>${SN} · each adds 2% to ${esc(W.name)} earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
