@@ -46,6 +46,11 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .grp .gp{grid-column:1/3;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;align-self:center}.grp .gp i{display:block;height:100%;background:var(--ice)}
 .grp .gc{grid-row:2;grid-column:3;font:600 12px var(--disp);color:var(--text)}
 .grp.done{opacity:.6}
+/* sound toggles, timed boosts */
+.world{display:flex;align-items:center;gap:8px}.world #wname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.snds{display:flex;gap:4px;flex:none}.snd{cursor:pointer;font:600 11px var(--disp);letter-spacing:.04em;text-transform:none;padding:3px 8px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+.snd[aria-pressed="true"]{color:var(--ink);background:var(--ice);border-color:var(--ice)}
+.timed{display:contents}.tchip{color:var(--ink);background:var(--ore2);border-color:var(--ore2);font-weight:700}.timedc{border-color:var(--ore)}
 /* restart advice, events */
 .pill.lv0{color:var(--muted)}.pill.lv1{color:var(--star);border-color:#4B3F86}.pill.lv2{color:var(--ink);background:var(--star);border-color:var(--star)}
 .evpill{cursor:pointer;color:var(--ink);background:var(--ore);border-color:var(--ore);font-weight:700}
@@ -149,10 +154,10 @@ body[data-world="event"]{--ice:#FFB36B}
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="app">
   <header class="hud">
-    <div class="world" id="wname">World 1 · Asteroid Belt</div>
+    <div class="world"><span id="wname">World 1 · Asteroid Belt</span><span class="snds"><button class="snd" id="musBtn" aria-pressed="false" title="Music">♪</button><button class="snd" id="sfxBtn" aria-pressed="false" title="Sounds">Fx</button></span></div>
     <div><div class="cash"><span id="cash">0</span><small id="curlbl">credits</small></div><div class="ps" id="ps">0/s</div></div>
     <div class="starchip"><b id="stars">0</b><span id="starlbl">Stars</span> <span id="starx">×1.00</span></div>
-    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><button class="pill evpill" id="evpill" data-world="event" hidden></button></div>
+    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
   </header>
   <nav class="tabs" role="tablist">
     <button data-tab="earners" role="tab">Items</button><button data-tab="upgrades" role="tab">Upgrades<i class="badge" hidden></i></button>
@@ -182,26 +187,38 @@ const ECON_MAKE=function(W){
 function rng(st){st.seed=(st.seed*1664525+1013904223)>>>0;return st.seed/4294967296;}
 /* ---- power-ups drawn when a group target is reached ---- */
 const PUPS=[
- {k:'all',   w:30, txt:m=>`Everything ×${m}`},
- {k:'tier',  w:30, txt:(m,t)=>`${W.tiers[t].name} ×${m}`},
- {k:'speed', w:18, txt:(m,t)=>`${W.tiers[t].name} works ×${m} faster`},
- {k:'cost',  w:12, txt:m=>`Everything costs ${Math.round((1-m)*100)}% less`},
- {k:'mgr',   w:10, txt:m=>`Managed items ×${m}`}];
+ {k:'all',     w:20, txt:m=>`Everything ×${m}`},
+ {k:'tier',    w:18, txt:(m,t)=>`${W.tiers[t].name} ×${m}`},
+ {k:'speed',   w:18, txt:(m,t)=>`${W.tiers[t].name} works ×${m} faster`},
+ {k:'grpspeed',w:8,  txt:(m,t)=>`${W.bands[t].name} items work ×${m} faster`},
+ {k:'allspeed',w:6,  txt:m=>`Everything works ×${m} faster`},
+ {k:'cost',    w:8,  txt:m=>`Everything costs ${Math.round((1-m)*100)}% less`},
+ {k:'mgr',     w:6,  txt:m=>`Managed items ×${m}`},
+ {k:'tx',      w:6,  txt:(m,t,d)=>`Everything ×${m} for ${d/60000} minutes`},
+ {k:'ttier',   w:5,  txt:(m,t,d)=>`${W.tiers[t].name} ×${m} for ${d/60000} minutes`},
+ {k:'tfast',   w:5,  txt:(m,t,d)=>`Everything ×${m} speed for ${d/60000} minutes`}];
+const TIMED={tx:1,ttier:1,tfast:1};
 function drawPup(st,big){let r=rng(st)*100,p=PUPS[0];for(const q of PUPS){if(r<q.w){p=q;break;}r-=q.w;}
   const owned=st.tiers.map((x,i)=>x.n>0?i:-1).filter(i=>i>=0);const t=owned.length?owned[Math.floor(rng(st)*owned.length)]:0;
   const lvl=big?2:1;let m;
+  let d=0,tt=t;
   switch(p.k){case 'all':m=big?2:(rng(st)<.25?1.75:1.5);break;
     case 'tier':m=big?5:(rng(st)<.3?4:3);break;
-    case 'speed':m=big?2:1.5;break;
+    case 'speed':m=(t>=8?[3,5]:t>=4?[2,3]:[1.5,2])[big?1:0];break;          // bigger speed-ups for the costlier items
+    case 'grpspeed':tt=rng(st)<.5?2:(rng(st)<.6?1:0);m=[[1.5,2],[2,3],[2.5,4]][tt][big?1:0];break;
+    case 'allspeed':m=big?1.5:1.25;break;
     case 'cost':m=big?0.8:0.9;break;
-    case 'mgr':m=big?2:(rng(st)<.5?1.5:1.25);break;}
-  return {k:p.k,t,m,txt:p.txt(m,t)};}
+    case 'mgr':m=big?2:(rng(st)<.5?1.5:1.25);break;
+    case 'tx':m=big?25:10;d=(big?15:10)*60000;break;
+    case 'ttier':m=big?100:25;d=15*60000;break;
+    case 'tfast':m=3;d=(big?10:5)*60000;break;}
+  return {k:p.k,t:tt,m,d,txt:p.txt(m,tt,d)};}
 function jitter(st,arr,a=0.8,b=1.1){return arr.map(v=>v<=1?v:Math.max(1,Math.round(v*(a+rng(st)*(b-a)))));}
 /* ---- a fresh run ---- */
 function newRun(st){st.pHist=[];
   st.cash=st.perks.head?[0,1e3,1e6,1e9][st.perks.head]:0;st.runEarned=0;st.runStart=st.now||0;
   st.tiers=W.tiers.map((_,i)=>({n:i===0?1:0,mgr:!!(st.perks.keepMgr&&i<4*st.perks.keepMgr),prog:0,run:false}));
-  st.ups={};st.pups=[];st.picks=[];st.bandIdx=[0,0,0];st.fullIdx=0;
+  st.ups={};st.pups=[];st.picks=[];st.timed=[];st.pupCount=0;st.bandIdx=[0,0,0];st.fullIdx=0;
   const bs=(st.mod&&st.mod.band)||1;st.bandT=W.bands.map(()=>jitter(st,W.bandTargets.map(v=>Math.max(1,Math.round(v*bs)))));st.fullT=jitter(st,W.fullTargets,0.85,1.15);
   rollMilestones(st);st.boost=null;st.nextGold=(st.now||0)+ (40+rng(st)*60)*1000;
   if(st.perks.startPup)for(let i=0;i<st.perks.startPup;i++)st.pups.push(drawPup(st,false));
@@ -240,8 +257,10 @@ function tierMult(st,i){const T=st.tiers[i];let m=starMult(st)*msFx(st)[i].pr*(s
   if(W.syn&&i>0)m*=1+W.syn*st.tiers[i-1].n;
   UPS.forEach(u=>{if(st.ups[u.id]&&(u.t===i||u.t===-1))m*=u.m;});
   st.pups.forEach(p=>{if(p.k==='all')m*=p.m;else if(p.k==='tier'&&p.t===i)m*=p.m;else if(p.k==='mgr'&&T.mgr)m*=p.m;});
+  if(!st._away)(st.timed||[]).forEach(b=>{if(b.k==='tx')m*=b.m;else if(b.k==='ttier'&&b.t===i)m*=b.m;});
   if(st.boost&&st.boost.until>st.now&&st.boost.k==='x')m*=st.boost.m;return m;}
-function tierSpeed(st,i){let s=msFx(st)[i].sp*((st.mod&&st.mod.speed)||1);st.pups.forEach(p=>{if(p.k==='speed'&&p.t===i)s*=p.m;});
+function tierSpeed(st,i){let s=msFx(st)[i].sp*((st.mod&&st.mod.speed)||1);st.pups.forEach(p=>{if(p.k==='speed'&&p.t===i)s*=p.m;else if(p.k==='allspeed')s*=p.m;else if(p.k==='grpspeed'&&Math.floor(i/4)===p.t)s*=p.m;});
+  if(!st._away)(st.timed||[]).forEach(b=>{if(b.k==='tfast')s*=b.m;});
   if(st.boost&&st.boost.until>st.now&&st.boost.k==='fast')s*=st.boost.m;return s;}
 function cycle(st,i){return W.tiers[i].t/tierSpeed(st,i);}
 function payout(st,i){return W.tiers[i].rev*st.tiers[i].n*tierMult(st,i);}
@@ -263,7 +282,8 @@ function buyUp(st,id){const u=UPS.find(x=>x.id===id);if(!u||st.ups[id])return fa
 const PICK_MS=180000;
 function offer(st,big,src){const opts=[];let guard=0;while(opts.length<3&&guard++<30){const p=drawPup(st,big);const key=o=>(o.k==='tier'||o.k==='speed')?o.k+o.t:o.k;if(!opts.some(o=>key(o)===key(p)))opts.push(p);}
   const pk={src,big,opts,at:st.now||0};(st.picks=st.picks||[]).push(pk);return pk;}
-function choosePup(st,idx,c){const pk=(st.picks||[])[idx];if(!pk)return null;const p=pk.opts[c]||pk.opts[0];p.src=pk.src;st.pups.push(p);st.picks.splice(idx,1);return p;}
+function choosePup(st,idx,c){const pk=(st.picks||[])[idx];if(!pk)return null;const p=pk.opts[c]||pk.opts[0];p.src=pk.src;
+  if(TIMED[p.k])(st.timed=st.timed||[]).push({k:p.k,t:p.t,m:p.m,left:p.d,txt:p.txt});else st.pups.push(p);st.pupCount=(st.pupCount||0)+1;st.picks.splice(idx,1);return p;}
 function autoPick(st,force){const got=[];while((st.picks||[]).length&&(force||(st.now||0)-st.picks[0].at>=PICK_MS)){const p=choosePup(st,0,0);got.push(p);}return got;}
 function checkGroups(st){const got=[];
   W.bands.forEach((B,b)=>{while(st.bandIdx[b]<st.bandT[b].length){const need=st.bandT[b][st.bandIdx[b]];
@@ -273,12 +293,12 @@ function checkGroups(st){const got=[];
   return got;}
 /* ---- time ---- */
 function earn(st,v){st.cash+=v;st.runEarned+=v;st.total+=v;}
-function tick(st,dt,now){st.now=now;
+function tick(st,dt,now){st.now=now;if(st.timed&&st.timed.length){st.timed.forEach(b=>b.left-=dt*1000);st.timed=st.timed.filter(b=>b.left>0);}
   st.tiers.forEach((T,i)=>{if(!T.n)return;if(!T.mgr&&!T.run)return;const c=cycle(st,i);T.prog+=dt/c;
     if(T.prog>=1){if(T.mgr){const k=Math.floor(T.prog);earn(st,payout(st,i)*k);T.prog-=k;}else{earn(st,payout(st,i));T.prog=0;T.run=false;}}});}
 function tap(st,i){const T=st.tiers[i];if(!T.n||T.mgr||T.run)return false;T.run=true;return true;}
 /* away time: managed earners keep going at full rate, with no limit */
-function away(st,ms){if(ms>=PICK_MS)autoPick(st,true);const s=ms/1000;const v=incomeManaged(st)*s;earn(st,v);return v;}
+function away(st,ms){if(ms>=PICK_MS)autoPick(st,true);const s=ms/1000;st._away=true;const v=incomeManaged(st)*s;st._away=false;earn(st,v);return v;}
 /* ---- restarts ---- */
 /* Stars from a run grow with each 10x of that run's earnings, so restarts keep paying off without running away */
 function starsFor(earned){return earned<W.starBase?0:Math.floor(25*Math.log10(earned/W.starBase)+10);}
@@ -367,9 +387,67 @@ const ECONS={belt:ECON_MAKE(DEFS.belt),coffee:ECON_MAKE(DEFS.coffee),event:ECON_
 const ECON=ECONS.belt;
 if(typeof module!=='undefined')module.exports=Object.assign(ECON,{ECONS,DEFS});
 
+/* ===================== SOUND: generated music for each world + action sounds (no files) ===================== */
+const AUDIO=(function(){
+let ctx=null,musicBus=null,sfxBus=null,delay=null,noiseBuf=null,timer=null,world='belt',step=0,nextT=0;
+const st={music:false,sfx:false};
+const hz=m=>440*Math.pow(2,(m-69)/12);
+function init(){if(ctx)return true;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;ctx=new AC();
+  musicBus=ctx.createGain();musicBus.gain.value=0;musicBus.connect(ctx.destination);
+  sfxBus=ctx.createGain();sfxBus.gain.value=0.22;sfxBus.connect(ctx.destination);
+  delay=ctx.createDelay(1);delay.delayTime.value=0.38;const fb=ctx.createGain();fb.gain.value=0.32;const dl=ctx.createGain();dl.gain.value=0.35;
+  delay.connect(fb);fb.connect(delay);delay.connect(dl);dl.connect(musicBus);
+  noiseBuf=ctx.createBuffer(1,ctx.sampleRate*0.5,ctx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return true;}
+function tone(t,f,dur,{type='sine',g=0.1,a=0.01,r=0.3,dest,fx=false,cut=0}={}){const o=ctx.createOscillator(),v=ctx.createGain();o.type=type;o.frequency.value=f;
+  let node=o;if(cut){const fl=ctx.createBiquadFilter();fl.type='lowpass';fl.frequency.value=cut;o.connect(fl);node=fl;}
+  node.connect(v);v.connect(dest||musicBus);if(fx)v.connect(delay);
+  v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g,t+a);v.gain.setValueAtTime(g,t+Math.max(a,dur-r));v.gain.linearRampToValueAtTime(0,t+dur);o.start(t);o.stop(t+dur+0.05);}
+function hat(t,g=0.05,len=0.05){const s=ctx.createBufferSource();s.buffer=noiseBuf;const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=7000;const v=ctx.createGain();
+  v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(0.0001,t+len);s.connect(f);f.connect(v);v.connect(musicBus);s.start(t);s.stop(t+len+0.02);}
+/* ---- one pattern per world ---- */
+const SONGS={
+ belt:{bpm:68,chords:[[57,60,64,67,71],[53,57,60,64,67],[48,55,59,64,67],[55,59,62,64,69]],          // Am9 Fmaj9 Cmaj9 G6: slow, spacey
+   play(t,s,b,ch){const bar=Math.floor(s/16)%4,st16=s%16,c=ch[bar];
+     if(st16===0){c.slice(0,4).forEach(n=>tone(t,hz(n),b*16,{type:'sine',g:0.035,a:1.6,r:1.8}));tone(t,hz(c[0]-24),b*16,{type:'triangle',g:0.05,a:1,r:1.5});}
+     if(st16%2===0&&Math.random()<0.45)tone(t,hz(c[Math.floor(Math.random()*c.length)]+12),b*3,{type:'triangle',g:0.04,a:0.01,r:b*2.5,fx:true});}},
+ coffee:{bpm:84,chords:[[50,53,57,60,64],[43,53,55,59,64],[48,52,55,59,62],[45,49,52,55,58]],       // Dm9 G13 Cmaj9 A7: warm lo-fi
+   play(t,s,b,ch){const bar=Math.floor(s/16)%4,st16=s%16,c=ch[bar];const sw=(st16%4===2)?b*0.33:0;
+     if(st16===0||st16===10){c.slice(1).forEach(n=>tone(t,hz(n),b*5,{type:'triangle',g:0.028,a:0.01,r:b*4,cut:1800}));}
+     if(st16%4===0)tone(t,hz(c[0]-12+[0,7,5,3][st16/4]),b*3.5,{type:'sine',g:0.09,a:0.01,r:b*2});
+     if(st16%4===2)hat(t+sw,0.035,0.06);if(st16===4||st16===12)hat(t,0.05,0.12);}},
+ event:{bpm:112,chords:[[50,53,57,62],[46,50,53,58],[48,52,55,60],[45,49,52,57]],                    // Dm Bb C A: upbeat pulse
+   play(t,s,b,ch){const bar=Math.floor(s/16)%4,st16=s%16,c=ch[bar];
+     tone(t,hz(c[st16%c.length]+12),b*0.9,{type:'square',g:0.022,a:0.005,r:b*0.6,cut:1400,fx:st16%4===0});
+     if(st16%2===0)tone(t,hz(c[0]-12),b*1.6,{type:'sawtooth',g:0.03,a:0.005,r:b,cut:500});
+     if(st16%4===2)hat(t,0.04,0.05);}}};
+function schedule(){if(!ctx)return;const song=SONGS[world]||SONGS.belt;const b=60/song.bpm/4;
+  while(nextT<ctx.currentTime+0.25){song.play(nextT,step,b,song.chords);nextT+=b;step++;}}
+function startMusic(){if(!init())return;ctx.resume();musicBus.gain.cancelScheduledValues(ctx.currentTime);musicBus.gain.linearRampToValueAtTime(0.9,ctx.currentTime+2);
+  if(!timer){nextT=ctx.currentTime+0.1;step=0;timer=setInterval(schedule,100);}}
+function stopMusic(){if(!ctx)return;musicBus.gain.cancelScheduledValues(ctx.currentTime);musicBus.gain.linearRampToValueAtTime(0,ctx.currentTime+0.6);
+  setTimeout(()=>{if(!st.music&&timer){clearInterval(timer);timer=null;}},700);}
+/* ---- action sounds ---- */
+const FX={
+ buy(){const t=ctx.currentTime;tone(t,880,0.07,{type:'square',g:0.05,r:0.05,dest:sfxBus,cut:3000});tone(t+0.04,1320,0.08,{type:'square',g:0.04,r:0.06,dest:sfxBus,cut:3000});},
+ mgr(){const t=ctx.currentTime;[660,880].forEach((f,i)=>tone(t+i*0.08,f,0.14,{type:'triangle',g:0.08,r:0.1,dest:sfxBus}));},
+ milestone(){const t=ctx.currentTime;[784,1175].forEach((f,i)=>tone(t+i*0.09,f,0.35,{type:'sine',g:0.1,r:0.3,dest:sfxBus}));},
+ offer(){const t=ctx.currentTime;[988,1319,1760].forEach((f,i)=>tone(t+i*0.06,f,0.18,{type:'triangle',g:0.06,r:0.15,dest:sfxBus}));},
+ pick(){const t=ctx.currentTime;[523,659,784,1047,1319].forEach((f,i)=>tone(t+i*0.05,f,0.3,{type:'sine',g:0.07,r:0.25,dest:sfxBus}));},
+ gold(){const t=ctx.currentTime;for(let i=0;i<6;i++)tone(t+i*0.04,1500+Math.random()*1500,0.25,{type:'sine',g:0.04,r:0.2,dest:sfxBus});},
+ challenge(){const t=ctx.currentTime;[523,659,784,1047].forEach((f,i)=>tone(t+i*0.1,f,i===3?0.6:0.14,{type:'square',g:0.05,r:0.1,dest:sfxBus,cut:2500}));},
+ restart(){const t=ctx.currentTime;const s=ctx.createBufferSource();s.buffer=noiseBuf;const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.setValueAtTime(300,t);f.frequency.exponentialRampToValueAtTime(4000,t+0.5);
+   const v=ctx.createGain();v.gain.setValueAtTime(0.25,t);v.gain.exponentialRampToValueAtTime(0.001,t+0.55);s.connect(f);f.connect(v);v.connect(sfxBus);s.start(t);s.stop(t+0.6);[392,523,784].forEach((q,i)=>tone(t+0.35+i*0.08,q,0.4,{type:'sine',g:0.07,r:0.3,dest:sfxBus}));}};
+return {
+ set(kind,on){st[kind]=!!on;if(kind==='music'){on?startMusic():stopMusic();}else if(on){init();ctx.resume();}},
+ get:k=>st[k],
+ world(w){world=SONGS[w]?w:'belt';},
+ play(name){if(!st.sfx||!ctx||!FX[name])return;try{FX[name]();}catch(e){}},
+ wake(){if((st.music||st.sfx)&&init()){ctx.resume();if(st.music&&!timer)startMusic();}}};
+})();
+
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V1.03.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V1.04.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -383,7 +461,7 @@ function save(){P.saved=now();try{localStorage.setItem(KEY,JSON.stringify(P));}c
 const raw=load();
 if(raw&&raw.v===2)P=raw;else if(raw&&raw.v===1)P={v:2,cur:'belt',w:{belt:raw},ev:null,tok:0,evBadges:[],saved:raw.saved};
 else P={v:2,cur:'belt',w:{belt:ECONS.belt.fresh(now())},ev:null,tok:0,evBadges:[],saved:now()};
-P.evBadges=P.evBadges||[];P.tok=P.tok||0;
+P.evBadges=P.evBadges||[];P.tok=P.tok||0;P.audio=P.audio||{music:false,sfx:false};
 function econOf(id){return ECONS[id];}
 function stateOf(id){return id==='event'?(P.ev&&P.ev.st):P.w[id];}
 function worldIds(){return Object.keys(P.w).concat(P.ev?['event']:[]);}
@@ -407,21 +485,24 @@ function eventWindow(t){const d=new Date(t);const back=(d.getDay()-5+7)%7;const 
 function twistFor(id){return TWISTS[((id*2654435761)>>>0)%TWISTS.length];}
 function chalRand(){P.ev.cs=((P.ev.cs||(P.ev.id*31+7))*1103515245+12345)>>>0;return (P.ev.cs%100000)/100000;}
 function chalValue(c){const S=P.ev.st,X=ECONS.event;switch(c.ty){case 'earn':return S.runEarned-c.base;case 'own':return S.tiers[c.t].n;
-  case 'mgr':return S.tiers.filter(T=>T.mgr).length;case 'gold':return P.ev.gold-c.base;case 'pup':return S.pups.length-c.base;case 'rate':return X.incomeAll(S);}return 0;}
+  case 'mgr':return S.tiers.filter(T=>T.mgr).length;case 'gold':return P.ev.gold-c.base;case 'pup':return (S.pupCount||0)-c.base;case 'rate':return X.incomeAll(S);}return 0;}
 function chalText(c){const W0=ECONS.event.W;switch(c.ty){case 'earn':return `Earn ${fmt(c.need)} credits`;case 'own':return `Own ${c.need} ${W0.tiers[c.t].name}`;
   case 'mgr':return `Hire ${c.need} managers`;case 'gold':return `Catch ${c.need} golden asteroid${c.need>1?'s':''}`;case 'pup':return `Get ${c.need} group power-up${c.need>1?'s':''}`;case 'rate':return `Reach ${fmt(c.need)} credits/s`;}return '';}
-function chalGen(k){const S=P.ev.st;const max=(S.mod&&S.mod.max)||12;const types=['earn','own','mgr','gold','pup','rate'];const ty=types[Math.floor(chalRand()*types.length)];let c;
-  switch(ty){case 'earn':c={need:Math.pow(10,5+k*1.3)};break;
+function chalGen(k){const S=P.ev.st;const max=(S.mod&&S.mod.max)||12;const X=ECONS.event.W;
+  const usable=X.bands.filter(B=>B.tiers.every(i=>i<max)).length+(max>=12?1:0);const f=0.55+0.45*max/12;   // fewer items: gentler targets
+  const busy=(P.ev.chal||[]).map(x=>x.ty);let types=['earn','own','mgr','gold','rate'].concat(usable?['pup']:[]);const free=types.filter(x=>!busy.includes(x));if(free.length)types=free;
+  const ty=types[Math.floor(chalRand()*types.length)];let c;
+  switch(ty){case 'earn':c={need:Math.pow(10,5+k*1.3*f)};break;
     case 'own':c={t:Math.floor(chalRand()*Math.min(max,4+k)),need:[25,50,100,150,200,300][Math.min(5,Math.floor(k/2)+Math.floor(chalRand()*2))]};break;
-    case 'mgr':c={need:Math.min(max,2+k)};break;case 'gold':c={need:2+Math.floor(k/2)};break;case 'pup':c={need:1+Math.floor(k/2)};break;
-    case 'rate':c={need:Math.pow(10,3+k*1.2)};break;}
+    case 'mgr':c={need:Math.min(max,2+k)};break;case 'gold':c={need:2+Math.floor(k/2)};break;case 'pup':c={need:1+Math.floor(k/(usable>=3?2:4))};break;
+    case 'rate':c={need:Math.pow(10,3+k*1.2*f)};break;}
   if(ty==='own'&&S.tiers[c.t].n>=c.need)c.need=[25,50,100,150,200,300,400,500,750,1000].find(v=>v>S.tiers[c.t].n)||S.tiers[c.t].n+100;
   if(ty==='mgr'){const have=S.tiers.filter(T=>T.mgr).length;if(have>=c.need){if(have>=max)return chalGen(k);c.need=have+1;}}
   if(ty==='rate'){const cur=ECONS.event.incomeAll(S);if(cur>=c.need)c.need=Math.pow(10,Math.ceil(Math.log10(cur*4)));}
-  c.ty=ty;c.k=k;c.tok=5+3*k;c.base=0;c.base=ty==='earn'?S.runEarned:ty==='gold'?P.ev.gold:ty==='pup'?S.pups.length:0;return c;}
+  c.ty=ty;c.k=k;c.tok=5+3*k;c.base=0;c.base=ty==='earn'?S.runEarned:ty==='gold'?P.ev.gold:ty==='pup'?(S.pupCount||0):0;return c;}
 function fillChal(){while(P.ev.chal.length<3)P.ev.chal.push(chalGen(P.ev.k++));}
 function checkChal(){if(!P.ev)return;let got=false;P.ev.chal=P.ev.chal.map(c=>{if(chalValue(c)>=c.need){P.ev.tok+=c.tok;P.ev.done++;got=true;
-    toast(`<b>Challenge done</b> ${esc(chalText(c))} · +${c.tok} tokens`,'star');return chalGen(P.ev.k++);}return c;});if(got)save();}
+    toast(`<b>Challenge done</b> ${esc(chalText(c))} · +${c.tok} tokens`,'star');AUDIO.play('challenge');return chalGen(P.ev.k++);}return c;});if(got)save();}
 function eventCheck(){const t=now();const w=eventWindow(t);
   if(P.ev&&(P.ev.id!==w.id||!w.live))finishEvent();
   if(w.live&&!P.ev){const tw=twistFor(w.id);const S=ECONS.event.fresh(t);S.seed=(w.id*7919)>>>0;S.mod=tw.mod;ECONS.event.newRun(S);
@@ -449,8 +530,9 @@ function buildEarners(){$('#earners').innerHTML=W.tiers.map((T,i)=>`
      <button class="mgr" data-mgr="${i}" id="mgr${i}"></button></div>
  </div>`).join('');}
 function unlockCoffee(){return (P.w.belt.runs||0)>=3;}
+function audioBtns(){const m=$('#musBtn'),x=$('#sfxBtn');m.setAttribute('aria-label',P.audio.music?'Music is on. Turn it off':'Music is off. Turn it on');x.setAttribute('aria-label',P.audio.sfx?'Sounds are on. Turn them off':'Sounds are off. Turn them on');m.setAttribute('aria-pressed',String(P.audio.music));x.setAttribute('aria-pressed',String(P.audio.sfx));}
 function switchWorld(id,quiet){if(id==='coffee'&&!P.w.coffee){if(!unlockCoffee())return;P.w.coffee=ECONS.coffee.fresh(now());}
-  if(id==='event'&&!P.ev)return;P.cur=id;E=econOf(id);W=E.W;st=stateOf(id);st.now=now();st.nextGold=Math.max(st.nextGold||0,now()+15000);
+  if(id==='event'&&!P.ev)return;P.cur=id;AUDIO.world(id);E=econOf(id);W=E.W;st=stateOf(id);st.now=now();st.nextGold=Math.max(st.nextGold||0,now()+15000);
   $('#gold').hidden=true;buildEarners();labels();if(!quiet){setTab('earners');toast(`<b>${esc(id==='event'?'Weekly event':W.name)}</b> ${id==='event'?'Finish challenges for tokens.':esc(W.blurb)}`);}save();}
 function labels(){const ev=P.cur==='event';const tw=ev?TWISTS.find(x=>x.id===P.ev.tw):null;
   $('#wname').textContent=ev?`Weekly event · ${tw.name}`:`World ${P.cur==='belt'?1:2} · ${W.name}`;$('#curlbl').textContent=W.cur;
@@ -463,20 +545,22 @@ function announce(got){got.forEach(p=>toast(`<b>Power-up to choose</b> ${esc(p.s
 function amount(i){if(mode==='max')return Math.max(1,E.maxAfford(st,i));if(mode==='next'){const nm=E.nextMilestone(st.tiers[i].n,i);return nm?nm-st.tiers[i].n:1;}return mode;}
 document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap]');if(!b)return;
   if(b.dataset.tap!=null){E.tap(st,+b.dataset.tap);return;}
-  if(b.dataset.buy!=null){const i=+b.dataset.buy;const before=(st.picks||[]).length;if(E.buy(st,i,amount(i))){announce((st.picks||[]).slice(before));}render();return;}
-  if(b.dataset.mgr!=null){const i=+b.dataset.mgr;if(E.buyMgr(st,i))toast(`<b>Manager hired</b> ${esc(W.tiers[i].name)} runs by itself now, even while you're away.`);render();return;}
-  if(b.dataset.pick!=null){const [pi,c]=b.dataset.pick.split(':').map(Number);const p=E.choosePup(st,pi,c);if(p){toast(`<b>Power-up!</b> ${esc(p.txt)}`,'pup');save();render(true);}return;}
+  if(b.dataset.buy!=null){const i=+b.dataset.buy;const before=(st.picks||[]).length;const n0=st.tiers[i].n;if(E.buy(st,i,amount(i))){const got=(st.picks||[]).slice(before);announce(got);
+    const hit=E.ladder(i).some(m=>n0<m&&st.tiers[i].n>=m);AUDIO.play(got.length?'offer':hit?'milestone':'buy');}render();return;}
+  if(b.dataset.mgr!=null){const i=+b.dataset.mgr;if(E.buyMgr(st,i)&&(AUDIO.play('mgr'),1))toast(`<b>Manager hired</b> ${esc(W.tiers[i].name)} runs by itself now, even while you're away.`);render();return;}
+  if(b.dataset.pick!=null){const [pi,c]=b.dataset.pick.split(':').map(Number);const p=E.choosePup(st,pi,c);if(p){toast(`<b>Power-up!</b> ${esc(p.txt)}`,'pup');AUDIO.play('pick');save();render(true);}return;}
   if(b.dataset.up){if(E.buyUp(st,b.dataset.up))render(true);return;}
   if(b.dataset.perk){const pk=E.PERKS.find(x=>x.id===b.dataset.perk);const im=E.perkImpact(st,pk);
     if(im&&im.drop>0.2&&!b.dataset.sure){openModal(`<h2>Big cut to your bonus</h2><p>This perk spends <b>${im.c}</b> of your <b>${st.stars}</b> ${W.starName}. All earnings go from <b>×${im.a.toFixed(2)}</b> to <b>×${im.b.toFixed(2)}</b>, a ${Math.round(im.drop*100)}% cut.</p><p>${PERK_TIP[pk.id][0].toUpperCase()+PERK_TIP[pk.id].slice(1)}. It may be worth waiting until you have more Stars.</p><div class="mact"><button class="ghost" id="rsNo">Wait</button><button class="go" data-perk="${pk.id}" data-sure="1">Buy anyway</button></div>`);return;}
     if(E.buyPerk(st,b.dataset.perk)){closeModal();save();render(true);}return;}
   if(b.dataset.mode){mode=['max','next'].includes(b.dataset.mode)?b.dataset.mode:+b.dataset.mode;$$('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));render();return;}
+  if(b.id==='musBtn'||b.id==='sfxBtn'){const k=b.id==='musBtn'?'music':'sfx';P.audio[k]=!P.audio[k];AUDIO.set(k,P.audio[k]);audioBtns();save();if(k==='sfx')AUDIO.play('buy');return;}
   if(b.dataset.tab){setTab(b.dataset.tab);return;}
   if(b.dataset.world){switchWorld(b.dataset.world);return;}
   if(b.id==='restartBtn'){openRestart();return;}
-  if(b.id==='rsYes'){const p=E.restart(st);st.now=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${W.starName}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
+  if(b.id==='rsYes'){const p=E.restart(st);AUDIO.play('restart');st.now=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${W.starName}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
   if(b.id==='rsNo'||b.id==='awayOk'){closeModal();return;}
-  if(b.id==='gold'){const r=E.goldReward(st);if(P.cur==='event')P.ev.gold++;b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} ${W.cur}`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
+  if(b.id==='gold'){const r=E.goldReward(st);AUDIO.play('gold');if(P.cur==='event')P.ev.gold++;b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} ${W.cur}`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
 });
 function openModal(h){$('#modalCard').innerHTML=h;$('#modal').hidden=false;}
 function closeModal(){$('#modal').hidden=true;}
@@ -489,6 +573,7 @@ let lastFull=0;
 function render(full){const t=now();
   $('#cash').textContent=fmt(st.cash);$('#ps').textContent=fmt(E.incomeAll(st))+'/s';
   const ev=P.cur==='event';$('#stars').textContent=ev?P.ev.tok:st.stars;$('#starx').textContent=ev?`+${P.tok}% kept`:'×'+E.starMult(st).toFixed(2);
+  const tb=st.timed||[];$('#timed').innerHTML=tb.map(x=>`<span class="pill tchip">${esc(x.txt.replace(/ for \d+ minutes$/,''))} · ${fmtT(x.left/1000)}</span>`).join('');
   const bst=st.boost&&st.boost.until>t?st.boost:null;$('#boost').hidden=!bst;if(bst)$('#boost').textContent=(bst.k==='x'?'Rich seam ×7':'Overclock ×3 speed')+' · '+Math.ceil((bst.until-t)/1000)+'s';
   const pe=$('#pend');if(ev){pe.textContent=`Ends in ${fmtT((P.ev.end-t)/1000)} · ${P.ev.done} done`;pe.className='pill';}
   else{const a=E.advice(st);pe.textContent=a.p?`${a.text} · +${a.p} ${W.starName} (×${a.a.toFixed(2)} → ×${a.b.toFixed(2)})`:a.text;pe.className='pill lv'+a.level;}
@@ -525,12 +610,19 @@ function renderGroups(){$('#groups').innerHTML=groupsHTML();}
 function renderUps(){const list=E.UPS.filter(u=>!st.ups[u.id]&&(u.t<0||E.allowed(st,u.t))).slice(0,10);const owned=E.UPS.filter(u=>st.ups[u.id]).length;
   $('#p-upgrades').innerHTML=`<p class="lead">One-off boosts for this run. ${owned} bought.</p>`+list.map(u=>{const c=E.upPrice(st,u);const lock=u.t>=0&&!st.tiers[u.t].n;
     return `<div class="card"><div><b>${esc(u.txt)}</b><small>${u.t<0?'Every item':lock?'Own one first':'One item'}</small></div><button class="buy" data-up="${u.id}" ${c>st.cash||lock?'disabled':''}><small>Buy</small><b>${fmt(c)}</b></button></div>`;}).join('');}
+function aggHTML(){const g={};const add=(key,label,m,mul)=>{g[key]=g[key]||{label,v:mul?1:0,n:0,mul};g[key].v=mul?g[key].v*m:g[key].v+m;g[key].n++;};
+  st.pups.forEach(p=>{switch(p.k){case 'all':add('all','Everything',p.m,1);break;case 'tier':add('t'+p.t,W.tiers[p.t].name,p.m,1);break;
+    case 'speed':add('s'+p.t,W.tiers[p.t].name+' speed',p.m,1);break;case 'grpspeed':add('g'+p.t,W.bands[p.t].name+' items speed',p.m,1);break;
+    case 'allspeed':add('as','Everything speed',p.m,1);break;case 'cost':add('c','Prices',p.m,1);break;case 'mgr':add('m','Managed items',p.m,1);break;}});
+  const rows=Object.values(g).map(x=>`<div class="card pupc"><div><b>${esc(x.label)} ${x.label==='Prices'?'−'+Math.round((1-x.v)*100)+'%':'×'+(+x.v.toFixed(2))}</b><small>from ${x.n} pick${x.n>1?'s':''}</small></div></div>`);
+  (st.timed||[]).forEach(x=>rows.unshift(`<div class="card pupc timedc"><div><b>${esc(x.txt.replace(/ for \d+ minutes$/,''))}</b><small>${fmtT(x.left/1000)} left · only counts while you're playing</small></div></div>`));
+  return rows.join('');}
 function picksHTML(){const pk=st.picks||[];if(!pk.length)return '';const t=now();
   return `<h3>Choose a power-up (${pk.length})</h3>`+pk.map((q,qi)=>`<div class="pick"><div class="pickh"><b>${esc(q.src)}</b><small>Auto-picks in ${fmtT(Math.max(0,(q.at+180000-t)/1000))}</small></div><div class="opts">${q.opts.map((o,c)=>`<button class="opt" data-pick="${qi}:${c}">${esc(o.txt)}</button>`).join('')}</div></div>`).join('');}
 function renderPups(){const P=st.pups;
   $('#p-powerups').innerHTML=`<p class="lead">Get every item in a group to the target count and you choose 1 of 3 random power-ups. Targets climb faster each time, and they shift a little every run.</p>
    ${picksHTML()}<div id="groups2">${groupsHTML()}</div>
-   <h3>Active this run (${P.length})</h3>${P.length?P.map(p=>`<div class="card pupc"><div><b>${esc(p.txt)}</b><small>${esc(p.src||'Start-of-run perk')}</small></div></div>`).join(''):'<p class="muted">None yet. The first one usually drops within a few minutes.</p>'}`;}
+   <h3>Active this run (${P.length} picked)</h3>${P.length||(st.timed||[]).length?aggHTML():'<p class="muted">None yet. The first one usually drops within a few minutes.</p>'}`;}
 function chalHTML(){if(P.cur!=='event')return '';return P.ev.chal.map(c=>{const v=Math.max(0,chalValue(c));const pct=Math.min(100,v/c.need*100);
   return `<div class="grp chal"><b>${esc(chalText(c))}</b><span>+${c.tok} tokens</span><span class="gp"><i style="width:${pct}%"></i></span><span class="gc">${Math.floor(pct)}%</span></div>`;}).join('');}
 function renderChal(){const el=$('#chal');el.hidden=P.cur!=='event';$('#chalHead').hidden=P.cur!=='event';if(P.cur==='event')el.innerHTML=chalHTML();}
@@ -575,6 +667,8 @@ function loop(){const t=now();let dt=(t-last)/1000;last=t;
   if(dt>5){const lines=awayAll(dt*1000);if(dt>30)welcome(dt*1000,lines);dt=0;}
   worldIds().forEach(id=>{const S=stateOf(id),X=econOf(id);S.xm=sharedMult(id);if(S===st){X.tick(S,dt,t);X.autoBuy(S);X.noteStars(S);X.autoPick(S).forEach(p=>toast(`<b>Power-up picked for you</b> ${esc(p.txt)}`,'pup'));}else{S.now=t;X.away(S,dt*1000);X.autoPick(S);}});
   checkChal();goldCheck();render();saveT+=dt;if(saveT>5){saveT=0;save();}}
+AUDIO.world(P.cur);AUDIO.set('sfx',P.audio.sfx);if(P.audio.music)AUDIO.set('music',true);audioBtns();
+['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>AUDIO.wake(),{once:false,passive:true}));
 buildEarners();labels();stars();setTab('earners');
 function sticky(){const h=$('.hud').offsetHeight,tb=$('.tabs').offsetHeight;document.documentElement.style.setProperty('--hudH',h+'px');document.documentElement.style.setProperty('--tabH',tb+'px');}
 sticky();addEventListener('resize',sticky);setInterval(sticky,1500);
