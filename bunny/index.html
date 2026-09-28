@@ -899,8 +899,8 @@ body.demo #codePane,body.demo .controls{pointer-events:none}
 <script>
 const RINK_KEY='clover-code-garden.v1';
 /* Fluffy's Code Garden: settings read by the shared game code */
-const THEME={version:'V1.01.01',title:"Fluffy's Code Garden",daily:false,pyLevel:'1-10',hard:false,
-  learnHTML:"<p><b>What she's learning.</b> World 1 is <b>sequences</b>: planning steps in order, picking things up and bringing them home, hopping over things, puzzles where steps change the meadow (sinking lily pads, hay-bale bridges), timing with the goose, reading code to predict what it does, and a first taste of real Python using code buttons (typing optional).</p>"};
+const THEME={version:'V1.02.00',title:"Fluffy's Code Garden",daily:false,pyLevel:'1-10',hard:false,
+  learnHTML:"<p><b>What she's learning.</b> World 1 is <b>sequences</b>: planning steps in order, picking things up and bringing them home, hopping over things, puzzles where steps change the meadow (sinking lily pads, hay-bale bridges), timing with the goose, reading code to predict what it does, and a first taste of real Python using code buttons (typing optional).</p><p><b>World 2</b> is <b>loops</b>: repeating steps with fewer blocks, patterns, loops inside loops, and a first Python for loop. <b>World 3</b> is <b>choosing commands</b>: dash(), slippery mud, garden gates, flowers in order and timing. In Worlds 2 and 3 the third star needs two small challenges done in the same run, like grabbing the golden carrot and using a loop.</p>"};
 
 /* ===================== GAME ENGINE (pure logic, no drawing) ===================== */
 const DIRS={right:[1,0],left:[-1,0],up:[0,-1],down:[0,1]};
@@ -1026,8 +1026,11 @@ function simulate(w,acts){let s=startState(w);const events=[];
   return {events,result:s.status==='goal'?'goal':(s.status==='fail'?'fail':'incomplete'),fish:s.fish,final:s};}
 function stateKey(w,s){return s.x+','+s.y+','+s.dir+','+s.g+','+(s.fish?1:0)+','+s.pucks+','+s.scored+','+(s.t%w.period)+','+(s.snow?1:0)+','+Math.min(1,s.passGoals||0)+','+(s.uses||0);}
 function objOf(L){return L.obj||{type:'fish'};}
-function objMet(w,s,L,lines){const o=objOf(L),g=s.g;
-  switch(o.type){case 'fish':return !!s.fish;case 'allfish':return !g.includes('*');case 'flags':return !/[123]/.test(g);case 'cones':return !g.includes('K');
+function objMet(w,s,L,lines){return objMetO(objOf(L),w,s,L,lines);}
+/* levels with two challenges for the third star list them in L.objs */
+function allObjMet(w,s,L,lines){return L.objs?L.objs.every(o=>objMetO(o,w,s,L,lines)):objMet(w,s,L,lines);}
+function objMetO(o,w,s,L,lines){const g=s.g;
+  switch(o.type){case 'use':return (lines||[]).filter(x=>x.b===o.block).length>=(o.n||1);case 'fish':return !!s.fish;case 'allfish':return !g.includes('*');case 'flags':return !/[123]/.test(g);case 'cones':return !g.includes('K');
     case 'pass':return (s.passGoals||0)>0;case 'iceonly':return !s.snow;case 'without':return !(lines||[]).some(x=>x.b===o.block);
     case 'budget':return (lines||[]).filter(x=>x.b===o.block).length<=o.max;}return true;}
 function bfsObj(w,L,allowed,maxNodes=150000,start){const o=objOf(L);let acts=allowed.filter(a=>a!=='repeat');if(o.type==='without')acts=acts.filter(a=>a!==o.block);
@@ -1137,7 +1140,7 @@ function genDaily(day,tierIdx,mechPool){
    hop() jumps over one square (a pond or rock, not a bush), the way Fluffy faces.
    ===================================================================== */
 const MOVES=['right','left','up','down'];
-const ALL_CMDS=[...MOVES,'hop','wait','repeat'];
+const ALL_CMDS=[...MOVES,'hop','wait','dash','repeat'];
 const WORLDS=[
 { n:1, name:'Spring Meadow', idea:'Sequences', blurb:'A program is a list of steps. Fluffy does them in order, one at a time, and the order is everything.',
   levels:[
@@ -1226,6 +1229,219 @@ const WORLDS=[
    mission:'Now write real Python! Tap the code buttons (or type). Each line is one step.',
    learn:'Python is code that grown-up programmers use. Blocks and Python mean the same thing.',
    hints:['Each block becomes one line, like right()','hop over the pond, grab the carrot, then head down to the burrow.'] },
+ ]},
+{ n:2, name:'Sunny Orchard', idea:'Loops', blurb:'A loop repeats steps for you. Fewer blocks, same hops. In Python a loop is for i in range(3):',
+  levels:[
+ { id:'2-1', title:'Carrot Row', mode:'blocks', blocks:[...MOVES,'repeat'], newBlocks:['repeat'], pucks:0, demo:true,
+   map:[',,,,,,,*,,',
+        'Po.......N',
+        ',,,,,,,,,,'],
+   solution:'for i in range(7):\n    right()\nup()\ndown()\nfor i in range(2):\n    right()',
+   objs:[{type:'use',block:'repeat'},{type:'fish'}],
+   mission:'That\'s a long way! Put a block inside a repeat to do it lots of times.',
+   learn:'A loop repeats the blocks inside it.',
+   hints:['Count the squares. That\'s how many times to repeat.','Tap repeat, then tap + until it shows the number. Then tap right: it goes inside the loop.'] },
+
+ { id:'2-2', title:'Puddle Jumps', mode:'blocks', blocks:[...MOVES,'hop','repeat'], pucks:0,
+   map:[',,,,,,,,,,',
+        'PoW.W.W..N',
+        ',,,,,,,,,,'],
+   solution:'right()\nfor i in range(3):\n    hop()\nfor i in range(2):\n    right()',
+   objs:[{type:'use',block:'repeat'},{type:'iceonly'}],
+   mission:'Puddles in a row! Hop them with a loop, and try not to squash the flowers.',
+   learn:'Any block can go inside a loop, even hop().',
+   hints:['After the carrot, every hop lands on a dry square.','right() once, then repeat hop() 3 times, then walk home.'] },
+
+ { id:'2-3', title:'Apple Stairs', mode:'blocks', blocks:[...MOVES,'hop','repeat'], pucks:0,
+   map:[',,,,,,N',
+        ',,,,,.T',
+        ',,,,.T,',
+        ',,,*T,,',
+        ',,.T,,,',
+        ',oT,,,,',
+        'PT,,,,,'],
+   solution:'for i in range(6):\n    up()\n    right()',
+   objs:[{type:'fish'},{type:'without',block:'hop'}],
+   mission:'Climb the stairs to the burrow. Find the pattern and loop it!',
+   learn:'Spotting a pattern of steps that repeats.',
+   hints:['What two moves make one stair?','Each stair is up() then right(). How many stairs?'] },
+
+ { id:'2-4', title:'Butterfly Crossing', mode:'blocks', blocks:[...MOVES,'wait','repeat'], pucks:0,
+   map:['T,,.,,,T',
+        'Po.....N',
+        'T,,.,,,T'],
+   zam:[[3,0],[3,1],[3,2]],
+   solution:'right()\nwait()\nfor i in range(6):\n    right()',
+   objs:[{type:'use',block:'repeat'},{type:'budget',block:'wait',max:1}],
+   mission:'A butterfly is fluttering up and down. Let it pass, then loop your way home!',
+   learn:'Waiting at the right moment, then repeating.',
+   hints:['Press Step to watch where the butterfly goes.','Move right once, wait() once, then repeat right().'] },
+
+ { id:'2-5', title:'Hay Loop', mode:'blocks', blocks:[...MOVES,'hop','repeat'], mech:'push', pucks:0,
+   map:['TTTTTTTTT',
+        'PoBW.BW.N',
+        'TTTTTTTTT'],
+   solution:'for i in range(8):\n    right()',
+   objs:[{type:'use',block:'repeat'},{type:'without',block:'hop'}],
+   mission:'Two ponds, two hay bales. Push each bale in to make bridges, all in one loop!',
+   learn:'The same step can do different things as the world changes.',
+   hints:['Walking into a hay bale pushes it.','Every step is right(). How many?'] },
+
+ { id:'2-6', title:'Lily Lane', mode:'blocks', blocks:[...MOVES,'hop','repeat'], mech:'cracked', pucks:0,
+   map:['TTTTTTTN',
+        'Pocccccc',
+        'T..*....'],
+   solution:'right()\ndown()\nfor i in range(6):\n    right()\nfor i in range(2):\n    up()',
+   objs:[{type:'fish'},{type:'use',block:'repeat',n:2}],
+   mission:'Lily pads sink after Fluffy hops off. Plan the path before you go!',
+   learn:'Planning ahead: some steps can\'t be undone.',
+   hints:['If you step on a lily pad to reach the golden carrot, can you get back?','Take the dry path at the bottom, then go up at the very end.'] },
+
+ { id:'2-7', title:'Two Loops', mode:'blocks', blocks:[...MOVES,'hop','repeat'], pucks:0,
+   map:['Po.....,',
+        ',,,,,,.,',
+        ',,,,,,.,',
+        ',*,,,,.,',
+        ',,,,,,N,'],
+   solution:'right()\nfor i in range(3):\n    down()\nfor i in range(5):\n    right()\ndown()',
+   objs:[{type:'fish'},{type:'use',block:'repeat',n:2}],
+   mission:'Two loops can go one after the other. Can you find the golden carrot too?',
+   learn:'A program can have more than one loop.',
+   hints:['The golden carrot is down the left side.','Go down to the golden carrot with one loop, then right along with another.'] },
+
+ { id:'2-8', title:'Carrot Steps', mode:'blocks', blocks:[...MOVES,'hop','repeat'], pucks:0, need:3,
+   map:['P.oTTTT',
+        'TT..oTT',
+        'TTTT..o',
+        'TTTTTTN'],
+   solution:'for i in range(3):\n    for j in range(2):\n        right()\n    down()',
+   objs:[{type:'use',block:'repeat'},{type:'budget',block:'right',max:1}],
+   mission:'Collect all 3 carrots on the way down, then take them home.',
+   learn:'A loop can go inside another loop.',
+   hints:['Each step down is: right, right, down.','For the challenge, put right() in its own little loop inside the big loop.'] },
+
+ { id:'2-9', title:'Where Will Fluffy Go?', mode:'predict', pucks:0,
+   map:[',,,,,,',
+        ',,,,,N',
+        ',#,,,,',
+        'P,,,,,'],
+   program:'for i in range(2):\n    right()\n    right()\n    up()',
+   mission:'Read the loop. Where will Fluffy stop? Tap that square, then press Check.',
+   learn:'Reading a loop and running it in your head.',
+   hints:['Write the loop out the long way: right, right, up, right, right, up.','Follow it with your finger, one step at a time.'] },
+
+ { id:'2-10', title:'Python Orchard', mode:'type', blocks:[...MOVES,'hop','repeat'], pucks:0,
+   map:[',,,,.,N',
+        ',,.*.T,',
+        '.,oT,,,',
+        'PT,,,,,'],
+   starter:'# A Python loop. Lines inside it are pushed in.\nfor i in range(3):\n    ',
+   solution:'for i in range(3):\n    up()\n    right()\n    right()',
+   mission:'Write a Python loop! Lines inside the loop are pushed in by 4 spaces.',
+   learn:'In Python, the spaces at the start of a line show what is inside a loop.',
+   hints:['Look for the pattern that repeats. It has 3 moves.','Each part of the pattern is: up, right, right.'] },
+ ]},
+{ n:3, name:'Autumn Woods', idea:'Choosing commands', blurb:'Lots of commands and tricky paths. Choose the best ones, and try the two challenges on each level.',
+  levels:[
+ { id:'3-1', title:'Zoom Zoom', mode:'blocks', blocks:[...MOVES,'hop','dash','repeat'], newBlocks:['dash'], pucks:0,
+   map:['Po....T',
+        'TTTTT.T',
+        'N..*..T'],
+   solution:'dash()\ndown()\ndown()\nleft()\ndash()\nleft()',
+   objs:[{type:'without',block:'right'},{type:'fish'}],
+   mission:'New: dash() runs the way Fluffy faces until something stops her!',
+   learn:'Choosing the best command for the job.',
+   hints:['Fluffy starts facing right, so dash() takes her along the top.','At the bottom, step left() once so she faces left, then dash() again.'] },
+
+ { id:'3-2', title:'Muddy Slide', mode:'blocks', blocks:[...MOVES,'hop','dash','repeat'], pucks:0,
+   map:['Po===.T',
+        'TTTTT.T',
+        'N====.T'],
+   solution:'for i in range(2):\n    right()\nfor i in range(2):\n    down()\nfor i in range(2):\n    left()',
+   objs:[{type:'budget',block:'down',max:1},{type:'budget',block:'left',max:1}],
+   mission:'Mud is slippery! Fluffy slides until something stops her.',
+   learn:'One step can move Fluffy a long way.',
+   hints:['Try one step onto the mud and watch where she stops.','For the challenges, put down() and left() inside loops.'] },
+
+ { id:'3-3', title:'Garden Gate', mode:'blocks', blocks:[...MOVES,'hop','dash','repeat'], pucks:0,
+   map:['Po..ST',
+        'TTTG.*',
+        'N...TT'],
+   solution:'dash()\ndown()\nright()\nfor i in range(2):\n    left()\ndown()\nleft()\ndash()\nleft()',
+   objs:[{type:'fish'},{type:'use',block:'dash',n:2}],
+   mission:'Step on the button to open the garden gate. Step on it again and it closes!',
+   learn:'Steps can change the world, and changing it back matters too.',
+   hints:['The gate is below the path. The button opens it.','Get the golden carrot without stepping on the button a second time.'] },
+
+ { id:'3-4', title:'Flower Order', mode:'blocks', blocks:[...MOVES,'hop','dash','repeat'], pucks:0,
+   map:['Po1..*',
+        'T.TT..',
+        'N.3.2.'],
+   solution:'for i in range(5):\n    right()\nfor i in range(2):\n    down()\nfor i in range(5):\n    left()',
+   objs:[{type:'flags'},{type:'fish'}],
+   mission:'Visit flowers 1, 2 and 3 in order, and bring the carrot home.',
+   learn:'Doing things in the right order.',
+   hints:['Flower 1 is near the start. Flower 2 is at the bottom right.','Go all the way right, down, then all the way left.'] },
+
+ { id:'3-5', title:'Brook Hop', mode:'blocks', blocks:[...MOVES,'hop','dash','repeat'], pucks:0,
+   map:[',,,,,,,',
+        'PoW.W.N',
+        ',,,,,,,'],
+   solution:'right()\nfor i in range(2):\n    hop()\nright()',
+   objs:[{type:'iceonly'},{type:'budget',block:'hop',max:1}],
+   mission:'A bubbly brook. Walk around it, or hop over it?',
+   learn:'Different programs can reach the same place. Some are better.',
+   hints:['Walking around squashes the flowers.','Hop twice, but use hop() only once: put it in a loop.'] },
+
+ { id:'3-6', title:'Busy Path', mode:'blocks', blocks:[...MOVES,'hop','dash','wait','repeat'], pucks:0,
+   map:['TT.TT.TT',
+        'Po.....N',
+        'TT.TT.TT'],
+   zam:[[[2,0],[2,1],[2,2]],[[5,2],[5,1],[5,0]]],
+   solution:'for i in range(4):\n    right()\nwait()\nfor i in range(3):\n    right()',
+   objs:[{type:'without',block:'dash'},{type:'budget',block:'wait',max:1}],
+   mission:'Two geese are waddling across the path. Time it just right!',
+   learn:'Timing: wait() for the right moment.',
+   hints:['Press Step to watch both geese. dash() is fast, but the challenge says walk!','Walk right 4 times, wait() once, then walk the rest.'] },
+
+ { id:'3-7', title:'Golden Hunt', mode:'blocks', blocks:[...MOVES,'hop','dash','repeat'], pucks:0,
+   map:['*,,,,,*',
+        'Po.....',
+        '*,,,,,N'],
+   solution:'up()\nfor i in range(2):\n    down()\nup()\nfor i in range(6):\n    right()\nup()\nfor i in range(2):\n    down()',
+   objs:[{type:'allfish'},{type:'iceonly'}],
+   mission:'Three golden carrots in the corners! Can you get them all?',
+   learn:'Planning a longer program in parts.',
+   hints:['Two golden carrots are next to the start.','Grab both near the start, walk along the path, then the last one.'] },
+
+ { id:'3-8', title:'Big Picnic', mode:'blocks', blocks:[...MOVES,'hop','dash','repeat'], pucks:0, need:2,
+   map:['Po===.T',
+        'T*TTT.T',
+        'N===.oT'],
+   solution:'right()\ndown()\nup()\nright()\nfor i in range(2):\n    down()\nfor i in range(3):\n    left()',
+   objs:[{type:'fish'},{type:'budget',block:'left',max:1}],
+   mission:'Bring 2 carrots home for a picnic. Watch out for the slippery mud!',
+   learn:'Putting everything together.',
+   hints:['One carrot is at the start, one at the bottom right.','The golden carrot is just below the start. Get it before the mud.'] },
+
+ { id:'3-9', title:'Where Will Fluffy Go?', mode:'predict', pucks:0,
+   map:[',,,,,,',
+        'P.==.T',
+        ',,,,,,'],
+   program:'right()\nright()\ndown()',
+   mission:'Read the code. Where will Fluffy stop? Remember the mud!',
+   learn:'Reading code and predicting what it does.',
+   hints:['The second right() lands on mud.','Fluffy slides until she reaches grass again.'] },
+
+ { id:'3-10', title:'Python Woods', mode:'type', blocks:[...MOVES,'hop','dash','repeat'], pucks:0,
+   map:['Po...T',
+        'TTTT.T',
+        'N*...T'],
+   starter:'# Use dash() to zoom along\n',
+   solution:'dash()\ndown()\ndown()\nleft()\ndash()\nleft()',
+   mission:'Write it in Python. dash() works in Python too!',
+   learn:'Python can use every command you know.',
+   hints:['dash() along the top, then go down.','At the bottom: left(), dash(), left().'] },
  ]},
 ];
 
@@ -2066,8 +2282,8 @@ function stepHint(){const L=cur.L,w=cur.w;
     return {k,line:t,replace:k<lines.length,text:k<lines.length?`Line ${k+1} should be: ${desc.trim()}${inside}`:`Next, add line ${k+1}: ${desc.trim()}${inside}`};}
   const flat=expand(lines).acts.map(a=>a.act);let s=startState(w),k=0,solved=false;
   for(;k<flat.length;k++){const r=step(w,s,flat[k]);if(r.s.status==='fail')break;s=r.s;if(s.status==='goal'){solved=true;k++;break;}}
-  if(solved){if(s.fish&&lines.length<=cur.par)return {text:'Your program already scores with all the stars. Press Play!'};
-    const tips=[];if(L.obj){if(!objMet(w,s,L,lines))tips.push('go for the bonus: '+objLabel(L).toLowerCase());}else if(!s.fish&&w.fishAt)tips.push('find a path that goes over the golden fish');if(lines.length>cur.par)tips.push(`try to do it in ${cur.par} blocks or fewer`);
+  if(solved){if((L.objs?allObjMet(w,s,L,lines):s.fish)&&lines.length<=cur.par)return {text:'Your program already scores with all the stars. Press Play!'};
+    const tips=[];if(L.objs){if(!allObjMet(w,s,L,lines))tips.push('go for both challenges: '+objLabel(L).toLowerCase());}else if(L.obj){if(!objMet(w,s,L,lines))tips.push('go for the bonus: '+objLabel(L).toLowerCase());}else if(!s.fish&&w.fishAt)tips.push('find a path that goes over the golden fish');if(lines.length>cur.par)tips.push(`try to do it in ${cur.par} blocks or fewer`);
     return {text:'Your program already scores! For more stars, '+tips.join(' and ')+'.'};}
   if(lines.some(x=>x.b==='repeat'))return {text:'Hint 3 works step by step. Try writing it without loops first, then look for a pattern.'};
   const path=L.obj?(bfsObj(w,L,L.blocks,80000,s)||bfs(w,s,L.blocks,false,60000)):(bfs(w,s,L.blocks,!!w.fishAt&&!s.fish,60000)||bfs(w,s,L.blocks,false,60000));if(!path||!path.length)return {text:'Press Reset and plan the path again from the start. Some steps can\'t be undone!'};
@@ -2255,9 +2471,10 @@ $('#btnRestart').innerHTML=icon('restart');$('#btnRestart').onclick=()=>{if(cur.
 /* ===================== TYPING: Pip's Keyboard, star rules, Speed Shift ===================== */
 SFX.key=()=>tone(1150,0,.025,'square',.022);
 function kbPip(){return (S.kb||(matchMedia('(pointer:coarse)').matches?'pip':'native'))==='pip';}
-function ruleOf(L){if(L.mode==='predict')return 'predict';if(L.mode==='speed')return 'speed';if(L.obj)return 'objective';return L.rule||(L.mode==='type'?'typed':'normal');}
-function objLabel(L){const o=objOf(L),g=L.map.join('');
-  switch(o.type){case 'fish':return 'Grab the golden fish';case 'allfish':return `Grab all ${(g.match(/\*/g)||[]).length} golden fish`;case 'flags':return 'Skate through flags 1, 2, 3 in order';
+function ruleOf(L){if(L.mode==='predict')return 'predict';if(L.mode==='speed')return 'speed';if(L.objs&&L.mode!=='type')return 'duo';if(L.obj)return 'objective';return L.rule||(L.mode==='type'?'typed':'normal');}
+function objLabel(L){return L.objs?L.objs.map((o,i)=>{const t=objLabelO(o,L);return i?t[0].toLowerCase()+t.slice(1):t;}).join(' and '):objLabelO(objOf(L),L);}
+function objLabelO(o,L){const g=L.map.join('');
+  switch(o.type){case 'use':return o.n>1?`Use ${o.n} ${o.block} blocks`:(o.block==='repeat'?'Use a repeat':`Use ${o.block}()`);case 'fish':return 'Grab the golden fish';case 'allfish':return `Grab all ${(g.match(/\*/g)||[]).length} golden fish`;case 'flags':return 'Skate through flags 1, 2, 3 in order';
     case 'cones':return 'Knock down every cone';case 'pass':return 'Score off a pass';case 'iceonly':return 'Stay on the ice (no snow)';
     case 'without':return `Don't use ${o.block}()`;case 'budget':return `Use ${o.block}() ${o.max===1?'only once':o.max+' times or fewer'}`;}return 'Bonus';}
 function pyCount(){return LEVELS.filter(L=>S.lv[L.key]&&S.lv[L.key].py).length;}
@@ -2273,6 +2490,7 @@ function starGoals(L){const par=cur.par;
     case 'translate':return ['Score a goal','Match the blocks exactly','Clean code: no errors when you press Play'];
     case 'buildit':return ['Score a goal','Match the Python exactly','Right first time'];
     case 'objective':return [L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${par} blocks or fewer`,'Bonus: '+objLabel(L)];
+    case 'duo':return [L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${par} blocks or fewer`,'Two challenges: '+objLabel(L)];
     default:return [L.need>1?`Score ${L.need} goals`:'Score a goal',`Use ${par} blocks or fewer`,'Grab the golden fish'];}}
 function sameLines(a,b){return !!b&&a.length===b.length&&a.every((x,i)=>x.b===b[i].b&&x.d===b[i].d&&(x.b!=='repeat'||x.n===b[i].n));}
 function computeStars(sim){const L=cur.L,rule=ruleOf(L),used=run.lines.length,par=cur.par;const tgt=L.target?parsePy(L.target,L.blocks).lines:null;
@@ -2283,9 +2501,11 @@ function computeStars(sim){const L=cur.L,rule=ruleOf(L),used=run.lines.length,pa
     case 'typos':on=[true,cur.edits<=L.editPar,!cur.dirty];labels=['Fixed and scored!',`${cur.edits} edits, par ${L.editPar}`,clean];break;
     case 'translate':{const ok=sameLines(run.lines,tgt);on=[true,ok,!cur.dirty];labels=['Scored!',ok?'Exact match!':'Not an exact match',clean];break;}
     case 'buildit':{const ok=sameLines(run.lines,tgt);on=[true,ok,!cur.failedThisVisit];labels=['Scored!',ok?'Exact match!':'Not an exact match',cur.failedThisVisit?'Took a few tries':'Right first time!'];break;}
+    case 'duo':{const miss=L.objs.filter(o=>!objMetO(o,cur.w,sim.final,L,run.lines));on=[true,used<=par,!miss.length];
+      labels=['Scored!',used<=par?`${used} blocks, par ${par}`:`${used} blocks. Par is ${par}`,miss.length?'Missed: '+miss.map(o=>objLabelO(o,L)).join(' and '):'Both challenges: '+objLabel(L)];break;}
     case 'objective':{const ok=objMet(cur.w,sim.final,L,run.lines);on=[true,used<=par,ok];labels=['Scored!',used<=par?`${used} blocks, par ${par}`:`${used} blocks. Par is ${par}`,(ok?'Bonus: ':'Missed bonus: ')+objLabel(L)];break;}
     default:{const parOk=used<=par;on=[true,parOk,sim.fish];labels=['Scored!',parOk?`${used} blocks, par ${par}`:`${used} blocks. Par is ${par}`,sim.fish?'Golden fish!':'Missed the fish'];}}
-  return {on,labels,stars:on.filter(Boolean).length,parOk:['normal','typed','objective'].includes(rule)?used<=par:true,fish:sim.fish,used,rule};}
+  return {on,labels,stars:on.filter(Boolean).length,parOk:['normal','typed','objective','duo'].includes(rule)?used<=par:true,fish:sim.fish,used,rule};}
 
 /* ---- syntax colouring ---- */
 function hl(t){return esc(t).replace(/(#.*$)|\b(for|in)\b|\b(range)\b|\b([a-z_]+)(?=\s*\()|(\d+)|([():])/g,(m,c,kw,rg,fn,num,pn)=>
@@ -2480,6 +2700,7 @@ $$('.inswitch').forEach(b=>b.onclick=()=>{if(cur.sp&&cur.sp.on)return;S.codeIn=b
 /* ---- words: penguin game -> bunny game (display text only, never code) ---- */
 const BUN_WORDS=[
  [/Pip's Code Rink/g,"Fluffy's Code Garden"],[/Code Rink/g,'Code Garden'],[/Today's Rink/g,"Today's Garden"],
+ [/Grab all (\d+) golden fish/g,'Grab all $1 golden carrots'],[/Skate through flags 1, 2, 3 in order/g,'Visit flowers 1, 2 and 3 in order'],[/Stay on the ice \(no snow\)/g,'Stay on the path (no flowers)'],
  [/\bScore and grab the fish\b/g,'Get home and grab the golden carrot'],[/\bScored with the fish\b/g,'Home with the golden carrot'],
  [/\bScored, missed the fish\b/g,'Home, but missed the golden carrot'],[/\bMissed the fish\b/g,'Missed the golden carrot'],
  [/\bScore a goal\b/g,'Take a carrot home'],[/\bScore (\d+) goals\b/g,'Take $1 carrots home'],[/\bScored!/g,'Home!'],
@@ -2492,7 +2713,8 @@ const BUN_WORDS=[
  [/Stars \(incl\. daily\)/g,'Stars'], [/Try Today's Rink for fresh puzzles!/g,'More worlds are coming soon!'],[/moving up the team/g,'growing into a great coder'],[/\blocker\b/g,'wardrobe'],[/\bteam passcode\b/g,'garden passcode'],
  [/\bthe boards\b/g,'the fence'],[/\bboards\b/g,'fence'],
  [/\bPip\b/g,'Fluffy'],[/\bhim\b/g,'her'],[/\bHe\b/g,'She'],[/\bhe\b/g,'she'],[/\bhis\b/g,'her'],[/\bHis\b/g,'Her']];
-function TX(s){if(!s||typeof s!=='string')return s;let o=s;for(const [re,to] of BUN_WORDS)o=o.replace(re,to);return o;}
+function TX(s){if(!s||typeof s!=='string')return s;let o=s;for(const [re,to] of BUN_WORDS)o=o.replace(re,to);
+  if(typeof cur!=='undefined'&&cur.L&&cur.L.world===2)o=o.replace(/\bgoose\b/g,'butterfly').replace(/\bgeese\b/g,'butterflies');return o;}
 (function(){const SKIP='code,pre,textarea,input,script,style,.cc,.py,.pline,.cchip,.codeview,.pkb,.cn,.prompt .pblk';
   const fixText=n=>{const p=n.parentElement;if(!p||p.closest(SKIP))return;const v=n.nodeValue,t=TX(v);if(t!==v)n.nodeValue=t;};
   const fixAttrs=el=>{for(const a of ['aria-label','title','placeholder']){const v=el.getAttribute&&el.getAttribute(a);if(v){const t=TX(v);if(t!==v)el.setAttribute(a,t);}}};
@@ -2509,12 +2731,13 @@ Object.assign(BLOCKS,{
  right:{kind:'move',icon:'right',say:'move one square right'},left:{kind:'move',icon:'left',say:'move one square left'},
  up:{kind:'move',icon:'up',say:'move one square up'},down:{kind:'move',icon:'down',say:'move one square down'},
  hop:{kind:'move',icon:'jump',say:'hop over one square (a pond or a rock), the way Fluffy faces'},
- wait:{kind:'time',icon:'wait',say:'stay still for one step'}});
+ wait:{kind:'time',icon:'wait',say:'stay still for one step'},
+ dash:{kind:'move',icon:'dash',say:'run the way Fluffy faces until something stops her'}});
 PAL_GROUPS[0][0]='Move';PAL_GROUPS[2][1].push('hop');
 RANKS.splice(0,RANKS.length,'Seedling','Sprout','Hopper','Nibbler','Digger','Explorer','Meadow Scout','Garden Helper','Burrow Builder','Carrot Captain','Garden Star','Legend');
 {const keep={first:['First Carrot','Finish your first level'],hattrick:['Three Stars','Get all 3 stars on a level'],fisher:['Golden Nibbler','Grab golden carrots on 5 levels'],
   debug:['Bug Squasher','Fix a program that went wrong'],slowmo:['Slow Hopper','Use Step to watch code one block at a time'],bridge:['Bridge Builder','Push a hay bale into the pond'],
-  predictor:['Mind Reader','Guess what the code does, first try'],typist:['Python Bunny','Solve a level with Python'],looper:['Loop Master','Solve a level with a loop'],
+  predictor:['Mind Reader','Guess what the code does, first try'],typist:['Python Bunny','Solve a level with Python'],looper:['Loop-de-loop','Solve a level with a loop'],world2:['Orchard Champion','Finish every level in World 2'],
   streak3:['On a Roll','Play 3 days in a row'],world1:['Meadow Champion','Finish every level in World 1'],perfect1:['Perfect Meadow','Get every star in World 1'],cleancoder:['Clean Coder','Earn a clean-code star']};
   const nb=BADGES.filter(b=>keep[b.id]).map(b=>({id:b.id,name:keep[b.id][0],desc:keep[b.id][1]}));BADGES.splice(0,BADGES.length,...nb);}
 Object.keys(CHARS).forEach(k=>delete CHARS[k]);
@@ -2529,18 +2752,18 @@ COSTUMES.splice(0,COSTUMES.length,
  {id:'red',name:'Strawberry Bow',color:'#F0507A',req:null},{id:'blue',name:'Bluebell Bow',color:'#4F8CE8',req:{xp:60}},
  {id:'green',name:'Meadow Bow',color:'#3FBF6E',req:{stars:9}},{id:'gold',name:'Sunflower Bow',color:'#FFC933',req:{badge:'hattrick'}},
  {id:'purple',name:'Lavender Bow',color:'#A77BEA',req:{badge:'debug'}},{id:'crystal',name:'Rainbow Bow',color:'#5FE0D8',req:{badge:'perfect1'}},
- {id:'python',name:'Python Bow',color:'#3776AB',req:{py:1}});
+ {id:'python',name:'Python Bow',color:'#3776AB',req:{py:1}},{id:'crown',name:'Flower Crown',color:'#FF8DB8',req:{stars:20}});
 Object.keys(TILE_INFO).forEach(k=>delete TILE_INFO[k]);
 Object.assign(TILE_INFO,{'N':'Burrow: Fluffy\'s home. Walk in holding a carrot to bring it home.','o':'Carrot: walk onto it to pick it up.',
  '*':'Golden carrot: grab it for a star.','W':'Pond: Fluffy falls in. Hop over it!','#':'Rock: Fluffy bumps into it, but can hop over it.',
  'T':'Bush: too tall to hop over.','c':'Lily pad: sinks after Fluffy steps off.','B':'Hay bale: push it. Push it into the pond to make a bridge.',
- '=':'Mud: Fluffy slides until something stops her.'});
+ '=':'Mud: Fluffy slides until something stops her.','S':'Button: step on it to open or close the garden gates.','G':'Gate: closed. Step on a button to open it.',
+ 'g':'Gate: open. Fluffy can walk through.','1':'Flower 1: visit the numbered flowers in order.','2':'Flower 2: visit the numbered flowers in order.','3':'Flower 3: visit the numbered flowers in order.'});
 FUTURE.splice(0,FUTURE.length,
- {n:2,name:'Summer Garden',idea:'Loops',blurb:'Repeat steps without writing them again.'},
- {n:3,name:'Autumn Woods',idea:'Choosing commands',blurb:'Lots of commands. Pick the best ones.'},
  {n:4,name:'Winter Warren',idea:'If / else',blurb:'Fluffy checks the path and decides what to do.'},
  {n:'S',name:'Build-a-Garden',idea:'Sandbox',blurb:'Make your own puzzles.'});
 Object.keys(WORLD_UNLOCK).forEach(k=>delete WORLD_UNLOCK[k]);
+Object.assign(WORLD_UNLOCK,{2:{world:1,count:10},3:{world:2,count:8}});
 
 /* ---- gentle wording for things that go wrong ---- */
 function failText(sim){const ev=sim.events[sim.events.length-1];const n=ev?ev.i+1:0;
@@ -2555,19 +2778,22 @@ function failText(sim){const ev=sim.events[sim.events.length-1];const n=ev?ev.i+
     case 'stuck':return {t:'Stuck!',m:`On step ${n}, Fluffy pushed the hay bale, but ${ob==='fence'?'the fence':'a '+ob} was behind it.`};
     case 'water':return {t:'Splash!',m:`On step ${n}, Fluffy fell in the pond. Bunnies don't like getting wet! Try hop() over it.`};
     case 'nopuck':return {t:'No carrot!',m:`On step ${n}, Fluffy got home with no carrot. Pick one up first!`};
-    case 'zamboni':return {t:'Honk honk!',m:`On step ${n}, Fluffy bumped into the goose. Try wait() to let it pass.`};}
+    case 'zamboni':return cur.L.world===2?{t:'Oops!',m:`On step ${n}, Fluffy bumped into the butterfly. Try wait() to let it flutter past.`}:{t:'Honk honk!',m:`On step ${n}, Fluffy bumped into the goose. Try wait() to let it pass.`};}
   return {t:'Not yet',m:'Try again!'};}
 
 /* ---- art: garden tiles ---- */
 function drawTile(c,ch,gx,gy,x,y,s){
   const p=s/16;const R=(cx,cy,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.floor(x+cx*p),Math.floor(y+cy*p),Math.ceil(w*p),Math.ceil(h*p))};
   const pond=(inner)=>{R(2,1,12,14,'#58B4E8');R(1,2,14,12,'#58B4E8');R(3,3,10,10,inner||'#469FD8');R(4,5,3,1,'#A9E1FA');R(9,9,3,1,'#A9E1FA');R(6,11,2,1,'#A9E1FA');};
-  R(0,0,16,16,'#BDE8A0');for(let i=0;i<5;i++){const a=Math.floor(hash(gx,gy,i)*14),b=Math.floor(hash(gx,gy,i+9)*13);R(a,b,1,2,i%2?'#A5DA84':'#D2F3BC');}
+  const wn=(typeof cur!=='undefined'&&cur.L&&cur.L.world)||1,aut=wn===3;
+  R(0,0,16,16,aut?'#E3D49A':'#BDE8A0');for(let i=0;i<5;i++){const a=Math.floor(hash(gx,gy,i)*14),b=Math.floor(hash(gx,gy,i+9)*13);R(a,b,1,2,aut?(i%2?'#E09A4A':'#C9B070'):(i%2?'#A5DA84':'#D2F3BC'));}
   if(ch===','){const cols=['#FF8DB8','#FFFFFF','#C9A7FF','#FFD84D'];for(let i=0;i<3;i++){const fx=2+Math.floor(hash(gx,gy,i+20)*11),fy=2+Math.floor(hash(gx,gy,i+30)*11),col=cols[Math.floor(hash(gx,gy,i+40)*4)];
     R(fx-1,fy,1,1,col);R(fx+1,fy,1,1,col);R(fx,fy-1,1,1,col);R(fx,fy+1,1,1,col);R(fx,fy,1,1,col==='#FFD84D'?'#FF9A3C':'#FFD84D');}}
   switch(ch){
   case '#':R(3,4,10,9,'#A39C95');R(2,6,12,6,'#A39C95');R(4,3,8,1,'#A39C95');R(4,4,5,2,'#C9C2BA');R(3,6,2,2,'#BDB6AE');R(3,12,10,2,'#756E68');R(12,7,2,5,'#8A837C');R(10,4,2,1,'#7FC45E');R(11,5,1,1,'#7FC45E');break;
-  case 'T':R(2,5,12,8,'#3FA45B');R(3,3,10,2,'#4DB86A');R(1,7,14,5,'#3FA45B');R(2,12,12,2,'#2E8046');R(4,4,3,1,'#7FD68F');R(3,6,2,1,'#7FD68F');
+  case 'T':if(wn===2){R(7,10,2,5,'#8A5A32');R(2,2,12,9,'#3FA45B');R(3,1,10,1,'#4DB86A');R(1,4,14,5,'#3FA45B');R(4,3,3,1,'#7FD68F');[[4,5],[10,4],[7,7],[11,8]].forEach(([a,b])=>{R(a,b,2,2,'#E8323F');R(a,b,1,1,'#FF8A8A');});break;}
+    if(aut){R(7,10,2,5,'#7A4A28');R(2,2,12,9,'#E0782E');R(3,1,10,1,'#F0A040');R(1,4,14,5,'#D9662A');R(4,3,3,1,'#FFC35A');R(9,6,2,2,'#B8481E');R(5,8,2,1,'#FFC35A');break;}
+    R(2,5,12,8,'#3FA45B');R(3,3,10,2,'#4DB86A');R(1,7,14,5,'#3FA45B');R(2,12,12,2,'#2E8046');R(4,4,3,1,'#7FD68F');R(3,6,2,1,'#7FD68F');
     R(5,7,2,2,'#EF4B72');R(10,6,2,2,'#EF4B72');R(8,10,2,2,'#EF4B72');R(5,7,1,1,'#FF9DB5');R(10,6,1,1,'#FF9DB5');R(8,10,1,1,'#FF9DB5');break;
   case 'W':pond();break;
   case 'c':pond();R(3,4,10,8,'#5BC46E');R(4,3,8,10,'#5BC46E');R(8,3,1,5,'#469FD8');R(7,4,1,3,'#469FD8');R(5,5,3,1,'#93E3A0');R(4,11,8,1,'#3E9D52');R(10,9,2,2,'#FF9CC6');R(10,9,1,1,'#FFFFFF');break;
@@ -2578,7 +2804,7 @@ function drawTile(c,ch,gx,gy,x,y,s){
   case 'B':R(1,4,14,10,'#E8C25A');R(1,4,14,2,'#F6DA85');R(1,8,14,1,'#CFA43F');R(1,11,14,1,'#CFA43F');R(4,4,1,10,'#B5652F');R(11,4,1,10,'#B5652F');
     R(2,6,1,1,'#FFF1B8');R(7,9,1,1,'#FFF1B8');R(13,12,1,1,'#FFF1B8');R(1,14,14,1,'rgba(60,90,20,.25)');break;
   case '=':R(2,3,12,10,'#9C6B43');R(1,5,14,6,'#9C6B43');R(4,5,3,1,'#C49069');R(9,9,2,1,'#C49069');R(3,12,10,1,'#7A5030');break;
-  case 'S':R(4,9,8,5,'#F2E8D8');R(2,4,12,5,'#EF4B5F');R(4,3,8,1,'#EF4B5F');R(4,5,2,2,'#FFFFFF');R(9,4,2,2,'#FFFFFF');break;
+  case 'S':R(3,4,10,9,'#8F8A86');R(2,6,12,5,'#8F8A86');R(4,5,8,6,'#FF6F9E');R(5,4,6,1,'#FF6F9E');R(5,6,3,2,'#FFB3CB');R(3,12,10,1,'#6A6560');break;
   case 'G':for(let k=0;k<4;k++)R(2+k*3,3,2,12,'#C98B55');R(1,6,14,2,'#A86B3C');R(1,11,14,2,'#A86B3C');break;
   case 'g':R(1,3,2,12,'#C98B55');R(13,3,2,12,'#C98B55');break;
   case '1':case '2':case '3':case 'v':{R(7,8,2,7,'#3E9D52');const fc=ch==='v'?'#3FBF6E':'#FF8DB8';R(4,2,8,7,fc);R(3,4,10,3,fc);R(6,4,4,3,'#FFD84D');
@@ -2596,6 +2822,9 @@ function drawFish(c,x,y,s,t){const p=s/16,b=Math.sin(t/300)*p*0.8;const R=(cx,cy
   if(Math.floor(t/400)%2){R(11,5,1,1,'#FFFFFF');R(12,4,1,1,'#FFF7C2');R(10,4,1,1,'#FFF7C2');R(11,3,1,1,'#FFF7C2');R(11,6,1,1,'#FFF7C2');}}
 /* the goose (moves where the penguin game's Zamboni does) */
 function drawZamboni(c,x,y,s){const p=s/16;const R=(cx,cy,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.floor(x+cx*p),Math.floor(y+cy*p),Math.ceil(w*p),Math.ceil(h*p))};
+  if(typeof cur!=='undefined'&&cur.L&&cur.L.world===2){const f=Math.floor(performance.now()/180)%2;const wy=f?1:0;
+    R(2,3+wy,5,5,'#B98CF0');R(9,3+wy,5,5,'#B98CF0');R(3,8,4,4,'#FF9CC6');R(9,8,4,4,'#FF9CC6');R(3,4+wy,2,2,'#FFFFFF');R(11,4+wy,2,2,'#FFFFFF');
+    R(7,4,2,9,'#4A3060');R(6,2,1,2,'#4A3060');R(9,2,1,2,'#4A3060');return;}
   R(2,8,11,5,'#FFFFFF');R(3,7,9,1,'#FFFFFF');R(1,9,1,3,'#FFFFFF');R(10,3,2,5,'#FFFFFF');R(10,1,4,3,'#FFFFFF');R(14,2,2,1,'#FF9A2E');R(14,3,1,1,'#E07A10');
   R(12,2,1,1,'#1B2330');R(4,9,6,2,'#E1E7EE');R(3,12,10,1,'#C9D2DC');R(5,13,1,2,'#FF9A2E');R(9,13,1,2,'#FF9A2E');R(4,15,3,1,'#FF9A2E');R(8,15,3,1,'#FF9A2E');}
 
@@ -2615,6 +2844,7 @@ function drawSprite(c,x,y,s,o={}){
   c.globalAlpha=o.alpha==null?1:o.alpha;
   const px=(cx,cy,color)=>{const X=left?G-1-cx:cx;c.fillStyle=color;c.fillRect(Math.floor(ox+X*p),Math.floor(oy+cy*p),Math.ceil(p),Math.ceil(p))};
   for(let r=0;r<G;r++){const row=BUN[r];for(let cc=0;cc<G;cc++){const k=row[cc];if(!k||k==='.')continue;px(cc,r,col[k]);}}
+  if((o.costume||S.costume)==='crown'){[[7,3,'#46C065'],[8,4,'#FF8DB8'],[9,3,'#FFD84D'],[10,4,'#FFFFFF'],[11,3,'#FF8DB8'],[12,4,'#46C065'],[9,4,'#46C065'],[11,4,'#C9A7FF']].forEach(([a,b,k])=>px(a,b,k));}
   if(o.puck){[[16,14,'#46C065'],[17,13,'#46C065'],[15,15,'#FF8A2A'],[16,15,'#FF8A2A'],[15,16,'#FF8A2A'],[16,16,'#F07A1E'],[16,17,'#F07A1E'],[15,15,'#FFB066']].forEach(([a,b,k])=>px(a,b,k));}
   c.globalAlpha=1;}
 /* her picture outside levels never shows a carrot she hasn't picked up */
