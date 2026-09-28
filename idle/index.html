@@ -115,6 +115,8 @@ body[data-world="event"]{--ice:#FFB36B}
 .pane{display:grid;gap:8px;align-content:start}
 .lead{margin:0;color:var(--muted);max-width:62ch}
 .pane h3{margin:10px 0 0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ice)}
+.card.good{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok) inset}.goodtag{display:table;font:700 10px var(--disp);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:var(--ok);border-radius:6px;padding:1px 6px;margin-bottom:3px}
+.card.good .buy:not(:disabled){background:var(--ok);border-color:var(--ok);color:var(--ink)}.card.good .buy:not(:disabled) small{color:var(--ink);opacity:.8}
 .card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .card b{font:600 15px var(--disp)}.card small{display:block;color:var(--muted);font-size:12px}
 .card .buy{width:104px}
@@ -481,7 +483,7 @@ return {
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.03.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.04.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -534,26 +536,37 @@ function chalGen(k){const S=P.ev.st;const max=(S.mod&&S.mod.max)||12;const X=ECO
   const usable=X.bands.filter(B=>B.tiers.every(i=>i<max)).length+(max>=12?1:0);const f=0.45+0.55*max/12;   // fewer items: gentler targets
   const busy=(P.ev.chal||[]).map(x=>x.ty);let types=['earn','own','mgr','gold','rate'].concat(usable?['pup']:[]);const free=types.filter(x=>!busy.includes(x));if(free.length)types=free;
   const ty=types[Math.floor(chalRand()*types.length)];let c;
-  switch(ty){case 'earn':c={need:Math.pow(10,5+k*1.3*f)};break;
+  const inc=ECONS.event.incomeAll(S);
+  switch(ty){case 'earn':c={need:Math.max(Math.pow(10,5+k*1.3*f),inc*(120+30*k))};break;
     case 'own':c={t:Math.floor(chalRand()*Math.min(max,4+k)),need:[25,50,100,150,200,300][Math.min(5,Math.floor(k/2)+Math.floor(chalRand()*2))]};break;
     case 'mgr':c={need:Math.min(max,2+k)};break;case 'gold':c={need:2+Math.floor(k/2)};break;case 'pup':c={need:1+Math.floor(k/(usable>=3?2:4))};break;
     case 'rate':c={need:Math.pow(10,3+k*1.2*f)};break;}
-  if(ty==='own'&&S.tiers[c.t].n>=c.need)c.need=[25,50,100,150,200,300,400,500,750,1000].find(v=>v>S.tiers[c.t].n)||S.tiers[c.t].n+100;
+  if(ty==='own'&&S.tiers[c.t].n>=c.need*0.6)c.need=Math.ceil((S.tiers[c.t].n+25+5*k)/25)*25;
   if(ty==='mgr'){const have=S.tiers.filter(T=>T.mgr).length;if(have>=c.need){if(have>=max)return chalGen(k);c.need=have+1;}}
-  if(ty==='rate'){const cur=ECONS.event.incomeAll(S);if(cur>=c.need)c.need=Math.pow(10,Math.ceil(Math.log10(cur*4)));}
+  if(ty==='rate'){const cur=ECONS.event.incomeAll(S);c.need=Math.max(c.need,Math.pow(10,Math.ceil(Math.log10(Math.max(1,cur)*(4+k)))));}
   c.ty=ty;c.k=k;c.tok=5+3*k;c.base=0;c.base=ty==='earn'?S.total:ty==='gold'?P.ev.gold:ty==='pup'?(S.pupEver||0):0;return c;}
 function fillChal(){while(P.ev.chal.length<3)P.ev.chal.push(chalGen(P.ev.k++));}
-function checkChal(){if(!P.ev)return;let got=false;P.ev.chal=P.ev.chal.map(c=>{if(chalValue(c)>=c.need){const g=Math.max(0,Math.min(c.tok,TOK_CAP-P.ev.tok));P.ev.tok+=g;P.ev.done++;got=true;
-    toast(`<b>Challenge done</b> ${esc(chalText(c))} · ${g?'+'+g+' tokens':'token limit reached'}`,'star');AUDIO.play('challenge');return chalGen(P.ev.k++);}return c;});if(got)save();}
+function capOf(){return (P.ev&&P.ev.cap)||TOK_CAP;}
+function checkChal(){if(!P.ev)return;let got=false;P.ev.chal=P.ev.chal.map(c=>{if(chalValue(c)>=c.need){const g=Math.max(0,Math.min(c.tok,capOf()-P.ev.tok));P.ev.tok+=g;P.ev.done++;got=true;
+    toast(`<b>Challenge done</b> ${esc(chalText(c))} · ${g?'+'+g+' tokens':'token limit reached'}`,'star');AUDIO.play('challenge');return chalGen(P.ev.k++);}return c;});if(got)save();if(P.ev.tok>=capOf())finishEvent(true);}
 function eventsOpen(){return (P.w.belt.runs||0)>=1;}
 function eventCheck(){const t=now();const w=eventWindow(t);
-  if(P.ev&&(P.ev.id!==w.id||!w.live))finishEvent();
+  if(P.ev){const done=P.ev.tok>=((P.ev&&P.ev.cap)||TOK_CAP);if(done||t>=P.ev.end||(!P.ev.bonus&&(P.ev.id!==w.id||!w.live)))finishEvent(done);}
   if(w.live&&!P.ev&&eventsOpen()&&P.lastEv!==w.id){P.lastEv=w.id;const tw=twistFor(w.id);const S=ECONS.event.fresh(t);S.seed=(w.id*7919)>>>0;S.mod=tw.mod;S.seen=t;ECONS.event.newRun(S);
     P.ev={id:w.id,end:w.end,tw:tw.id,st:S,tok:0,gold:0,k:0,chal:[],done:0};fillChal();save();}
   return w;}
-function finishEvent(){const e=P.ev;if(!e)return;const tw=TWISTS.find(x=>x.id===e.tw)||TWISTS[0];P.ev=null;P.tok+=e.tok;
-  P.evBadges.push({id:e.id,name:tw.name,tok:e.tok,done:e.done});if(P.cur==='event')switchWorld('belt',true);
-  if(e.tok)setTimeout(()=>openModal(`<h2>${esc(tw.name)} is over</h2><p>You finished <b>${e.done}</b> challenge${e.done===1?'':'s'}.</p><div class="bigstat"><span>+${e.tok}%</span><small>permanent bonus to every world</small></div><p>Your event bonus is now <b>+${P.tok}%</b>. A new event opens next Friday.</p><div class="mact"><button class="go" id="awayOk">Nice</button></div>`),300);save();}
+/* an event ends early once its token limit is reached; finishing the weekly event unlocks up to 2 short bonus events that week */
+function finishEvent(early){const e=P.ev;if(!e)return;const tw=TWISTS.find(x=>x.id===e.tw)||TWISTS[0];P.ev=null;P.tok+=e.tok;
+  if(early&&!e.bonus)P.evDone=e.id;
+  P.evBadges.push({id:e.id,name:(e.bonus?'Bonus: ':'')+tw.name,tok:e.tok,done:e.done});if(P.cur==='event')switchWorld('belt',true);
+  const b=bonusAvail();const left=b?2-bonusUsed():0;
+  if(e.tok)setTimeout(()=>openModal(`<h2>${esc(tw.name)} ${early?'complete!':'is over'}</h2><p>You finished <b>${e.done}</b> challenge${e.done===1?'':'s'}${early?' and reached the token limit':''}.</p><div class="bigstat"><span>+${e.tok}%</span><small>permanent bonus to every world</small></div><p>Your event bonus is now <b>+${P.tok}%</b>.${b?` You can play a 3-hour bonus event with a new twist for up to 10 more tokens (${left} left this week).`:' A new event opens next Friday.'}</p><div class="mact">${b?'<button class="ghost" id="awayOk">Later</button><button class="go" data-bonus>Start a bonus event</button>':'<button class="go" id="awayOk">Nice</button>'}</div>`),300);save();}
+function bonusUsed(){const w=eventWindow(now());return P.bonusWk===w.id?(P.bonusN||0):0;}
+function bonusAvail(){const w=eventWindow(now());return w.live&&!P.ev&&P.evDone===w.id&&bonusUsed()<2;}
+function startBonus(){if(!bonusAvail())return;const t=now(),w=eventWindow(t);const n=bonusUsed();P.bonusWk=w.id;P.bonusN=n+1;
+  const avoid=[twistFor(w.id).id,P.lastBonusTw];const pool=TWISTS.filter(x=>!avoid.includes(x.id));const tw=pool[Math.floor(Math.random()*pool.length)];P.lastBonusTw=tw.id;
+  const S=ECONS.event.fresh(t);S.mod=tw.mod;S.seen=t;ECONS.event.newRun(S);
+  P.ev={id:w.id,end:t+3*3600e3,tw:tw.id,st:S,tok:0,gold:0,k:0,chal:[],done:0,bonus:true,cap:10};fillChal();save();switchWorld('event');}
 eventCheck();
 if(P.ev){const tw=TWISTS.find(x=>x.id===P.ev.tw);if(tw)P.ev.st.mod=tw.mod;}   // pick up twist changes in a live event
 if(P.cur!=='belt'&&!stateOf(P.cur))P.cur='belt';
@@ -586,7 +599,7 @@ function switchWorld(id,quiet){if(UNLOCK[id]&&!P.w[id]){if(!unlocked(id))return;
   if(id==='event'&&!P.ev)return;if(st)st.seen=now();P.cur=id;AUDIO.world(id);E=econOf(id);W=E.W;st=stateOf(id);st.now=now();st.nextGold=Math.max(st.nextGold||0,now()+15000);
   $('#gold').hidden=true;const r=redeem(id);buildEarners();labels();if(!quiet){setTab('earners');if(r&&r.gap>30000)welcome(r);else toast(`<b>${esc(id==='event'?'Weekly event':W.name)}</b> ${id==='event'?'Finish challenges for tokens.':esc(W.blurb)}`);}save();}
 function labels(){const ev=P.cur==='event';const tw=ev?TWISTS.find(x=>x.id===P.ev.tw):null;
-  $('#wname').textContent=ev?`Weekly event · ${tw.name}`:`World ${WNUM[P.cur]} · ${W.name}`;$('#curlbl').textContent=W.cur;
+  $('#wname').textContent=ev?`${P.ev.bonus?'Bonus':'Weekly'} event · ${tw.name}`:`World ${WNUM[P.cur]} · ${W.name}`;$('#curlbl').textContent=W.cur;
   $('#starlbl').textContent=ev?'Tokens':W.starName;$('[data-tab="stars"] .tl').textContent=ev?'Event':W.starName;document.body.dataset.world=P.cur;}
 function setTab(t){tab=t;$$('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));$$('section.pane').forEach(p=>p.hidden=p.id!=='p-'+t);render(true);}
 /* ---- toasts ---- */
@@ -617,6 +630,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.id==='restartBtn'){openRestart();return;}
   if(b.id==='rsYes'){const p=E.restart(st);AUDIO.play('restart');st.now=now();st.seen=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${SNm()}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
   if(b.id==='rsNo'||b.id==='awayOk'){closeModal();return;}
+  if(b.dataset.bonus!=null){closeModal();startBonus();return;}
   if(b.id==='gold'){const r=E.goldReward(st);AUDIO.play('gold');if(P.cur==='event')P.ev.gold++;b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} ${W.cur}`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
 });
 function openModal(h){$('#modalCard').innerHTML=h;$('#modal').hidden=false;}
@@ -659,7 +673,7 @@ function render(full){const t=now();
 }
 function renderBadges(){const ups=E.UPS.some(u=>!st.ups[u.id]&&E.upPrice(st,u)<=st.cash&&(u.t<0||(st.tiers[u.t].n&&E.allowed(st,u.t))));
   const newP=(st.picks||[]).length;
-  const lv=E.advice(st).level;const perk=P.cur!=='event'&&E.PERKS.some(pk=>{const im=E.perkImpact(st,pk);return im&&im.c<=st.stars&&im.drop<=0.2;});
+  const lv=E.advice(st).level;const perk=E.PERKS.some(pk=>{const im=E.perkImpact(st,pk);return im&&im.c<=st.stars&&im.c<=st.stars*0.05&&(P.cur!=='event'||pk.id==='quick');});
   const set=(t,v)=>{const el=$(`[data-tab="${t}"] .badge`);el.hidden=!v;el.textContent=v===true?'':v;};
   set('upgrades',ups);set('powerups',newP);set('stars',(lv===2||perk)?true:0);set('worlds',(P.ev&&P.cur!=='event'&&!P.evSeen)||(unlockCoffee()&&!P.w.coffee)?true:0);if(tab==='worlds')P.evSeen=true;}
 function groupLine(label,idx,targets,tiers){if(idx>=targets.length)return `<div class="grp done"><b>${label}</b><span>All targets reached</span></div>`;
@@ -697,7 +711,7 @@ function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(
    <h3>Challenges</h3>${chalHTML()}<p class="muted small">${P.ev.done} challenge${P.ev.done===1?'':'s'} finished so far.</p>
    <h3>Event Stars</h3><p class="lead">Stuck? Restart the event to bank Event Stars. Each adds ${Math.round(((st.mod&&st.mod.starPer)||W.starPer)*100)}% to event earnings, for this event only. Tokens and finished challenges are kept.</p>
    <div class="advice lv${a.level}"><b>${esc(a.text.replace('Stars','Event Stars'))}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
-   <button class="go wide" id="restartBtn" ${a.p?'':'disabled'}>Restart for ${a.p} Event Stars</button><p class="muted small">Event Stars: ${st.stars} (×${E.starMult(st).toFixed(2)}). Event restarts: ${st.runs}. An event gives at most ${TOK_CAP} tokens.</p>
+   <button class="go wide" id="restartBtn" ${a.p?'':'disabled'}>Restart for ${a.p} Event Stars</button><p class="muted small">Event Stars: ${st.stars} (×${E.starMult(st).toFixed(2)}). Event restarts: ${st.runs}. This event gives at most ${capOf()} tokens and ends early when you reach them.</p>
    <h3>Quick buy for this event</h3><p class="muted">Bought with Event Stars, only for this event. It ends with the event.</p>${perkCard(E.PERKS.find(x=>x.id==='quick'))}
    <button class="ghost wide" data-export>Copy progress code</button>`;}
 function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||0,cs=P.w.coffee?P.w.coffee.starsEver||0:0;const card=(id,name,tag,txt,on,lock,btn)=>`<div class="wcard${on?' on':''}${lock?' lock':''}"><span class="tag">${tag}</span><b>${esc(name)}</b><small>${txt}</small>${btn?`<button class="ghost small" data-world="${id}">${btn}</button>`:''}</div>`;
@@ -706,13 +720,13 @@ function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||
   $('#p-worlds').innerHTML=`<p class="lead">Each world plays at its own speed with its own twist. ${esc(ECONS.belt.W.starName)}, Beans and Relics from your other worlds give a small bonus that grows slowly (×${sharedMult(P.cur).toFixed(2)} here now), and event tokens add 1% each to every world.</p><div class="worlds">
    ${card('belt','Asteroid Belt',P.cur==='belt'?'Playing':'World 1',esc(ECONS.belt.W.blurb),P.cur==='belt',false,P.cur==='belt'?'':'Go to the Belt')}
    ${wc('coffee',2,'Coffee')}${wc('salvage',3,'the Deep Sea')}
-   ${!eventsOpen()?card('','Weekly events','Locked','Short, wild events every Friday to Monday. Unlock by restarting the Belt once.',false,true,''):P.ev?card('event','Weekly event: '+tw.name,P.cur==='event'?'Playing':'Live now',esc(tw.txt)+` Ends in ${fmtT((P.ev.end-now())/1000)}.`,P.cur==='event',false,P.cur==='event'?'':'Play the event'):card('','Next event: '+tw.name,'Opens Friday',`${esc(tw.txt)} Starts in ${fmtT((w.next-now())/1000)} and runs for 4 days.`,false,true,'')}
+   ${!eventsOpen()?card('','Weekly events','Locked','Short, wild events every Friday to Monday. Unlock by restarting the Belt once.',false,true,''):P.ev?card('event',(P.ev.bonus?'Bonus event: ':'Weekly event: ')+tw.name,P.cur==='event'?'Playing':'Live now',esc(tw.txt)+` Ends in ${fmtT((P.ev.end-now())/1000)}.`,P.cur==='event',false,P.cur==='event'?'':'Play the event'):card('','Next event: '+tw.name,'Opens Friday',`${esc(tw.txt)} Starts in ${fmtT((w.next-now())/1000)} and runs for 4 days.`,false,true,'')}${bonusAvail()?`<div class="wcard"><span class="tag">Bonus</span><b>Bonus event</b><small>You finished this week's event! Play a 3-hour bonus event with a new twist, for up to 10 tokens. ${2-bonusUsed()} left this week.</small><button class="ghost small" data-bonus>Start a bonus event</button></div>`:''}
    ${card('','Wizard\'s Tower','Coming later','Stack spells with cooldowns so they multiply.',false,true,'')}
   </div>${P.evBadges.length?`<h3>Event badges</h3><div class="evb">${P.evBadges.slice(-12).reverse().map(b=>`<span>${esc(b.name)} · ${b.tok} tokens</span>`).join('')}</div>`:''}`;}
 const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',goldLen:'bigger bursts for active play',msBoost:'every item earns more as it grows',choice4:'more say over your power-ups',quick:'fewer taps, you still choose when'};
-const perkCard=pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;
+const perkCard=pk=>{const l=st.perks[pk.id]||0;const im=E.perkImpact(st,pk);const c=im&&im.c;const risky=im&&im.drop>0.2&&c<=st.stars;const good=im&&c<=st.stars&&c<=st.stars*0.05;   // green: costs 5% or less of your Stars
      const impact=im?(c>st.stars?`<small>Needs ${c} ${SNm()}</small>`:`<small class="${risky?'warn':''}">Bonus ×${im.a.toFixed(2)} → ×${im.b.toFixed(2)} (−${Math.round(im.drop*100)}%)</small>`):'';
-     return `<div class="card"><div><b>${esc(pk.txt(Math.min(pk.max,l+(l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max} · ${PERK_TIP[pk.id]}</small>${impact}</div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy${risky?' risky':''}" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>${risky?'Big cut':'Buy'}</small><b>${c} ★</b></button>`}</div>`;};
+     return `<div class="card${good?' good':''}"><div>${good?'<span class="goodtag">Good pick</span>':''}<b>${esc(pk.txt(Math.min(pk.max,l+(l<pk.max?1:0))))}</b><small>Level ${l}/${pk.max} · ${PERK_TIP[pk.id]}</small>${impact}</div>${c==null?'<span class="maxed">Maxed</span>':`<button class="buy${risky?' risky':''}" data-perk="${pk.id}" ${c>st.stars?'disabled':''}><small>${risky?'Big cut':'Buy'}</small><b>${c} ★</b></button>`}</div>`;};
 function renderStars(){const p=E.pendingStars(st);
   const a=E.advice(st),SN=W.starName;
   $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>${SN} · each adds 2% to ${esc(W.name)} earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
