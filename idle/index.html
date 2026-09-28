@@ -483,7 +483,7 @@ return {
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.04.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.04.01';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -491,7 +491,7 @@ function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixe
 function fmtT(s){if(s<1)return s.toFixed(2)+'s';if(s<60)return s.toFixed(s<10?1:0)+'s';if(s<3600)return Math.floor(s/60)+'m '+Math.floor(s%60)+'s';const h=Math.floor(s/3600);return h+'h '+Math.floor(s%3600/60)+'m';}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 /* ---- save ---- */
-let P,st;const now=()=>Date.now();
+let P,st;const now=()=>Date.now();var uiReady=false;   // true once the screen is built
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null;}}
 function save(){P.saved=now();try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}}
 const raw=load();
@@ -558,7 +558,7 @@ function eventCheck(){const t=now();const w=eventWindow(t);
 /* an event ends early once its token limit is reached; finishing the weekly event unlocks up to 2 short bonus events that week */
 function finishEvent(early){const e=P.ev;if(!e)return;const tw=TWISTS.find(x=>x.id===e.tw)||TWISTS[0];P.ev=null;P.tok+=e.tok;
   if(early&&!e.bonus)P.evDone=e.id;
-  P.evBadges.push({id:e.id,name:(e.bonus?'Bonus: ':'')+tw.name,tok:e.tok,done:e.done});if(P.cur==='event')switchWorld('belt',true);
+  P.evBadges.push({id:e.id,name:(e.bonus?'Bonus: ':'')+tw.name,tok:e.tok,done:e.done});if(P.cur==='event'){if(uiReady)switchWorld('belt',true);else P.cur='belt';}
   const b=bonusAvail();const left=b?2-bonusUsed():0;
   if(e.tok)setTimeout(()=>openModal(`<h2>${esc(tw.name)} ${early?'complete!':'is over'}</h2><p>You finished <b>${e.done}</b> challenge${e.done===1?'':'s'}${early?' and reached the token limit':''}.</p><div class="bigstat"><span>+${e.tok}%</span><small>permanent bonus to every world</small></div><p>Your event bonus is now <b>+${P.tok}%</b>.${b?` You can play a 3-hour bonus event with a new twist for up to 10 more tokens (${left} left this week).`:' A new event opens next Friday.'}</p><div class="mact">${b?'<button class="ghost" id="awayOk">Later</button><button class="go" data-bonus>Start a bonus event</button>':'<button class="go" id="awayOk">Nice</button>'}</div>`),300);save();}
 function bonusUsed(){const w=eventWindow(now());return P.bonusWk===w.id?(P.bonusN||0):0;}
@@ -760,7 +760,7 @@ function loop(){const t=now();let dt=(t-last)/1000;last=t;
   checkChal();checkUnlocks();goldCheck();render();saveT+=dt;if(saveT>5){saveT=0;save();}}
 AUDIO.world(P.cur);AUDIO.set('sfx',P.audio.sfx);if(P.audio.music)AUDIO.set('music',true);audioBtns();
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>AUDIO.wake(),{once:false,passive:true}));
-buildEarners();labels();stars();setTab('earners');
+uiReady=true;buildEarners();labels();stars();setTab('earners');
 function sticky(){const h=$('.hud').offsetHeight,tb=$('.tabs').offsetHeight;document.documentElement.style.setProperty('--hudH',h+'px');document.documentElement.style.setProperty('--tabH',tb+'px');}
 sticky();addEventListener('resize',sticky);setInterval(sticky,1500);
 setInterval(loop,100);
