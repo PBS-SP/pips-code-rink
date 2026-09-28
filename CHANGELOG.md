@@ -44,6 +44,7 @@ Called Clover's Code Garden in V1.00.00.
 ## Asteroid Belt Idle (idle game, `idle/` folder)
 | Version | Date | Commit | What's in it |
 |---|---|---|---|
+| V2.04.01 | 2026-09-28 | ea54cf3 | Fix: the game froze on a blank screen when it opened on an event that had just finished (you were in the event when you last closed it). Progress was not affected. |
 | V2.04.00 | 2026-09-28 | bccee4e | Weekly events end early once you reach the 60-token limit, with an "Event complete!" screen. Finishing the weekly event unlocks up to 2 bonus events that week: 3 hours each, a fresh start with a different twist, up to 10 tokens each. Event challenge targets now keep pace with how fast your event grows. Star perks that cost 5% or less of your Stars are highlighted green as a "Good pick", and the Stars tab badge lights up for them. |
 | V2.03.00 | 2026-09-28 | 5dcab77 | Quick buy in weekly events, bought with Event Stars (50, 200, 800) on the Event tab. It only lasts for that event. The Event tab now shows the right value per Event Star (5%). |
 | V2.02.00 | 2026-09-28 | 83e38fb | Auto-buy is gone. A Quick buy Star perk adds buttons you tap yourself: Buy all upgrades (150 Stars), Hire all managers (600) and Next milestones, which takes every item to its next milestone (2,500). Buttons grey out when nothing is affordable. |
