@@ -1,0 +1,335 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E3354"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Tiny Isles"><meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>[hidden]{display:none!important}.app{padding-top:max(12px,env(safe-area-inset-top));padding-bottom:max(32px,env(safe-area-inset-bottom))}</style></head><body>
+<title>Tiny Isles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+<style>
+:root{color-scheme:dark;--sea:#1E5F8C;--deep:#123B5C;--ink:#0B2338;--panel:#163F63;--panel2:#1D4E78;--line:#2C6593;--text:#F4F8FF;--muted:#A9C4DE;
+  --sand:#F3DDA0;--grass:#8CCB6A;--gold:#FFD35C;--ok:#6FDB8F;--bad:#FF7A6B;--accent:#FF9F5A;
+  --disp:"Fredoka",ui-rounded,system-ui,sans-serif;--body:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:linear-gradient(180deg,#0E3354,#0B2338 60%);color:var(--text);font:600 15px/1.4 var(--body);-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulation;background:none}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;padding:12px 16px 32px;min-height:100%}
+h1,h2,h3{font-family:var(--disp);margin:0;letter-spacing:.01em}
+.scr[hidden]{display:none!important}
+/* home */
+.logo{display:flex;align-items:center;gap:12px;margin:8px 0 14px}.logo h1{font-size:34px;line-height:1}.logo small{display:block;color:var(--muted);font:700 13px var(--body)}
+.logo canvas{width:64px;height:64px;image-rendering:auto}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font:700 13px var(--body)}
+.chip b{color:var(--gold)}
+.daily{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#FF9F5A,#FF6B8B);color:#2A1024;border-radius:18px;padding:14px;margin-bottom:16px;width:100%;text-align:left}
+.daily h2{font-size:20px}.daily small{display:block;font:700 13px var(--body);opacity:.85}.daily .go{margin-left:auto;background:#2A1024;color:#FFE3C8;border-radius:12px;padding:10px 14px;font:700 15px var(--disp)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.isle{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;text-align:left;display:grid;gap:6px}
+.isle canvas{width:100%;aspect-ratio:1;border-radius:10px;background:var(--sea)}
+.isle b{font:600 16px var(--disp)}.isle small{color:var(--muted);font:700 12px var(--body)}
+.isle .st{color:var(--gold);letter-spacing:2px;font-size:15px}.isle.lock{opacity:.55}.isle.lock canvas{filter:grayscale(.8) brightness(.6)}
+.isle .new{position:absolute;top:8px;right:8px;background:var(--gold);color:var(--ink);font:700 11px var(--disp);padding:2px 8px;border-radius:8px}
+.row2{display:flex;gap:8px;margin-top:16px}.btn{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;font:700 15px var(--disp)}
+.btn.go{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+/* game */
+.top{display:flex;align-items:center;gap:8px;margin-bottom:8px}.ib{width:40px;height:40px;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font:700 18px var(--disp);flex:none}
+.top h2{font-size:19px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ib.undo{width:auto;padding:0 10px;font-size:14px;gap:4px;display:flex}
+.ib:disabled{opacity:.4}
+.scorebar{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 12px;margin-bottom:8px}
+.sb1{display:flex;align-items:baseline;gap:8px}.sb1 .big{font:700 30px var(--disp);color:var(--gold);line-height:1}.sb1 small{color:var(--muted);font:700 13px var(--body)}
+.sb1 .gl{margin-left:auto;text-align:right;font:700 13px var(--body);color:var(--muted)}
+.prog{position:relative;height:10px;border-radius:6px;background:var(--deep);margin-top:6px;overflow:hidden}.prog i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#6FDB8F,#FFD35C);border-radius:6px;transition:width .3s}
+.stars{display:flex;gap:10px;margin-top:6px;font:700 12px var(--body);color:var(--muted)}.stars span.on{color:var(--gold)}
+.board{position:relative}.board canvas{display:block;width:100%;aspect-ratio:1;border-radius:16px;touch-action:manipulation;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.float{position:absolute;pointer-events:none;font:700 22px var(--disp);color:var(--gold);text-shadow:0 2px 0 #0B2338,0 0 8px rgba(0,0,0,.5);transform:translate(-50%,-50%);animation:up 1s ease-out forwards}
+.float.neg{color:var(--bad)}@keyframes up{to{transform:translate(-50%,-160%);opacity:0}}
+.hand{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 4px;scrollbar-width:none}.hand::-webkit-scrollbar{display:none}
+.hb{position:relative;flex:none;width:64px;border-radius:14px;background:var(--panel);border:2px solid var(--line);padding:6px 4px 4px;display:grid;justify-items:center;gap:2px;font:700 11px var(--body)}
+.hb canvas{width:40px;height:40px}.hb .n{position:absolute;top:-6px;right:-6px;background:var(--gold);color:var(--ink);font:700 13px var(--disp);min-width:22px;height:22px;border-radius:11px;display:grid;place-items:center;padding:0 5px}
+.hb[aria-pressed="true"]{border-color:var(--gold);background:var(--panel2);box-shadow:0 0 0 2px rgba(255,211,92,.35)}
+.info{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:center;min-height:64px}
+.info div{flex:1;min-width:0}.info b{font:600 16px var(--disp)}.info small{display:block;color:var(--muted);font:700 13px/1.35 var(--body)}
+.info .place{flex:none;background:var(--gold);color:var(--ink);border-radius:12px;padding:10px 14px;font:700 16px var(--disp)}.info .place:disabled{background:var(--panel2);color:var(--muted)}
+.tipline{color:var(--muted);font:700 12px var(--body);text-align:center;margin-top:8px}
+/* modal */
+.modal{position:fixed;inset:0;z-index:20;background:rgba(5,18,32,.72);display:grid;place-items:center;padding:16px}
+.card{width:100%;max-width:440px;max-height:90vh;overflow:auto;background:linear-gradient(180deg,#1D4E78,#163F63);border:1px solid var(--line);border-radius:20px;padding:18px}
+.card h2{font-size:24px;margin-bottom:6px}.card p{margin:6px 0;color:var(--muted)}.card p b{color:var(--text)}
+.packs{display:grid;gap:10px;margin-top:10px}.pack{display:flex;align-items:center;gap:10px;background:var(--deep);border:2px solid var(--line);border-radius:16px;padding:10px;text-align:left}
+.pack:hover,.pack:focus-visible{border-color:var(--gold)}.pack b{font:600 17px var(--disp);display:block}.pack .its{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.pack .its span{display:flex;align-items:center;gap:3px;background:var(--panel);border-radius:10px;padding:2px 8px 2px 2px;font:700 13px var(--body)}.pack .its canvas{width:26px;height:26px}
+.bigstat{text-align:center;margin:10px 0}.bigstat .big{font:700 48px var(--disp);color:var(--gold);line-height:1}.bigstat .st{font-size:30px;letter-spacing:6px;color:var(--gold)}.bigstat small{display:block;color:var(--muted)}
+.mact{display:flex;gap:8px;margin-top:14px}
+.rule{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}.rule canvas{width:40px;height:40px;flex:none}.rule b{font:600 16px var(--disp)}.rule small{display:block;color:var(--muted);font:700 13px var(--body)}
+.rule.lock{opacity:.5}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:30;background:var(--gold);color:var(--ink);font:700 15px var(--disp);padding:10px 16px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.35);animation:tin .25s ease-out}
+@keyframes tin{from{transform:translate(-50%,-20px);opacity:0}}
+@media (min-width:700px){.app{max-width:600px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.float{animation:none;display:none}.prog i{transition:none}}
+</style>
+<div class="app">
+ <section class="scr" id="home">
+  <div class="logo"><canvas id="logo" width="128" height="128" aria-hidden="true"></canvas><div><h1>Tiny Isles</h1><small>Build little islands. Every spot matters.</small></div></div>
+  <div class="chips" id="chips"></div>
+  <button class="daily" id="dailyBtn"></button>
+  <h3 style="margin:0 0 8px">Islands</h3>
+  <div class="grid" id="isles"></div>
+  <div class="row2"><button class="btn" id="helpBtn">How to play</button><button class="btn" id="sndBtn" aria-pressed="false">Sound: off</button></div>
+  <p class="tipline" id="ver"></p>
+ </section>
+ <section class="scr" id="game" hidden>
+  <div class="top"><button class="ib" id="backBtn" aria-label="Back to islands">‹</button><h2 id="gname"></h2><button class="ib undo" id="undoBtn" aria-label="Undo last building">↶ <span id="undoN">3</span></button><button class="ib" id="gHelp" aria-label="Building guide">?</button></div>
+  <div class="scorebar"><div class="sb1"><span class="big" id="score">0</span><small>points</small><span class="gl" id="goal"></span></div><div class="prog"><i id="progI"></i></div><div class="stars" id="starLine"></div></div>
+  <div class="board" id="boardWrap"><canvas id="board" width="720" height="720" aria-label="Island map. Tap a square to preview, tap again to build."></canvas></div>
+  <div class="hand" id="hand" role="toolbar" aria-label="Your buildings"></div>
+  <div class="info" id="info"><div><b id="iName"></b><small id="iTxt"></small></div><button class="place" id="placeBtn" disabled>Build</button></div>
+  <p class="tipline">Tap a square to see the points, tap again (or Build) to place it.</p>
+ </section>
+</div>
+<div class="modal" id="modal" hidden><div class="card" id="mcard" role="dialog" aria-modal="true"></div></div>
+<script>
+/* ===================== TINY ISLES: rules (pure, shared by the game and the balance bot) ===================== */
+const ISLES=(function(){
+const B={
+ field:  {name:'Field',     col:'#E9C85A', coast:false, txt:'+1. +2 for each Windmill within 2 squares.'},
+ windmill:{name:'Windmill', col:'#F2EEE6', coast:false, txt:'+1 for each Field within 2. −3 for each other Windmill within 2.'},
+ house:  {name:'House',     col:'#E0664A', coast:false, txt:'+1. +1 for each House or Tree next to it. −2 for each Windmill next to it (noisy!).'},
+ tree:   {name:'Tree',      col:'#4FA35A', coast:false, txt:'+1. +1 for each Tree next to it.'},
+ sawmill:{name:'Sawmill',   col:'#A8703F', coast:false, txt:'+2 for each Tree within 2. −1 for each House next to it.'},
+ fish:   {name:'Fishing Hut',col:'#6FB7D6',coast:true,  txt:'Coast only. +2 for each water square next to it. +1 for each House within 2.'},
+ market: {name:'Market',    col:'#C98BD9', coast:false, txt:'+2 for each House within 2. −4 for each other Market within 3.'},
+ light:  {name:'Lighthouse',col:'#F4F4F4', coast:true,  txt:'Coast only. +1 for each water square within 3 (up to 12). −5 for each other Lighthouse within 4.'},
+ temple: {name:'Temple',    col:'#F2D78A', coast:false, txt:'+6, but −2 for each building touching it (corners count).'},
+ statue: {name:'Statue',    col:'#B8C0CC', coast:false, txt:'+2 for each different kind of building within 2.'}};
+const ORDER=['field','windmill','house','tree','sawmill','fish','market','light','temple','statue'];
+const PACKS=[
+ {id:'farm',name:'Farmland',items:{field:3,windmill:1}},
+ {id:'village',name:'Village',items:{house:3,tree:1}},
+ {id:'wood',name:'Woodland',items:{tree:3,sawmill:1}},
+ {id:'harbour',name:'Harbour',items:{fish:2,house:1},need:'fish'},
+ {id:'trade',name:'Trade Post',items:{market:1,house:2},need:'market'},
+ {id:'beacon',name:'Beacon',items:{light:1,fish:1},need:'light'},
+ {id:'shrine',name:'Shrine',items:{temple:1,tree:2},need:'temple'},
+ {id:'plaza',name:'Plaza',items:{statue:1,house:1,field:1},need:'statue'},
+ {id:'mill',name:'Mill Town',items:{windmill:1,field:2,house:1}},
+ {id:'grove',name:'Grove',items:{tree:2,house:2}}];
+/* islands: ~ water, . grass, ^ rock (can't build) */
+const ISLANDS=[
+ {id:'cove',name:'Pebble Cove',set:['field','windmill','house','tree','sawmill'],goals:[75,105,125],need:0,
+  map:['~~~~~~~~~','~~~....~~','~~......~','~.......~','~...^...~','~.......~','~~......~','~~~....~~','~~~~~~~~~']},
+ {id:'bay',name:'Gull Bay',set:['field','windmill','house','tree','sawmill','fish'],goals:[65,92,115],need:2,
+  map:['~~~~~~~~~','~~.....~~','~.......~','~..~~...~','~..~~...~','~.......~','~.....^.~','~~.....~~','~~~~~~~~~']},
+ {id:'market',name:'Market Reef',set:['field','windmill','house','tree','sawmill','fish','market'],goals:[60,85,110],need:4,
+  map:['~~~~~~~~~','~.....~~~','~......~~','~..^....~','~.......~','~....^..~','~~......~','~~~.....~','~~~~~~~~~']},
+ {id:'cape',name:'Beacon Cape',set:['field','windmill','house','tree','sawmill','fish','market','light'],goals:[70,100,120],need:7,
+  map:['~~~~~~~~~','~~~~..~~~','~~.....~~','~.......~','~...~...~','~.......~','~~.....~~','~~~~..~~~','~~~~~~~~~']},
+ {id:'peak',name:'Misty Peak',set:['field','windmill','house','tree','sawmill','fish','market','light','temple'],goals:[70,98,125],need:10,
+  map:['~~~~~~~~~','~~......~','~...^...~','~..^^^..~','~...^...~','~.......~','~.......~','~~.....~~','~~~~~~~~~']},
+ {id:'atoll',name:'Sunset Atoll',set:ORDER.slice(),goals:[65,92,118],need:13,
+  map:['~~~~~~~~~','~.......~','~.~~~~~.~','~.~...~.~','~.~.^.~.~','~.~...~.~','~.~~.~~.~','~.......~','~~~~~~~~~']}];
+function rng(seed){let s=seed>>>0||1;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+/* the daily island: a random blob, same for everyone on the same date */
+function dailyIsland(dayId){const r=rng(dayId*2654435761);const W=9,H=9;const g=[];for(let y=0;y<H;y++){g.push([]);for(let x=0;x<W;x++)g[y].push('~');}
+  let cx=4,cy=4;for(let k=0;k<95;k++){g[cy][cx]='.';const d=Math.floor(r()*4);cx=Math.max(1,Math.min(W-2,cx+[1,-1,0,0][d]));cy=Math.max(1,Math.min(H-2,cy+[0,0,1,-1][d]));}
+  for(let k=0;k<3;k++){const x=1+Math.floor(r()*7),y=1+Math.floor(r()*7);if(g[y][x]==='.')g[y][x]='^';}
+  return {id:'daily',name:'Daily Island',set:ORDER.slice(),goals:[0,0,0],map:g.map(r=>r.join('')),daily:dayId};}
+function newGame(isle,seed){const g={isle:isle.id,seed:(seed>>>0)||1,w:isle.map[0].length,h:isle.map.length,cells:[],score:0,target:0,step:0,hand:{},placed:0,undo:3,last:null,picks:null,over:false,set:isle.set};
+  isle.map.forEach((row,y)=>[...row].forEach((c,x)=>g.cells.push({t:c,b:null})));
+  g.r=g.seed;addPack(g,PACKS.find(p=>p.id==='village'));addPack(g,PACKS.find(p=>p.id==='farm'));g.target=nextTarget(g);return g;}
+function R(g){g.r=(g.r*1664525+1013904223)>>>0;return g.r/4294967296;}
+function nextTarget(g){g.step++;return g.score+6+g.step;}      // each goal a little further than the last
+function addPack(g,p){for(const k in p.items)g.hand[k]=(g.hand[k]||0)+p.items[k];}
+function packsFor(g){return PACKS.filter(p=>Object.keys(p.items).every(k=>g.set.includes(k)));}
+function offerPacks(g){const pool=packsFor(g);const a=pool[Math.floor(R(g)*pool.length)];let b=a,guard=0;while(b===a&&guard++<20)b=pool[Math.floor(R(g)*pool.length)];g.picks=[a.id,b.id];}
+function cell(g,x,y){return x<0||y<0||x>=g.w||y>=g.h?null:g.cells[y*g.w+x];}
+function isWater(g,x,y){const c=cell(g,x,y);return !c||c.t==='~';}
+function coastal(g,x,y){return [[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>isWater(g,x+dx,y+dy));}
+function canPlace(g,b,x,y){const c=cell(g,x,y);if(!c||c.t!=='.'||c.b)return false;if(B[b].coast&&!coastal(g,x,y))return false;return true;}
+function around(g,x,y,r,diag){const out=[];for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(!dx&&!dy)continue;const d=diag?Math.max(Math.abs(dx),Math.abs(dy)):Math.abs(dx)+Math.abs(dy);if(d>r)continue;const c=cell(g,x+dx,y+dy);if(c)out.push({x:x+dx,y:y+dy,c});}return out;}
+/* points a building would score here, and which neighbours gave (or took) them */
+function scoreAt(g,b,x,y){let pts=0;const links=[];const add=(v,p)=>{pts+=v;if(p)links.push({x:p.x,y:p.y,v});};
+  const near=(r,k,diag)=>around(g,x,y,r,diag).filter(p=>p.c.b===k);
+  switch(b){
+  case 'field':pts+=1;near(2,'windmill').forEach(p=>add(2,p));break;
+  case 'windmill':pts+=1;near(2,'field').forEach(p=>add(1,p));near(2,'windmill').forEach(p=>add(-3,p));break;
+  case 'house':pts+=1;near(1,'house').forEach(p=>add(1,p));near(1,'tree').forEach(p=>add(1,p));near(1,'windmill').forEach(p=>add(-2,p));break;
+  case 'tree':pts+=1;near(1,'tree').forEach(p=>add(1,p));break;
+  case 'sawmill':near(2,'tree').forEach(p=>add(2,p));near(1,'house').forEach(p=>add(-1,p));break;
+  case 'fish':around(g,x,y,1).filter(p=>p.c.t==='~').forEach(p=>add(2,p));if(!cell(g,x+1,y))pts+=2;if(!cell(g,x-1,y))pts+=2;if(!cell(g,x,y+1))pts+=2;if(!cell(g,x,y-1))pts+=2;near(2,'house').forEach(p=>add(1,p));break;
+  case 'market':near(2,'house').forEach(p=>add(2,p));near(3,'market').forEach(p=>add(-4,p));break;
+  case 'light':{const w=around(g,x,y,3).filter(p=>p.c.t==='~');let n=0;w.forEach(p=>{if(n<12){add(1,null);n++;}});near(4,'light').forEach(p=>add(-5,p));break;}
+  case 'temple':pts+=6;around(g,x,y,1,true).filter(p=>p.c.b).forEach(p=>add(-2,p));break;
+  case 'statue':{const kinds={};around(g,x,y,2).forEach(p=>{if(p.c.b&&!kinds[p.c.b]){kinds[p.c.b]=1;add(2,p);}});break;}}
+  return {pts,links};}
+function place(g,b,x,y){if(g.over||!g.hand[b]||!canPlace(g,b,x,y))return null;const s=scoreAt(g,b,x,y);const c=cell(g,x,y);
+  g.last={b,x,y,pts:s.pts,score:g.score,target:g.target,step:g.step,picks:g.picks};
+  c.b=b;g.hand[b]--;if(!g.hand[b])delete g.hand[b];g.score+=s.pts;g.placed++;
+  let reached=0;while(g.score>=g.target){reached++;g.target=nextTarget(g);}
+  if(reached){g.picks=null;offerPacks(g);g.last.reached=reached;g.bank=(g.bank||0)+reached-1;}
+  checkOver(g);return {pts:s.pts,reached};}
+function choosePack(g,i){if(!g.picks)return false;addPack(g,PACKS.find(p=>p.id===g.picks[i]));g.picks=null;
+  if(g.bank>0){g.bank--;offerPacks(g);}g.last=null;checkOver(g);return true;}
+function undo(g){const L=g.last;if(!L||g.undo<=0||L.reached)return false;const c=cell(g,L.x,L.y);c.b=null;g.hand[L.b]=(g.hand[L.b]||0)+1;g.score=L.score;g.target=L.target;g.step=L.step;g.picks=L.picks;g.placed--;g.undo--;g.last=null;g.over=false;return true;}
+function anySpot(g,b){for(let y=0;y<g.h;y++)for(let x=0;x<g.w;x++)if(canPlace(g,b,x,y))return true;return false;}
+function checkOver(g){if(g.picks)return g.over=false;const left=Object.keys(g.hand).filter(b=>anySpot(g,b));g.over=!left.length;return g.over;}
+/* the helper robot: greedy best spot each time; used to set the Daily Island's star goals */
+const PVAL={field:3,windmill:3,house:3,tree:2.5,sawmill:5,fish:6,market:6,light:8,temple:5,statue:6};
+function bestMove(g){let bb=null;for(const b in g.hand)for(let y=0;y<g.h;y++)for(let x=0;x<g.w;x++){if(!canPlace(g,b,x,y))continue;const s=scoreAt(g,b,x,y).pts;if(!bb||s>bb.s)bb={b,x,y,s};}return bb;}
+function autoPlay(isle,seed){const g=newGame(isle,seed);let guard=0;
+  while(!g.over&&guard++<500){if(g.picks){let bi=0,bv=-1e9;g.picks.forEach((id,i)=>{const p=PACKS.find(q=>q.id===id);const v=Object.entries(p.items).reduce((a,[k,n])=>a+n*PVAL[k],0);if(v>bv){bv=v;bi=i;}});choosePack(g,bi);continue;}
+    const m=bestMove(g);if(!m)break;place(g,m.b,m.x,m.y);}return g.score;}
+function dailyGoals(isle){const r=[1,2,3,4,5].map(k=>autoPlay(isle,isle.daily*31+k)).sort((a,b)=>a-b);const m=r[2];return [Math.round(m*0.75),Math.round(m),Math.round(m*1.2)];}
+function stars(isle,score){return isle.goals.filter(v=>score>=v).length;}
+return {bestMove,autoPlay,dailyGoals,B,ORDER,PACKS,ISLANDS,dailyIsland,newGame,place,choosePack,undo,scoreAt,canPlace,cell,coastal,stars,packsFor,checkOver,anySpot};
+})();
+if(typeof module!=='undefined')module.exports=ISLES;
+
+/* ===================== TINY ISLES: screens ===================== */
+(function(){
+const I=ISLES,VERSION='V1.00.00',KEY='tiny-isles.v1';
+const $=s=>document.querySelector(s);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+/* ---- save ---- */
+let S;try{S=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){S=null;}
+S=Object.assign({games:{},best:{},stars:{},played:{},daily:{},streak:{last:0,count:0},sound:false,seen:{},dgoals:null},S||{});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const dayId=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/864e5);
+function dailyIsle(){const d=dayId();const is=I.dailyIsland(d);if(!S.dgoals||S.dgoals.day!==d){S.dgoals={day:d,goals:I.dailyGoals(is)};save();}is.goals=S.dgoals.goals;return is;}
+function isleById(id){return id==='daily'?dailyIsle():I.ISLANDS.find(x=>x.id===id);}
+function totalStars(){return I.ISLANDS.reduce((a,is)=>a+(S.stars[is.id]||0),0);}
+function unlocked(is){return totalStars()>=(is.need||0);}
+function newBuildings(is){const k=I.ISLANDS.indexOf(is);if(k<=0)return [];const prev=I.ISLANDS[k-1].set;return is.set.filter(b=>!prev.includes(b));}
+/* ---- sound (off until you turn it on) ---- */
+let ac=null;function tone(f,t0,d,type='sine',g=.08){if(!S.sound)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),v=ac.createGain();o.type=type;o.frequency.value=f;o.connect(v);v.connect(ac.destination);const t=ac.currentTime+t0;v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g,t+.01);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.start(t);o.stop(t+d+.05);}catch(e){}}
+const SFX={place:p=>{const f=p>0?520+Math.min(p,10)*40:260;tone(f,0,.18,'triangle');tone(f*1.5,.06,.16,'sine',.05);},goal:()=>[523,659,784,1047].forEach((f,i)=>tone(f,i*.09,.3,'triangle')),
+ bad:()=>tone(200,0,.2,'square',.04),end:()=>[784,659,523,659,784,1047].forEach((f,i)=>tone(f,i*.12,.35,'sine',.07)),tap:()=>tone(880,0,.05,'sine',.03)};
+/* ---- art ---- */
+function hash(x,y,k){let h=(x*374761393+y*668265263+k*2147483647)|0;h=(h^(h>>>13))*1274126177|0;return ((h^(h>>>16))>>>0)/4294967296;}
+function drawB(c,b,x,y,s,alpha){c.save();c.globalAlpha=alpha==null?1:alpha;c.translate(x,y);c.scale(s/100,s/100);
+  const R=(a,b2,w,h,col,r)=>{c.fillStyle=col;c.beginPath();if(r&&c.roundRect)c.roundRect(a,b2,w,h,r);else c.rect(a,b2,w,h);c.fill();};
+  const C=(a,b2,r,col)=>{c.fillStyle=col;c.beginPath();c.arc(a,b2,r,0,Math.PI*2);c.fill();};
+  const Pg=(pts,col)=>{c.fillStyle=col;c.beginPath();pts.forEach(([a,b2],i)=>i?c.lineTo(a,b2):c.moveTo(a,b2));c.closePath();c.fill();};
+  c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(50,86,34,8,0,0,Math.PI*2);c.fill();
+  switch(b){
+  case 'field':R(12,26,76,58,'#E9C85A',10);for(let k=0;k<4;k++)R(18,34+k*13,64,5,'#C9A43A',2);for(let k=0;k<5;k++){R(22+k*13,28,3,6,'#7FBF4A');}break;
+  case 'windmill':Pg([[36,86],[64,86],[58,34],[42,34]],'#F2EEE6');R(45,68,10,18,'#8A5A32',4);Pg([[38,36],[62,36],[50,24]],'#C94B3A');
+    c.save();c.translate(50,34);for(let k=0;k<4;k++){c.rotate(Math.PI/2);R(-4,-34,8,30,'#E9DFC8',3);R(-4,-34,8,6,'#B89A6A',2);}c.restore();C(50,34,5,'#6A4A2A');break;
+  case 'house':R(24,48,52,38,'#F4E6CC',4);Pg([[16,52],[50,20],[84,52]],'#E0664A');R(44,64,12,22,'#8A5A32',3);R(28,56,12,11,'#8FD3F0',2);R(60,56,12,11,'#8FD3F0',2);R(62,24,8,16,'#9A5A48');break;
+  case 'tree':R(45,58,10,28,'#8A5A32',3);C(50,46,22,'#3F8F4A');C(38,54,15,'#4FA35A');C(62,54,15,'#4FA35A');C(50,34,16,'#5DB866');C(44,32,5,'#8FDB8F');break;
+  case 'sawmill':R(14,46,50,40,'#A8703F',4);Pg([[10,50],[39,26],[68,50]],'#7A4A28');R(30,62,14,24,'#5A3A1E',3);
+    C(72,62,18,'#C9CFD8');for(let k=0;k<10;k++){const a=k/10*Math.PI*2;Pg([[72+Math.cos(a)*16,62+Math.sin(a)*16],[72+Math.cos(a+.2)*22,62+Math.sin(a+.2)*22],[72+Math.cos(a+.35)*16,62+Math.sin(a+.35)*16]],'#C9CFD8');}C(72,62,5,'#6A7080');break;
+  case 'fish':R(20,70,6,16,'#7A4A28');R(62,70,6,16,'#7A4A28');R(16,44,58,28,'#E8D4A8',4);Pg([[10,48],[45,22],[80,48]],'#3F86B8');R(38,54,14,18,'#7A4A28',3);
+    Pg([[66,70],[86,62],[86,78]],'#FF9F5A');c.fillStyle='#FF9F5A';c.beginPath();c.ellipse(74,70,14,8,0,0,Math.PI*2);c.fill();C(68,68,2,'#2A1A10');break;
+  case 'market':R(18,56,64,30,'#E8D4A8',4);for(let k=0;k<5;k++)R(14+k*14.4,30,14.4,20,k%2?'#FFFFFF':'#B065C8');Pg([[14,50],[86,50],[86,56],[14,56]],'#8A4AA0');
+    C(32,60,6,'#E8323F');C(46,60,6,'#FFB84D');C(60,60,6,'#6FDB8F');R(22,68,56,5,'#A8703F',2);break;
+  case 'light':Pg([[38,86],[62,86],[57,26],[43,26]],'#F4F4F4');for(let k=0;k<3;k++)Pg([[41-k*1.3,74-k*18],[59+k*1.3,74-k*18],[58+k*1.3,66-k*18],[42-k*1.3,66-k*18]],'#E8453A');
+    R(40,14,20,14,'#FFE27A',3);Pg([[36,14],[64,14],[50,4]],'#E8453A');c.globalAlpha*=.5;Pg([[60,18],[98,6],[98,32]],'#FFF4B0');Pg([[40,18],[2,6],[2,32]],'#FFF4B0');break;
+  case 'temple':R(12,76,76,10,'#D9C08A',2);R(16,34,68,8,'#F2D78A',2);Pg([[12,36],[50,14],[88,36]],'#F2D78A');for(let k=0;k<4;k++)R(20+k*17,42,9,34,'#FFF1C8',2);C(50,28,4,'#E0A030');break;
+  case 'statue':R(30,70,40,16,'#8A93A3',3);R(36,62,28,10,'#A8B0BC',2);R(42,34,16,30,'#C9D0DA',6);C(50,26,10,'#C9D0DA');R(56,38,16,6,'#C9D0DA',3);C(46,24,2,'#8A93A3');break;}
+  c.restore();}
+const WATER='#2E7DB5',WATER2='#3E93CC',GRASS='#8CCB6A',SAND='#F3DDA0';
+function drawTerrain(c,map,cs,g){const H=map.length,W=map[0].length;c.fillStyle=WATER;c.fillRect(0,0,W*cs,H*cs);
+  const t=ch=>ch;const tile=(x,y)=>x<0||y<0||x>=W||y>=H?'~':map[y][x];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const ch=tile(x,y),X=x*cs,Y=y*cs;
+    if(ch==='~'){c.strokeStyle=WATER2;c.lineWidth=Math.max(1,cs/18);for(let k=0;k<2;k++){if(hash(x,y,k)<.5){const wx=X+cs*(.2+.5*hash(x,y,k+5)),wy=Y+cs*(.25+.5*hash(x,y,k+9));c.beginPath();c.moveTo(wx,wy);c.quadraticCurveTo(wx+cs*.1,wy-cs*.08,wx+cs*.2,wy);c.stroke();}}continue;}
+    c.fillStyle=SAND;c.fillRect(X,Y,cs,cs);const e=cs*.16;const inX=tile(x-1,y)==='~'?e:0,inR=tile(x+1,y)==='~'?e:0,inT=tile(x,y-1)==='~'?e:0,inB=tile(x,y+1)==='~'?e:0;
+    c.fillStyle=GRASS;c.fillRect(X+inX,Y+inT,cs-inX-inR,cs-inT-inB);
+    for(let k=0;k<3;k++){c.fillStyle=hash(x,y,k+20)<.5?'#7BBB5B':'#A2DB82';c.fillRect(X+inX+(cs-inX-inR-4)*hash(x,y,k+30),Y+inT+(cs-inT-inB-4)*hash(x,y,k+40),Math.max(2,cs/16),Math.max(2,cs/12));}
+    if(ch==='^'){const r=cs;c.fillStyle='#8C8F99';c.beginPath();c.ellipse(X+r*.42,Y+r*.6,r*.26,r*.2,0,0,7);c.fill();c.fillStyle='#A7AAB4';c.beginPath();c.ellipse(X+r*.62,Y+r*.52,r*.22,r*.24,0,0,7);c.fill();c.fillStyle='#C4C7CF';c.beginPath();c.ellipse(X+r*.58,Y+r*.44,r*.08,r*.06,0,0,7);c.fill();}}
+  if(g)for(let y=0;y<H;y++)for(let x=0;x<W;x++){const cl=g.cells[y*W+x];if(cl.b)drawB(c,cl.b,x*cs,y*cs,cs);}}
+function mapOf(g){const rows=[];for(let y=0;y<g.h;y++){let r='';for(let x=0;x<g.w;x++)r+=g.cells[y*g.w+x].t;rows.push(r);}return rows;}
+function icon(b,px){const cv=document.createElement('canvas');cv.width=cv.height=px*2;drawB(cv.getContext('2d'),b,0,0,px*2);return cv;}
+/* ---- screens ---- */
+let g=null,isle=null,sel=null,pv=null;
+function show(id){$('#home').hidden=id!=='home';$('#game').hidden=id!=='game';window.scrollTo(0,0);}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800);}
+function openModal(h){$('#mcard').innerHTML=h;$('#modal').hidden=false;}
+function closeModal(){$('#modal').hidden=true;}
+function starStr(n){return '★'.repeat(n)+'☆'.repeat(3-n);}
+function renderHome(){const ts=totalStars(),open=I.ISLANDS.filter(unlocked).length;const d=dayId();
+  $('#chips').innerHTML=`<span class="chip">Stars <b>${ts}</b> / ${I.ISLANDS.length*3}</span><span class="chip">Islands <b>${open}</b> / ${I.ISLANDS.length}</span><span class="chip">Daily streak <b>${S.streak.last>=d-1?S.streak.count:0}</b></span>`;
+  const di=dailyIsle(),db=S.daily[d]||0,dg=S.games.daily&&S.games.daily.day===d;
+  $('#dailyBtn').innerHTML=`<div><h2>Daily Island</h2><small>A new island every day, with every building. ${db?`Best today: ${db} ${starStr(I.stars(di,db))}`:`Goals: ${di.goals.join(' / ')}`}</small></div><span class="go">${dg?'Continue':db?'Replay':'Play'}</span>`;
+  $('#isles').innerHTML=I.ISLANDS.map((is,k)=>{const on=unlocked(is),st=S.stars[is.id]||0,best=S.best[is.id]||0,nb=newBuildings(is),inprog=!!S.games[is.id];
+    return `<button class="isle${on?'':' lock'}" data-isle="${is.id}" aria-label="${esc(is.name)}${on?'':', locked'}">${on&&!S.played[is.id]?'<span class="new">NEW</span>':''}<canvas width="180" height="180" data-map="${k}"></canvas><b>${esc(is.name)}</b>
+     ${on?`<span class="st">${starStr(st)}</span><small>${inprog?'In progress':best?'Best '+best:'Goals '+is.goals.join(' / ')}</small>`:`<small>Needs ${is.need} stars (you have ${ts})</small>`}${nb.length?`<small>New: ${nb.map(b=>I.B[b].name).join(', ')}</small>`:''}</button>`;}).join('');
+  document.querySelectorAll('[data-map]').forEach(cv=>{const is=I.ISLANDS[+cv.dataset.map];const c=cv.getContext('2d');const sv=S.games[is.id];drawTerrain(c,is.map,cv.width/is.map.length,sv||null);});
+  $('#sndBtn').textContent='Sound: '+(S.sound?'on':'off');$('#sndBtn').setAttribute('aria-pressed',String(S.sound));$('#ver').textContent='Tiny Isles '+VERSION;
+  show('home');}
+function start(id,fresh){const is=isleById(id);if(!is)return;if(id!=='daily'&&!unlocked(is)){SFX.bad();toast(`Needs ${is.need} stars`);return;}
+  isle=is;let sv=S.games[id];if(id==='daily'&&sv&&sv.day!==dayId())sv=null;
+  if(fresh||!sv){g=I.newGame(is,(Math.random()*4294967296)>>>0);if(id==='daily')g.day=dayId();S.games[id]=g;S.played[id]=1;save();}else g=sv;
+  sel=null;pv=null;$('#gname').textContent=is.name;show('game');renderGame();
+  if(!S.seen.help){S.seen.help=1;save();help(true);}else if(g.picks)packModal();else if(g.over)endGame();}
+function pickSel(){if(sel&&g.hand[sel])return;sel=I.ORDER.find(b=>g.hand[b])||null;}
+function renderGame(){pickSel();const is=isle;
+  $('#score').textContent=g.score;const prevT=g.targetFrom!=null?g.targetFrom:0;
+  $('#goal').innerHTML=g.over?'Island finished':`Next pack at <b style="color:var(--text)">${g.target}</b>`;
+  const base=g.lastGoal||0;$('#progI').style.width=Math.max(0,Math.min(100,(g.score-base)/Math.max(1,g.target-base)*100))+'%';
+  $('#starLine').innerHTML=is.goals.map((v,i)=>`<span class="${g.score>=v?'on':''}">${'★'.repeat(i+1)} ${v}</span>`).join('');
+  $('#undoN').textContent=g.undo;$('#undoBtn').disabled=!g.last||g.undo<=0||!!g.last.reached;
+  const keys=I.ORDER.filter(b=>g.hand[b]);
+  $('#hand').innerHTML=keys.map(b=>`<button class="hb" data-b="${b}" aria-pressed="${b===sel}" aria-label="${I.B[b].name}, ${g.hand[b]} left"><span class="n">${g.hand[b]}</span></button>`).join('')||'<small style="color:var(--muted);padding:8px">No buildings left</small>';
+  document.querySelectorAll('.hb').forEach(el=>{el.insertBefore(icon(el.dataset.b,40),el.firstChild);const s=document.createElement('span');s.textContent=I.B[el.dataset.b].name.split(' ')[0];el.appendChild(s);});
+  if(sel){$('#iName').textContent=I.B[sel].name+(pv?` · ${pv.pts>=0?'+':''}${pv.pts} here`:'');$('#iTxt').textContent=I.B[sel].txt;}else{$('#iName').textContent='';$('#iTxt').textContent='';}
+  $('#placeBtn').disabled=!pv;$('#placeBtn').textContent=pv?`Build ${pv.pts>=0?'+':''}${pv.pts}`:'Build';
+  drawBoard();}
+function drawBoard(){const cv=$('#board'),c=cv.getContext('2d');const cs=cv.width/g.w;drawTerrain(c,mapOf(g),cs,g);
+  if(sel&&!g.over&&!g.picks){for(let y=0;y<g.h;y++)for(let x=0;x<g.w;x++){if(I.canPlace(g,sel,x,y)){c.fillStyle='rgba(255,255,255,.12)';c.beginPath();c.arc(x*cs+cs/2,y*cs+cs/2,cs*.08,0,7);c.fill();}}}
+  if(pv){pv.links.forEach(l=>{const X=l.x*cs+cs/2,Y=l.y*cs+cs/2;c.strokeStyle=l.v>0?'rgba(111,219,143,.9)':'rgba(255,122,107,.9)';c.lineWidth=cs*.06;c.beginPath();c.moveTo(pv.x*cs+cs/2,pv.y*cs+cs/2);c.lineTo(X,Y);c.stroke();});
+    c.fillStyle='rgba(255,211,92,.25)';c.fillRect(pv.x*cs,pv.y*cs,cs,cs);drawB(c,sel,pv.x*cs,pv.y*cs,cs,.75);
+    pv.links.forEach(l=>{const X=l.x*cs+cs*.78,Y=l.y*cs+cs*.22;c.fillStyle=l.v>0?'#2E9E5B':'#D9483A';c.beginPath();c.arc(X,Y,cs*.2,0,7);c.fill();c.fillStyle='#fff';c.font=`700 ${Math.round(cs*.24)}px Fredoka,system-ui`;c.textAlign='center';c.textBaseline='middle';c.fillText((l.v>0?'+':'')+l.v,X,Y+1);});
+    const X=pv.x*cs+cs/2,Y=pv.y*cs-cs*.1;c.font=`700 ${Math.round(cs*.42)}px Fredoka,system-ui`;c.textAlign='center';c.textBaseline='middle';c.lineWidth=cs*.1;c.strokeStyle='#0B2338';const t=(pv.pts>=0?'+':'')+pv.pts;c.strokeText(t,X,Math.max(cs*.25,Y));c.fillStyle=pv.pts>=0?'#FFD35C':'#FF7A6B';c.fillText(t,X,Math.max(cs*.25,Y));}}
+function cellFromEvent(e){const cv=$('#board');const r=cv.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*g.w),y=Math.floor((e.clientY-r.top)/r.height*g.h);return {x,y};}
+function why(b,x,y){const c=I.cell(g,x,y);if(!c||c.t==='~')return 'That\'s water';if(c.t==='^')return 'Rocks: nothing can be built here';if(c.b)return 'Something is already built there';if(I.B[b].coast)return I.B[b].name+' must be on the coast';return 'Can\'t build there';}
+function doPlace(){if(!pv)return;const {x,y}=pv;const before=g.target;const res=I.place(g,sel,x,y);if(!res)return;SFX.place(res.pts);floatText(x,y,res.pts);pv=null;
+  if(res.reached){g.lastGoal=before;setTimeout(SFX.goal,200);}save();renderGame();
+  if(g.picks)setTimeout(packModal,res.reached?450:0);else if(g.over)setTimeout(endGame,600);}
+function floatText(x,y,p){const w=$('#boardWrap');const d=document.createElement('div');d.className='float'+(p<0?' neg':'');d.textContent=(p>=0?'+':'')+p;d.style.left=((x+.5)/g.w*100)+'%';d.style.top=((y+.3)/g.h*100)+'%';w.appendChild(d);setTimeout(()=>d.remove(),1000);}
+function packModal(){if(!g.picks)return;const ps=g.picks.map(id=>I.PACKS.find(p=>p.id===id));
+  openModal(`<h2>Goal reached!</h2><p>Choose a pack of new buildings. Next goal: <b>${g.target}</b> points.${g.bank?` You also have <b>${g.bank}</b> more pick${g.bank>1?'s':''} waiting.`:''}</p><div class="packs">${ps.map((p,i)=>`<button class="pack" data-pack="${i}"><div><b>${esc(p.name)}</b><div class="its">${Object.entries(p.items).map(([b,n])=>`<span data-ic="${b}">${n}× ${esc(I.B[b].name)}</span>`).join('')}</div></div></button>`).join('')}</div>`);
+  document.querySelectorAll('#mcard [data-ic]').forEach(el=>el.insertBefore(icon(el.dataset.ic,26),el.firstChild));}
+function endGame(){const is=isle,id=is.id;const sc=g.score,st=I.stars(is,sc);const beforeT=totalStars();const oldBest=id==='daily'?(S.daily[dayId()]||0):(S.best[id]||0);
+  if(id==='daily'){const d=dayId();S.daily[d]=Math.max(S.daily[d]||0,sc);if(S.streak.last!==d){S.streak.count=S.streak.last===d-1?S.streak.count+1:1;S.streak.last=d;}}
+  else{S.best[id]=Math.max(oldBest,sc);S.stars[id]=Math.max(S.stars[id]||0,st);}
+  delete S.games[id];save();SFX.end();
+  const opened=I.ISLANDS.filter(x=>(x.need||0)>beforeT&&(x.need||0)<=totalStars());
+  openModal(`<h2>${esc(is.name)} is finished!</h2><div class="bigstat"><div class="big">${sc}</div><div class="st">${starStr(st)}</div><small>${sc>oldBest?(oldBest?'New best! Old best '+oldBest:'First score on this island'):'Best '+oldBest}</small></div>
+   <p>Goals: ${is.goals.map((v,i)=>`${'★'.repeat(i+1)} ${v}`).join(' · ')}</p>${opened.map(x=>`<p><b>New island unlocked: ${esc(x.name)}</b>${newBuildings(x).length?` with the ${newBuildings(x).map(b=>I.B[b].name).join(', ')}`:''}!</p>`).join('')}
+   ${id==='daily'?`<p>Daily streak: <b>${S.streak.count}</b> day${S.streak.count===1?'':'s'}. A new island arrives tomorrow.</p>`:''}
+   <div class="mact"><button class="btn" data-act="home">Islands</button><button class="btn go" data-act="again">Play again</button></div>`);}
+function help(first){const set=isle?isle.set:I.ORDER;const openSet=new Set(I.ISLANDS.filter(unlocked).flatMap(x=>x.set));
+  openModal(`<h2>${first?'Welcome to Tiny Isles':'How to play'}</h2>
+   <p>Place buildings on the island. Each one scores points <b>when you place it</b>, depending on what's around it. Tap a square to see the points and which neighbours give or take them, then tap again to build.</p>
+   <p>Reach the <b>goal</b> to choose a new pack of buildings. The island is finished when you run out of buildings or space. Beat the star goals to unlock new islands and buildings.</p>
+   <p>You get <b>3 undos</b> per island (not after reaching a goal). Squares count as "next to" when they share a side, and "within 2" counts steps left, right, up and down.</p>
+   ${I.ORDER.map(b=>{const on=openSet.has(b);const where=I.ISLANDS.find(x=>x.set.includes(b));return `<div class="rule${on?'':' lock'}" data-ic="${b}"><div><b>${esc(I.B[b].name)}</b><small>${on?esc(I.B[b].txt):'Unlocks on '+esc(where.name)}</small></div></div>`;}).join('')}
+   <div class="mact"><button class="btn go" data-act="close">${first?'Let\'s build':'Got it'}</button></div>`);
+  document.querySelectorAll('#mcard .rule').forEach(el=>el.insertBefore(icon(el.dataset.ic,40),el.firstChild));}
+/* ---- input ---- */
+$('#board').addEventListener('click',e=>{if(!g||g.over||g.picks)return;if(!sel){toast('No buildings left');return;}const {x,y}=cellFromEvent(e);
+  if(!I.canPlace(g,sel,x,y)){pv=null;renderGame();SFX.bad();toast(why(sel,x,y));return;}
+  if(pv&&pv.x===x&&pv.y===y){doPlace();return;}const s=I.scoreAt(g,sel,x,y);pv={x,y,pts:s.pts,links:s.links};SFX.tap();renderGame();});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.isle){start(b.dataset.isle);return;}
+  if(b.id==='dailyBtn'){start('daily');return;}
+  if(b.dataset.b){sel=b.dataset.b;pv=null;SFX.tap();renderGame();return;}
+  if(b.id==='placeBtn'){doPlace();return;}
+  if(b.id==='undoBtn'){if(I.undo(g)){pv=null;save();renderGame();toast('Undone');}return;}
+  if(b.id==='backBtn'){save();renderHome();return;}
+  if(b.id==='gHelp'||b.id==='helpBtn'){help(false);return;}
+  if(b.id==='sndBtn'){S.sound=!S.sound;save();renderHome();SFX.tap();return;}
+  if(b.dataset.pack!=null){const before=g.target;I.choosePack(g,+b.dataset.pack);closeModal();save();sel=null;renderGame();if(g.picks)packModal();else if(g.over)endGame();return;}
+  if(b.dataset.act==='close'){closeModal();if(g&&g.picks)packModal();return;}
+  if(b.dataset.act==='home'){closeModal();renderHome();return;}
+  if(b.dataset.act==='again'){closeModal();start(isle.id,true);return;}});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden&&!(g&&g.picks))closeModal();});
+/* logo */
+{const c=$('#logo').getContext('2d');c.fillStyle=WATER;c.beginPath();c.arc(64,64,62,0,7);c.fill();c.fillStyle=SAND;c.beginPath();c.ellipse(64,78,50,26,0,0,7);c.fill();c.fillStyle=GRASS;c.beginPath();c.ellipse(64,74,42,20,0,0,7);c.fill();drawB(c,'house',20,30,50);drawB(c,'tree',58,34,40);drawB(c,'light',78,20,40);}
+window.__isles={S:()=>S,g:()=>g,start,renderHome,I};
+renderHome();
+})();
+
+</script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});});}</script></body></html>
