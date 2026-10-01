@@ -63,12 +63,12 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .evb{display:flex;flex-wrap:wrap;gap:6px}.evb span{font:600 12px var(--body);padding:3px 9px;border-radius:8px;background:var(--panel);border:1px solid #4B3F86;color:var(--star)}
 body[data-world="coffee"]{--ore:#E9A86A;--ore2:#FFD2A6;--ice:#9EE0B8}
 body[data-world="salvage"]{--ore:#5FD3C8;--ore2:#A6F0E6;--ice:#7FB8F0;--ink:#081424;--deep:#0D1C33;--panel:#11243F;--panel2:#18304F;--line:#24456E}
-.quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.quick button{flex:1;min-width:140px}.quick button:disabled{opacity:.45}
+.modes{flex-wrap:wrap}.quick{display:flex;gap:6px;flex-basis:100%;margin-top:2px}.quick button{flex:1;min-width:0;padding:6px 4px;border-radius:9px;background:var(--panel2);border:1px solid var(--ok);color:var(--text);font:600 12px var(--disp);white-space:nowrap}.quick button:disabled{opacity:.4;border-color:var(--line)}
 .troph{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}.troph .big{font:700 26px var(--disp);color:var(--ore2);display:block}.meds{display:flex;flex-direction:column;gap:2px;font:600 12px var(--body);text-align:right}
 .rcard small{display:block}.medal{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .track{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}.trk{position:relative;height:12px;border-radius:7px;background:var(--deep)}.trk i{position:absolute;inset:0 auto 0 0;border-radius:7px;background:linear-gradient(90deg,var(--ore),var(--ore2))}
 .trk .mk{position:absolute;top:-3px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--deep);border:2px solid var(--mc)}.trk .mk.on{background:var(--mc)}.trl{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font:600 13px var(--body);flex-wrap:wrap}.trl span{color:var(--muted)}
-.grp.chal.wait{opacity:.7}.grp.chal.wait b{color:var(--muted)}
+.grp.chal.done{border-color:var(--ok)}.grp.chal.done b{color:var(--ok)}.grp.chal .collectb{grid-column:1/-1;justify-self:end;padding:6px 14px}.grp.chal.got{opacity:.55}.grp.chal.got b{color:var(--muted)}
 .grp.chal .skipb{grid-column:1/-1;justify-self:end;padding:4px 10px}
 .curpill{color:var(--ink);background:var(--ice);border-color:var(--ice);font-variant-numeric:tabular-nums}.row.hot{border-color:var(--ice);box-shadow:0 0 0 1px var(--ice) inset}
 body[data-world="event"]{--ice:#FFB36B}
@@ -177,8 +177,8 @@ body[data-world="event"]{--ice:#FFB36B}
   <section class="pane" id="p-earners">
     <div class="main">
       <div class="pane">
-        <div class="modes"><span>Tap an item to collect. Managers do it for you.</span><button data-mode="1" aria-pressed="true">×1</button><button data-mode="10" aria-pressed="false">×10</button><button data-mode="100" aria-pressed="false">×100</button><button data-mode="max" aria-pressed="false">Max</button><button data-mode="next" aria-pressed="false">Next</button></div>
-        <div id="quick" class="quick" hidden></div><div id="earners"></div>
+        <div class="modes"><span>Tap an item to collect. Managers do it for you.</span><button data-mode="1" aria-pressed="true">×1</button><button data-mode="10" aria-pressed="false">×10</button><button data-mode="100" aria-pressed="false">×100</button><button data-mode="max" aria-pressed="false">Max</button><button data-mode="next" aria-pressed="false">Next</button><div id="quick" class="quick" hidden></div></div>
+        <div id="earners"></div>
       </div>
       <aside class="side"><h3 id="chalHead" hidden style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ore)">Event challenges</h3><div id="chal" hidden></div><h3 style="margin:0;font:600 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ice)">Group targets</h3><div id="groups"></div></aside>
     </div>
@@ -377,7 +377,7 @@ function quickCan(st){const ups=UPS.some(u=>!st.ups[u.id]&&(u.t<0||(st.tiers[u.t
   const mgr=st.tiers.some((T,i)=>!T.mgr&&T.n&&allowed(st,i)&&mgrPrice(st,i)<=st.cash);
   const next=st.tiers.some((T,i)=>T.n&&allowed(st,i)&&costN(st,i,nextMilestone(T.n,i)-T.n)<=st.cash);return {ups,mgr,next};}
 function perkCost(st,p){const l=st.perks[p.id]||0;return l>=p.max?null:p.cost[l];}
-function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+W.starPer*(st.stars-c);return {c,a,b,drop:1-b/a};}
+function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+((st.mod&&st.mod.starPer)||W.starPer)*(st.stars-c);return {c,a,b,drop:1-b/a};}
 function buyPerk(st,id){const p=PERKS.find(x=>x.id===id);const c=perkCost(st,p);if(c==null||st.stars<c)return false;st.stars-=c;st.perks[id]=(st.perks[id]||0)+1;return true;}
 /* ---- golden bonus ---- */
 function goldGap(st){return (45+rng(st)*75)*1000/(1+[0,.3,.6,1,1.5][st.perks.luck||0])/((st.mod&&st.mod.gold)||1);}
@@ -495,7 +495,7 @@ return {
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.07.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.08.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -594,13 +594,19 @@ function chalGen(k){const S=P.ev.st;const max=(S.mod&&S.mod.max)||12;const X=evE
   c.ty=ty;c.k=k;c.tok=P.ev.bonus?2+Math.floor(k/3):1+Math.floor(k/5);c.base=0;c.base=ty==='earn'?S.total:ty==='gold'?P.ev.gold:ty==='pup'?(S.pupEver||0):ty==='restart'?S.runs:0;return c;}
 function tokFor(k){return P.ev&&P.ev.bonus?2+Math.floor(k/3):1+Math.floor(k/5);}
 /* weekly event: a finished challenge's slot refills after a wait that grows (20 min, then 3 min longer each time), so the event stretches over the weekend */
-function chalWait(k){return (20+3*k)*60000;}
+/* weekly event: tick off (collect) every challenge in the batch of 3 before the next batch opens */
+function collectChal(ci){const c=P.ev.chal[ci];if(!c||!c.done||c.got)return;const g=Math.max(0,Math.min(c.tok,capOf()-P.ev.tok));P.ev.tok+=g;P.ev.done++;c.got=true;AUDIO.play('pick');
+  toast(`<b>+${g} token${g===1?'':'s'}</b> ${esc(chalText(c))}`,'star');
+  if(P.ev.chal.every(x=>x.got)&&P.ev.tok<capOf()){P.ev.chal=[];fillChal();P.ev.batch=(P.ev.batch||1)+1;toast('<b>New challenges!</b> A fresh batch of 3 is open.','star');}
+  save();if(P.ev.tok>=capOf())finishEvent(true);else render(true);}
 const EV_MEDALS=[[20,'Bronze','#D9905A'],[40,'Silver','#C9CFE0'],[60,'Gold','#FFD37A']];
 function evMedal(t){let m=null;EV_MEDALS.forEach(x=>{if(t>=x[0])m=x;});return m;}
 function fillChal(){while(P.ev.chal.length<3)P.ev.chal.push(chalGen(P.ev.k++));}
 function capOf(){return (P.ev&&P.ev.cap)||TOK_CAP;}
-function checkChal(){if(!P.ev)return;let got=false;for(let ci=0;ci<P.ev.chal.length;ci++){const c=P.ev.chal[ci];if(c.wait){if(now()>=c.wait){P.ev.chal[ci]=chalGen(P.ev.k++);got=true;}continue;}if(chalValue(c)>=c.need){const g=Math.max(0,Math.min(c.tok,capOf()-P.ev.tok));P.ev.tok+=g;P.ev.done++;got=true;
-    toast(`<b>Challenge done</b> ${esc(chalText(c))} · ${g?'+'+g+(P.ev.bonus?' trophy points':' tokens'):'limit reached'}`,'star');AUDIO.play('challenge');P.ev.chal[ci]=P.ev.bonus?chalGen(P.ev.k++):{wait:now()+chalWait(c.k)};}}if(got)save();if(P.ev.tok>=capOf())finishEvent(true);}
+function checkChal(){if(!P.ev)return;let got=false;for(let ci=0;ci<P.ev.chal.length;ci++){const c=P.ev.chal[ci];if(c.wait){P.ev.chal[ci]=chalGen(P.ev.k++);got=true;continue;}if(c.done)continue;
+    if(!P.ev.bonus&&chalValue(c)>=c.need){c.done=true;got=true;toast(`<b>Challenge complete!</b> ${esc(chalText(c))} · tap Collect for +${c.tok} token${c.tok>1?'s':''}`,'star');AUDIO.play('challenge');continue;}
+    if(chalValue(c)>=c.need){const g=Math.max(0,Math.min(c.tok,capOf()-P.ev.tok));P.ev.tok+=g;P.ev.done++;got=true;
+    toast(`<b>Challenge done</b> ${esc(chalText(c))} · ${g?'+'+g+(P.ev.bonus?' trophy points':' tokens'):'limit reached'}`,'star');AUDIO.play('challenge');P.ev.chal[ci]=chalGen(P.ev.k++);}}if(got)save();if(P.ev.tok>=capOf())finishEvent(true);}
 function eventsOpen(){return (P.w.belt.runs||0)>=1;}
 function eventCheck(){const t=now();const w=eventWindow(t);
   if(P.ev){const done=P.ev.tok>=((P.ev&&P.ev.cap)||TOK_CAP);if(done||t>=P.ev.end||(!P.ev.bonus&&(P.ev.id!==w.id||!w.live)))finishEvent(done);}
@@ -691,7 +697,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.id==='rsYes'){if(P.cur==='event'&&P.ev)P.ev.goldRun=0;const p=E.restart(st);AUDIO.play('restart');st.now=now();st.seen=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${SNm()}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
   if(b.id==='rsNo'||b.id==='awayOk'){closeModal();return;}
   if(b.dataset.bonus!=null){closeModal();startBonus();return;}
-  if(b.dataset.skip!=null){if(!P.ev||!skipReady())return;const i=+b.dataset.skip;if(P.ev.chal[i].wait)return;P.ev.chal[i]=chalGen(P.ev.k++);P.ev.skipAt=now();save();render(true);toast('<b>Challenge swapped</b> Next swap in 1 hour.');return;}
+  if(b.dataset.collect!=null){if(P.ev)collectChal(+b.dataset.collect);return;}
+  if(b.dataset.skip!=null){if(!P.ev||!skipReady())return;const i=+b.dataset.skip;if(P.ev.chal[i].wait||P.ev.chal[i].done)return;P.ev.chal[i]=chalGen(P.ev.k++);P.ev.skipAt=now();save();render(true);toast('<b>Challenge swapped</b> Next swap in 1 hour.');return;}
   if(b.dataset.round){closeModal();if(P.br&&P.br.id!==b.dataset.round){toast('<b>Finish or quit your current round first</b>');return;}if(P.br)switchWorld('bonus');else startRound(b.dataset.round);return;}
   if(b.id==='quitRound'){endRound(true);return;}
   if(b.id==='gold'){const r=E.goldReward(st);AUDIO.play('gold');if(P.cur==='event'){P.ev.gold++;P.ev.goldRun=(P.ev.goldRun||0)+1;}if(P.cur==='bonus')P.br.gold++;b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} ${W.cur}`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
@@ -718,8 +725,8 @@ function render(full){const t=now();
   else{const a=E.advice(st);const sh=a.text.split(',')[0].replace(' to restart','');pe.textContent=a.p?`${sh} · +${fmt(a.p)} ★ → ×${a.b.toFixed(2)}`:a.text;pe.className='pill lv'+a.level;}
   const eb=$('#evpill');eb.hidden=!P.ev||ev;if(P.ev&&!ev)eb.textContent=`Event · ${TWISTS.find(x=>x.id===P.ev.tw).name} · ${fmtT((P.ev.end-t)/1000)}`;
   const cb=E.currentBand(st);const cp=$('#curpill');cp.hidden=cb<0;if(cb>=0){const left=W.current-(t%W.current);cp.textContent=`Current: ${W.bands[cb].name} ×${W.curX} · ${mmss(left)}`;}
-  if(tab==='earners'){const q=$('#quick');const L=st.perks.quick||0;q.hidden=L<2;if(L>=2){const can=E.quickCan(st);
-    const h=(L>=2?`<button class="ghost small" data-quick="mgr" ${can.mgr?'':'disabled'}>Hire all managers</button>`:'')+(L>=3?`<button class="ghost small" data-quick="next" ${can.next?'':'disabled'}>Next milestones</button>`:'');if(q.innerHTML!==h)q.innerHTML=h;}
+  if(tab==='earners'){const q=$('#quick');const L=st.perks.quick||0;q.hidden=L<1;if(L>=1){const can=E.quickCan(st);
+    const h=`<button data-quick="ups" ${can.ups?'':'disabled'}>All upgrades</button>`+(L>=2?`<button data-quick="mgr" ${can.mgr?'':'disabled'}>All managers</button>`:'')+(L>=3?`<button data-quick="next" ${can.next?'':'disabled'}>All milestones</button>`:'');if(q.innerHTML!==h)q.innerHTML=h;}
     W.tiers.forEach((T,i)=>{const S=st.tiers[i];const row=$('#r'+i);
       $('#own'+i).textContent=S.n;const cyc=E.cycle(st,i);const fast=cyc<0.25;
       $('#bar'+i).style.width=(S.n?(fast&&(S.mgr||S.run)?100:Math.min(100,S.prog*100)):0)+'%';
@@ -739,7 +746,7 @@ function renderBadges(){const ups=E.UPS.some(u=>!st.ups[u.id]&&E.upPrice(st,u)<=
   const newP=(st.picks||[]).length;
   const lv=P.cur==='bonus'?0:E.advice(st).level;const perk=E.PERKS.some(pk=>{const im=E.perkImpact(st,pk);return im&&im.c<=st.stars&&im.c<=st.stars*0.05&&(P.cur!=='event'||pk.id==='quick');});
   const set=(t,v)=>{const el=$(`[data-tab="${t}"] .badge`);el.hidden=!v;el.textContent=v===true?'':v;};
-  set('upgrades',ups);set('powerups',newP);set('stars',(lv===2||perk)?true:0);set('worlds',(P.ev&&P.cur!=='event'&&!P.evSeen)||(unlockCoffee()&&!P.w.coffee)?true:0);if(tab==='worlds')P.evSeen=true;}
+  set('upgrades',ups);set('powerups',newP);const col=P.cur==='event'&&P.ev?P.ev.chal.filter(c=>c.done&&!c.got).length:0;set('stars',col?col:(lv===2||perk)?true:0);set('worlds',(P.ev&&P.cur!=='event'&&!P.evSeen)||(unlockCoffee()&&!P.w.coffee)?true:0);if(tab==='worlds')P.evSeen=true;}
 function groupLine(label,idx,targets,tiers){if(idx>=targets.length)return `<div class="grp done"><b>${label}</b><span>All targets reached</span></div>`;
   const need=targets[idx];const have=tiers.filter(i=>st.tiers[i].n>=need).length;
   const mem=tiers.length>4?`<div class="mem">${tiers.filter(i=>st.tiers[i].n<need).length} item${tiers.filter(i=>st.tiers[i].n<need).length===1?'':'s'} still below ${need}</div>`:
@@ -766,8 +773,10 @@ function renderPups(){const P=st.pups;
    ${picksHTML()}<div id="groups2">${groupsHTML()}</div>
    <h3>Active this run (${P.length} picked)</h3>${P.length||(st.timed||[]).length?aggHTML():'<p class="muted">None yet. The first one usually drops within a few minutes.</p>'}`;}
 function skipReady(){return now()-(P.ev.skipAt||0)>=3600e3;}
-function chalHTML(){if(P.cur!=='event')return '';return P.ev.chal.map((c,ci)=>{if(c.wait)return `<div class="grp chal wait"><b>New challenge coming</b><span>in ${fmtT(Math.max(0,c.wait-now())/1000)}</span></div>`;const v=Math.max(0,chalValue(c));const pct=Math.min(100,v/c.need*100);
-  return `<div class="grp chal"><b>${esc(chalText(c))}</b><span>+${c.tok} ${P.ev.bonus?'trophy points':'tokens'}</span><span class="gp"><i style="width:${pct}%"></i></span><span class="gc">${Math.floor(pct)}%</span>${tab==='stars'?`<button class="ghost small skipb" data-skip="${ci}" ${skipReady()?'':'disabled'}>Swap</button>`:''}</div>`;}).join('');}
+function chalHTML(){if(P.cur!=='event')return '';return P.ev.chal.map((c,ci)=>{if(c.wait)return '';
+  if(c.got)return `<div class="grp chal got"><b>✓ ${esc(chalText(c))}</b><span>collected</span></div>`;
+  if(c.done)return `<div class="grp chal done"><b>✓ ${esc(chalText(c))}</b><span>complete!</span><button class="go small collectb" data-collect="${ci}">Collect +${c.tok}</button></div>`;const v=Math.max(0,chalValue(c));const pct=Math.min(100,v/c.need*100);
+  return `<div class="grp chal"><b>${esc(chalText(c))}</b><span>+${c.tok} ${P.ev.bonus?'trophy points':'tokens'}</span><span class="gp"><i style="width:${pct}%"></i></span><span class="gc">${Math.floor(pct)}%</span>${tab==='stars'&&!P.ev.bonus?`<button class="ghost small skipb" data-skip="${ci}" ${skipReady()?'':'disabled'}>Swap</button>`:''}</div>`;}).join('');}
 function renderChal(){const el=$('#chal');el.hidden=P.cur!=='event';$('#chalHead').hidden=P.cur!=='event';if(P.cur==='event')el.innerHTML=chalHTML();}
 function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(st);
   const cap=capOf(),tk=P.ev.tok,md=evMedal(tk);const nextR=[0,1,2,3,4].map(j=>tokFor(P.ev.k+j));const left=Math.max(0,3600e3-(now()-(P.ev.skipAt||0)));
@@ -775,7 +784,7 @@ function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(
    <div class="trl"><b>${tk} / ${cap}</b> ${P.ev.bonus?'trophy points':'tokens'}${md&&!P.ev.bonus?` · <span style="color:${md[2]}">${md[1]} medal</span>`:''}<span>${P.ev.done} done · ends in ${fmtT((P.ev.end-now())/1000)}</span></div></div>
    ${chalHTML()}<p class="muted small">Next rewards: ${nextR.map(v=>'+'+v).join(', ')}. ${skipReady()?'You can swap one challenge now (one swap an hour).':`Next swap in ${fmtT(left/1000)}.`}</p>
    <div class="advice lv1"><b>${esc(tw.name)}</b><span>${esc(tw.txt)}</span></div>
-   <p class="lead">${P.ev.bonus?'Bonus event points go to your trophy tally only.':`Finish challenges for tokens. A new challenge arrives a while after you finish one, so check back over the weekend. Medals at 20, 40 and 60 tokens. Later challenges need event restarts, so use your Event Stars. Each token adds +${TOK_PCT}% to every world, for good (+${tokPct(P.tok)}% so far).`}</p>
+   <p class="lead">${P.ev.bonus?'Bonus event points go to your trophy tally only.':`Finish challenges, then tap Collect to tick them off. When all three in a batch are collected, the next batch opens. Medals at 20, 40 and 60 tokens. Later challenges need event restarts, so use your Event Stars. Each token adds +${TOK_PCT}% to every world, for good (+${tokPct(P.tok)}% so far).`}</p>
    <h3>Event Stars</h3><p class="lead">Stuck? Restart the event to bank Event Stars. Each adds ${Math.round(((st.mod&&st.mod.starPer)||W.starPer)*100)}% to event earnings, for this event only. Tokens and finished challenges are kept.</p>
    <div class="advice lv${a.level}"><b>${esc(a.text.replace('Stars','Event Stars'))}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
    <button class="go wide" id="restartBtn">${a.p?`Restart for ${a.p} Event Stars`:'Restart the event (no Event Stars yet)'}</button><p class="muted small">Event Stars: ${st.stars} (×${E.starMult(st).toFixed(2)}). Event restarts: ${st.runs}. This event gives at most ${capOf()} tokens and ends early when you reach them.</p>
