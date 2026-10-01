@@ -50,7 +50,8 @@ button:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
 .world{display:flex;align-items:center;gap:8px}.world #wname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .snds{display:flex;gap:4px;flex:none}.snd{cursor:pointer;font:600 11px var(--disp);letter-spacing:.04em;text-transform:none;padding:3px 8px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
 .snd[aria-pressed="true"]{color:var(--ink);background:var(--ice);border-color:var(--ice)}
-.timed{display:contents}.tchip{color:var(--ink);background:var(--ore2);border-color:var(--ore2);font-weight:700;font-size:11px;padding:3px 7px;white-space:nowrap;font-variant-numeric:tabular-nums;cursor:pointer}.tchip i{font-style:normal;display:inline-block;min-width:5ch;text-align:right;margin-left:4px;font-weight:600}#codeBox{width:100%;font:12px ui-monospace,monospace;background:var(--deep);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical;margin:8px 0}.timedc{border-color:var(--ore)}
+.timed{display:contents}.tchip{color:var(--ink);background:var(--ore2);border-color:var(--ore2);font-weight:700;font-size:11px;padding:3px 7px;white-space:nowrap;font-variant-numeric:tabular-nums;cursor:pointer}.tchip em{font-style:normal;font-size:10px;background:var(--ink);color:var(--ore2);border-radius:6px;padding:0 4px;margin-left:4px}.evpill.hot{color:var(--ink);background:var(--ok);border-color:var(--ok)}.colpill{color:var(--ink);background:var(--ok);border-color:var(--ok);font-weight:700}
+.tchip i{font-style:normal;display:inline-block;min-width:5ch;text-align:right;margin-left:4px;font-weight:600}#codeBox{width:100%;font:12px ui-monospace,monospace;background:var(--deep);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical;margin:8px 0}.timedc{border-color:var(--ore)}
 /* restart advice, events */
 .pill.lv0{color:var(--muted)}.pill.lv1{color:var(--star);border-color:#4B3F86}.pill.lv2{color:var(--ink);background:var(--star);border-color:var(--star)}
 .evpill{cursor:pointer;color:var(--ink);background:var(--ore);border-color:var(--ore);font-weight:700}
@@ -168,7 +169,7 @@ body[data-world="event"]{--ice:#FFB36B}
     <div class="world"><span id="wname">World 1 · Asteroid Belt</span><span class="snds"><button class="snd" data-export title="Copy progress code" aria-label="Copy progress code">⧉</button><button class="snd" id="musBtn" aria-pressed="false" title="Music">♪</button><button class="snd" id="sfxBtn" aria-pressed="false" title="Sounds">Fx</button></span></div>
     <div><div class="cash"><span id="cash">0</span><small id="curlbl">credits</small></div><div class="ps" id="ps">0/s</div></div>
     <div class="starchip"><b id="stars">0</b><span id="starlbl">Stars</span> <span id="starx">×1.00</span></div>
-    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><span class="pill curpill" id="curpill" hidden></span><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
+    <div class="sub"><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><span class="pill curpill" id="curpill" hidden></span><button class="pill colpill" id="colpill" hidden></button><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
   </header>
   <nav class="tabs" role="tablist">
     <button data-tab="earners" role="tab">Items</button><button data-tab="upgrades" role="tab">Upgrades<i class="badge" hidden></i></button>
@@ -495,7 +496,7 @@ return {
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.08.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.08.01';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -669,7 +670,7 @@ function labels(){const ev=P.cur==='event',br=P.cur==='bonus';const tw=ev?TWISTS
   $('#starlbl').textContent=br?'Trophies':ev?'Tokens':W.starName;$('[data-tab="stars"] .tl').textContent=br?'Round':ev?'Event':W.starName;document.body.dataset.world=br?'event':P.cur;}
 function setTab(t){tab=t;$$('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));$$('section.pane').forEach(p=>p.hidden=p.id!=='p-'+t);render(true);}
 /* ---- toasts ---- */
-function toast(html,cls=''){const d=document.createElement('div');d.className='toast '+cls;d.innerHTML=html;$('#toasts').appendChild(d);setTimeout(()=>d.classList.add('out'),3400);setTimeout(()=>d.remove(),4000);}
+function toast(html,cls=''){const box=$('#toasts');while(box.children.length>=2)box.firstChild.remove();const d=document.createElement('div');d.className='toast '+cls;d.innerHTML=html;$('#toasts').appendChild(d);setTimeout(()=>d.classList.add('out'),3400);setTimeout(()=>d.remove(),4000);}
 function announce(got){got.forEach(p=>toast(`<b>Power-up to choose</b> ${esc(p.src)}<small>Pick 1 of ${p.opts.length} on the Power-ups tab. One is picked for you after 3 minutes.</small>`,'pup'));}
 /* ---- actions ---- */
 function amount(i){if(mode==='max')return Math.max(1,E.maxAfford(st,i));if(mode==='next'){const nm=E.nextMilestone(st.tiers[i].n,i);return nm?nm-st.tiers[i].n:1;}return mode;}
@@ -688,7 +689,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.dataset.tab){setTab(b.dataset.tab);return;}
   if(b.dataset.quick){const k=b.dataset.quick;const before=(st.picks||[]).length;const n=k==='ups'?E.buyAllUps(st):k==='mgr'?E.hireAll(st):E.nextAll(st);
     if(n){AUDIO.play(k==='mgr'?'mgr':'milestone');toast(`<b>Quick buy</b> ${k==='ups'?`${n} upgrade${n>1?'s':''} bought`:k==='mgr'?`${n} manager${n>1?'s':''} hired`:`${n} item${n>1?'s':''} reached a milestone`}`);announce((st.picks||[]).slice(before));}render(true);return;}
-  if(b.dataset.tchip!=null){const x=(st.timed||[])[+b.dataset.tchip];if(x)toast(`<b>${esc(x.txt.replace(/ for \d+ minutes$/,''))}</b> ${mmss(x.left)} left. The clock only runs while you play.`,'pup');return;}
+  if(b.dataset.tchip!=null){const k=b.dataset.tchip;const list=(st.timed||[]).filter(x=>x.k===k).sort((a,c)=>a.left-c.left);const g=timedGroups(st).find(x=>x.k===k);if(!g)return;
+    openModal(`<h2>${esc(g.name)}</h2><p>${g.n} active · together ${esc(g.label)}. The clocks only run while you play.</p>${list.map(x=>`<div class="card pupc timedc"><div><b>${esc(x.txt.replace(/ for \d+ minutes$/,''))}</b><small>${mmss(x.left)} left</small></div></div>`).join('')}<div class="mact"><button class="go" id="rsNo">OK</button></div>`);return;}
   if(b.dataset.export!=null){const c=progressCode();openModal(`<h2>Progress code</h2><p>Copy this and paste it to Claude to get a check-up on how your game is going. It doesn't change your game.</p><textarea id="codeBox" readonly rows="6">${esc(c)}</textarea><div class="mact"><button class="ghost" id="rsNo">Close</button><button class="go" id="copyCode">Copy</button></div>`);return;}
   if(b.id==='copyCode'){const ta=$('#codeBox');const done=()=>{b.textContent='Copied';toast('<b>Copied</b> Paste it into your chat.');};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();document.execCommand('copy');done();});else{ta.select();document.execCommand('copy');done();}return;}
@@ -697,6 +699,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.id==='rsYes'){if(P.cur==='event'&&P.ev)P.ev.goldRun=0;const p=E.restart(st);AUDIO.play('restart');st.now=now();st.seen=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${SNm()}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
   if(b.id==='rsNo'||b.id==='awayOk'){closeModal();return;}
   if(b.dataset.bonus!=null){closeModal();startBonus();return;}
+  if(b.id==='colpill'){if(P.cur!=='event')switchWorld('event',true);setTab('stars');return;}
   if(b.dataset.collect!=null){if(P.ev)collectChal(+b.dataset.collect);return;}
   if(b.dataset.skip!=null){if(!P.ev||!skipReady())return;const i=+b.dataset.skip;if(P.ev.chal[i].wait||P.ev.chal[i].done)return;P.ev.chal[i]=chalGen(P.ev.k++);P.ev.skipAt=now();save();render(true);toast('<b>Challenge swapped</b> Next swap in 1 hour.');return;}
   if(b.dataset.round){closeModal();if(P.br&&P.br.id!==b.dataset.round){toast('<b>Finish or quit your current round first</b>');return;}if(P.br)switchWorld('bonus');else startRound(b.dataset.round);return;}
@@ -712,18 +715,23 @@ function openRestart(){const a=E.advice(st);const SN=SNm();const ev=P.cur==='eve
 /* ---- render ---- */
 let lastFull=0,timedKey='';const TICON={tx:'⚡',tfast:'»'};
 function mmss(ms){const s=Math.max(0,Math.ceil(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0');}
+function timedGroups(S){const g={};(S.timed||[]).forEach(x=>{const k=x.k;g[k]=g[k]||{k,n:0,m:1,soon:Infinity,items:new Set()};g[k].n++;g[k].m*=x.m;g[k].soon=Math.min(g[k].soon,x.left);if(k==='ttier')g[k].items.add(x.t);});
+  const nm={tx:'Profit boosts',tfast:'Speed boosts',ttier:'Item boosts'};
+  return ['tx','tfast','ttier'].filter(k=>g[k]).map(k=>{const x=g[k];x.name=nm[k];x.label=k==='tx'?'⚡×'+fmt(x.m):k==='tfast'?'»×'+fmt(x.m):'⛏'+x.items.size+' item'+(x.items.size>1?'s':'');return x;});}
 function SNm(){return P.cur==='event'?'Event Stars':W.starName;}
 function render(full){const t=now();
   $('#cash').textContent=fmt(st.cash);$('#ps').textContent=fmt(E.incomeAll(st))+'/s';
-  const ev=P.cur==='event',br=P.cur==='bonus';$('#stars').textContent=br?P.tro.pts:ev?P.ev.tok:st.stars;$('#starx').textContent=br?troRank():ev?`+${tokPct(P.tok)}% kept`:'×'+E.starMult(st).toFixed(2);
-  const tb=st.timed||[];const tk=tb.map(x=>x.k+x.t+x.m).join('|');
-  if(tk!==timedKey){timedKey=tk;$('#timed').innerHTML=tb.map((x,j)=>`<button class="pill tchip" data-tchip="${j}"><b>${x.k==='ttier'?'⛏'+(x.t+1):TICON[x.k]}×${x.m}</b><i id="tc${j}"></i></button>`).join('');}
-  tb.forEach((x,j)=>{const el=$('#tc'+j);if(el){el.textContent=mmss(x.left);el.parentNode.setAttribute('aria-label',`${x.txt}, ${mmss(x.left)} left`);}});
+  const ev=P.cur==='event',br=P.cur==='bonus';$('#stars').textContent=br?P.tro.pts:ev?P.ev.tok:st.stars;$('#starx').textContent=br?troRank():ev?`of ${capOf()}`:'×'+E.starMult(st).toFixed(2);
+  /* timed boosts collapse into one chip per kind: total effect, how many, and the soonest to run out */
+  const tg=timedGroups(st);const tk=tg.map(g=>g.k+g.n).join('|');
+  if(tk!==timedKey){timedKey=tk;$('#timed').innerHTML=tg.map(g=>`<button class="pill tchip" data-tchip="${g.k}"><b>${g.label}</b>${g.n>1?`<em>${g.n}</em>`:''}<i id="tc_${g.k}"></i></button>`).join('');}
+  tg.forEach(g=>{const el=$('#tc_'+g.k);if(el){el.textContent=mmss(g.soon);el.parentNode.setAttribute('aria-label',`${g.n} ${g.name}, next ends in ${mmss(g.soon)}. Tap for details.`);}});
   const bst=st.boost&&st.boost.until>t?st.boost:null;$('#boost').hidden=!bst;if(bst)$('#boost').textContent=(bst.k==='x'?'Rich seam ×7':'Overclock ×3 speed')+' · '+Math.ceil((bst.until-t)/1000)+'s';
   const pe=$('#pend');if(br){const R=roundOf(P.br.id),v=roundScore(),m=medalFor(R,v);pe.textContent=`⏱ ${mmss(P.br.left)} · ${scoreText(R,v)}${m?' · '+MEDAL[m]:''}`;pe.className='pill'+(P.br.left<30000?' lv2':'');}
   else if(ev){const a=E.advice(st);pe.textContent=`Ends in ${fmtT((P.ev.end-t)/1000)} · ${P.ev.done} done`+(a.p?` · +${a.p} Event Stars`:'');pe.className='pill'+(a.level===2?' lv2':'');}
   else{const a=E.advice(st);const sh=a.text.split(',')[0].replace(' to restart','');pe.textContent=a.p?`${sh} · +${fmt(a.p)} ★ → ×${a.b.toFixed(2)}`:a.text;pe.className='pill lv'+a.level;}
-  const eb=$('#evpill');eb.hidden=!P.ev||ev;if(P.ev&&!ev)eb.textContent=`Event · ${TWISTS.find(x=>x.id===P.ev.tw).name} · ${fmtT((P.ev.end-t)/1000)}`;
+  const cn=P.ev&&!P.ev.bonus?P.ev.chal.filter(c=>c.done&&!c.got).length:0;const cp2=$('#colpill');cp2.hidden=!cn||!ev;if(cn&&ev)cp2.textContent=`✓ ${cn} to collect`;
+  const eb=$('#evpill');eb.hidden=!P.ev||ev;if(P.ev&&!ev){eb.textContent=`Event · ${TWISTS.find(x=>x.id===P.ev.tw).name} · ${fmtT((P.ev.end-t)/1000)}`+(cn?` · ✓ ${cn} to collect`:'');eb.classList.toggle('hot',!!cn);}
   const cb=E.currentBand(st);const cp=$('#curpill');cp.hidden=cb<0;if(cb>=0){const left=W.current-(t%W.current);cp.textContent=`Current: ${W.bands[cb].name} ×${W.curX} · ${mmss(left)}`;}
   if(tab==='earners'){const q=$('#quick');const L=st.perks.quick||0;q.hidden=L<1;if(L>=1){const can=E.quickCan(st);
     const h=`<button data-quick="ups" ${can.ups?'':'disabled'}>All upgrades</button>`+(L>=2?`<button data-quick="mgr" ${can.mgr?'':'disabled'}>All managers</button>`:'')+(L>=3?`<button data-quick="next" ${can.next?'':'disabled'}>All milestones</button>`:'');if(q.innerHTML!==h)q.innerHTML=h;}
@@ -776,13 +784,13 @@ function skipReady(){return now()-(P.ev.skipAt||0)>=3600e3;}
 function chalHTML(){if(P.cur!=='event')return '';return P.ev.chal.map((c,ci)=>{if(c.wait)return '';
   if(c.got)return `<div class="grp chal got"><b>✓ ${esc(chalText(c))}</b><span>collected</span></div>`;
   if(c.done)return `<div class="grp chal done"><b>✓ ${esc(chalText(c))}</b><span>complete!</span><button class="go small collectb" data-collect="${ci}">Collect +${c.tok}</button></div>`;const v=Math.max(0,chalValue(c));const pct=Math.min(100,v/c.need*100);
-  return `<div class="grp chal"><b>${esc(chalText(c))}</b><span>+${c.tok} ${P.ev.bonus?'trophy points':'tokens'}</span><span class="gp"><i style="width:${pct}%"></i></span><span class="gc">${Math.floor(pct)}%</span>${tab==='stars'&&!P.ev.bonus?`<button class="ghost small skipb" data-skip="${ci}" ${skipReady()?'':'disabled'}>Swap</button>`:''}</div>`;}).join('');}
+  return `<div class="grp chal"><b>${esc(chalText(c))}</b><span>+${c.tok} ${P.ev.bonus?'points':'token'+(c.tok>1?'s':'')}</span><span class="gp"><i style="width:${pct}%"></i></span><span class="gc">${Math.floor(pct)}%</span>${tab==='stars'&&!P.ev.bonus?`<button class="ghost small skipb" data-skip="${ci}" ${skipReady()?'':'disabled'}>${skipReady()?'Swap':'Swap in '+fmtT(Math.max(0,3600e3-(now()-(P.ev.skipAt||0)))/1000)}</button>`:''}</div>`;}).join('');}
 function renderChal(){const el=$('#chal');el.hidden=P.cur!=='event';$('#chalHead').hidden=P.cur!=='event';if(P.cur==='event')el.innerHTML=chalHTML();}
 function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(st);
   const cap=capOf(),tk=P.ev.tok,md=evMedal(tk);const nextR=[0,1,2,3,4].map(j=>tokFor(P.ev.k+j));const left=Math.max(0,3600e3-(now()-(P.ev.skipAt||0)));
   $('#p-stars').innerHTML=`<h3 style="margin-top:0">Challenge track</h3><div class="track"><div class="trk"><i style="width:${Math.min(100,tk/cap*100)}%"></i>${P.ev.bonus?'':EV_MEDALS.map(x=>`<span class="mk${tk>=x[0]?' on':''}" style="left:${x[0]/cap*100}%;--mc:${x[2]}" title="${x[1]}"></span>`).join('')}</div>
    <div class="trl"><b>${tk} / ${cap}</b> ${P.ev.bonus?'trophy points':'tokens'}${md&&!P.ev.bonus?` · <span style="color:${md[2]}">${md[1]} medal</span>`:''}<span>${P.ev.done} done · ends in ${fmtT((P.ev.end-now())/1000)}</span></div></div>
-   ${chalHTML()}<p class="muted small">Next rewards: ${nextR.map(v=>'+'+v).join(', ')}. ${skipReady()?'You can swap one challenge now (one swap an hour).':`Next swap in ${fmtT(left/1000)}.`}</p>
+   ${chalHTML()}<p class="muted small">Next rewards: ${nextR.map(v=>'+'+v).join(', ')}. One swap an hour.</p>
    <div class="advice lv1"><b>${esc(tw.name)}</b><span>${esc(tw.txt)}</span></div>
    <p class="lead">${P.ev.bonus?'Bonus event points go to your trophy tally only.':`Finish challenges, then tap Collect to tick them off. When all three in a batch are collected, the next batch opens. Medals at 20, 40 and 60 tokens. Later challenges need event restarts, so use your Event Stars. Each token adds +${TOK_PCT}% to every world, for good (+${tokPct(P.tok)}% so far).`}</p>
    <h3>Event Stars</h3><p class="lead">Stuck? Restart the event to bank Event Stars. Each adds ${Math.round(((st.mod&&st.mod.starPer)||W.starPer)*100)}% to event earnings, for this event only. Tokens and finished challenges are kept.</p>
@@ -807,7 +815,7 @@ function renderStars(){const p=E.pendingStars(st);
   const a=E.advice(st),SN=W.starName;
   $('#p-stars').innerHTML=`<div class="starbox"><div><span class="big">${st.stars}</span><small>${SN} · each adds 2% to ${esc(W.name)} earnings</small></div><div><span class="big">+${p}</span><small>ready from this run</small></div></div>
    <div class="advice lv${a.level}"><b>${esc(a.text)}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
-   <p class="lead">${SN} come from everything you've ever earned in ${esc(W.name)}, so every run adds some and a big run adds more. Next ${W.unit} in ${fmt(E.nextStarAt(st))} ${W.cur}. The advice says "Good time" once the boost is big (double on your first restart, then +40%, easing to +12% as you restart more) and ${SN} have stopped piling up quickly.</p>
+   <p class="lead">${SN} come from everything you've ever earned in ${esc(W.name)}. Next ${W.unit} in <b>${fmt(E.nextStarAt(st))}</b> ${W.cur}.</p><p class="muted small">"Good time" shows when the boost is big enough and ${SN} have stopped piling up quickly.</p>
    <button class="go wide" id="restartBtn" ${p?'':'disabled'}>Restart for ${p} ${SN}</button>
    <h3>Perks</h3><p class="muted">Perks cost ${SN}, and spent ${SN} stop adding their 2%. Pick the ones that suit how you play.</p>`+
    E.PERKS.map(perkCard).join('')+
