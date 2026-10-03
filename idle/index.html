@@ -254,15 +254,31 @@ function fresh(now){const st={v:1,seed:(Math.random()*4294967296)>>>0,now,stars:
 /* ---- upgrades (one-off, per run): item ×3 every 150× the price, everything ×2 (events ×3) every 10,000× ---- */
 const UPS=[];
 const UPM=W.upM||3,UPG=W.upGap||150;
-W.tiers.forEach((T,i)=>{for(let k=0;k<16;k++)UPS.push({id:'a'+i+'_'+k,t:i,m:UPM,cost:T.cost*400*Math.pow(UPG,k),txt:`${T.name} ×${UPM}`});});
-const GG=W.gGap||1e4;for(let k=0;k<20;k++){const m=ADD?2:3;UPS.push({id:'g'+k,t:-1,m,cost:1e6*Math.pow(GG,k),txt:`Everything ×${m}`});}
+/* upgrades come in different kinds (profit, speed, price cuts, free items, managers), mixed the same way each run for a world */
+const hseed=[...W.id].reduce((a,c)=>a*31+c.charCodeAt(0),7)>>>0;const hf=(a,b)=>{let h=(hseed^(a*374761393+b*668265263))>>>0;h=Math.imul(h^(h>>>13),1274126177)>>>0;return ((h^(h>>>16))>>>0)/4294967296;};
+W.tiers.forEach((T,i)=>{for(let k=0;k<16;k++){const r=hf(i,k),cost=T.cost*400*Math.pow(UPG,k);let u;
+  if(r<.45)u={kind:'pr',m:UPM,txt:`${T.name} ×${UPM}`};else if(r<.55)u={kind:'pr',m:UPM+1,txt:`${T.name} ×${UPM+1}`};
+  else if(r<.75)u={kind:'sp',m:2,txt:`${T.name} works ×2 faster`};else if(r<.88)u={kind:'cost',m:0.7,txt:`${T.name} costs 30% less`};
+  else{const m=10*(k+1)+(i<4?20:0);u={kind:'free',m,txt:`+${m} free ${T.name}`};}
+  UPS.push(Object.assign({id:'a'+i+'_'+k,t:i,cost},u));}});
+const GG=W.gGap||1e4;for(let k=0;k<20;k++){const r=hf(99,k),cost=1e6*Math.pow(GG,k);const m=ADD?2:3;let u;
+  if(r<.55)u={kind:'all',m,txt:`Everything ×${m}`};else if(r<.75)u={kind:'allsp',m:1.5,txt:'Everything works ×1.5 faster'};
+  else if(r<.9)u={kind:'allcost',m:0.75,txt:'Everything costs 25% less'};else u={kind:'mgr',m:2.5,txt:'Managed items ×2.5'};
+  UPS.push(Object.assign({id:'g'+k,t:-1,cost},u));}
 UPS.sort((a,b)=>a.cost-b.cost);
 /* ---- milestones: each item has its own ladder, then a new milestone every +100 for good ---- */
 const LADDERS={early:[25,75,150,250,400,550,700,850,1000,1200,1400,1600],mid:[25,50,100,175,275,400,550,700,850,1000,1200,1400],
   late:[10,25,40,60,100,150,200,275,350,450,550,700],top:[5,15,25,40,60,90,125,175,250,325,400,500]};
 const LADDER_OF=['early','early','early','mid','mid','mid','mid','late','late','late','top','top'];
-function ladder(i){return LADDERS[LADDER_OF[i]];}
+function ladder(i){return W.ladders?W.ladders[i]:LADDERS[LADDER_OF[i]];}
 function rollMilestones(st){st.msR=W.tiers.map((_,i)=>ladder(i).map((ms,k)=>{
+    if(W.pers){const r=rng(st),o=()=>{let t=i;while(t===i)t=Math.floor(rng(st)*W.tiers.length);return t;};   // wild events: every item has its own personality
+      switch(W.pers[i]){
+      case 'jackpot':return k%3===2?(r<.5?{k:'profit',m:10}:{k:'all',m:2}):{k:'profit',m:1.2};
+      case 'helper':return r<.75?{k:'other',t:o(),m:4}:{k:'speed',m:2};
+      case 'surger':return k%2?{k:'surge',m:10}:{k:'speed',m:2};
+      case 'miser':return r<.6?{k:'cost',m:0.6}:{k:'profit',m:2};
+      default:return k%2?{k:'profit',m:2}:{k:'speed',m:2};}}
     if(k<2)return {k:'speed',m:2};const r=rng(st);
     if(!ADD){             // events: big swings, boosts to other items
       if(r<.34)return {k:'profit',m:rng(st)<.25?3:2};if(r<.54)return {k:'speed',m:2};
@@ -276,19 +292,20 @@ function rollMilestones(st){st.msR=W.tiers.map((_,i)=>ladder(i).map((ms,k)=>{
 function lastRung(i){const L=ladder(i);return L[L.length-1];}
 function nextMilestone(n,i){const L=ladder(i||0);const x=L.find(m=>m>n);if(x)return x;const b=lastRung(i||0);return b+W.msStep*(Math.floor((n-b)/W.msStep)+1);}
 function msText(st,i,k){if(k>=ladder(i).length)return `profit ×${W.msBeyond}`;const r=st.msR[i][k];switch(r.k){case 'speed':return 'speed ×2';case 'profit':return `profit ×${r.m}`;
-  case 'other':return `${W.tiers[r.t].name} ×${r.m}`;case 'cost':return 'price −15%';case 'all':return `everything ×${r.m}`;}return '';}
+  case 'other':return `${W.tiers[r.t].name} ×${r.m}`;case 'cost':return `price −${Math.round((1-r.m)*100)}%`;case 'surge':return `surge ×${r.m} for 2 min`;case 'all':return `everything ×${r.m}`;}return '';}
 function msInfo(st,i){const n=st.tiers[i].n,L=ladder(i);const next=nextMilestone(n,i);const k=L.indexOf(next);
   const prev=k>0?L[k-1]:k===0?0:next-W.msStep;return {prev,next,txt:msText(st,i,k<0?L.length:k)};}
 function crossed(i,a,b){return nextMilestone(a,i)<=b;}
 /* ---- all multipliers in one pass ---- */
 function starMult(st){return 1+((st.mod&&st.mod.starPer)||W.starPer)*st.stars;}
 function currentBand(st){return W.current?Math.floor((st.now||0)/W.current)%3:-1;}
-function costMult(st){let m=(st.mod&&st.mod.cost)||1;st.pups.forEach(p=>{if(p.k==='cost')m*=p.m;});return Math.max(m,0.25);}
+function costMult(st){let m=(st.mod&&st.mod.cost)||1;st.pups.forEach(p=>{if(p.k==='cost')m*=p.m;});UPS.forEach(u=>{if(u.kind==='allcost'&&st.ups[u.id])m*=u.m;});return Math.max(m,0.25);}
 function fx(st){if(!st.msR)rollMilestones(st);const N=W.tiers.length;const pr=new Array(N).fill(1),sp=new Array(N).fill(1),cost=new Array(N).fill(1);let all=1;
   st.tiers.forEach((T,i)=>{const L=ladder(i);for(let k=0;k<L.length&&T.n>=L[k];k++){const r=st.msR[i][k];
       if(r.k==='speed')sp[i]*=r.m;else if(r.k==='profit')pr[i]*=r.m===2&&st.perks.msBoost?[2,2.25,2.5,2.75][st.perks.msBoost]:r.m;else if(r.k==='other')pr[r.t]*=r.m;else if(r.k==='cost')cost[i]*=r.m;else if(r.k==='all')all*=r.m;}
     const b=L[L.length-1];if(T.n>=b+W.msStep)pr[i]*=Math.pow(W.msBeyond,Math.floor((T.n-b)/W.msStep));});
-  UPS.forEach(u=>{if(st.ups[u.id]){if(u.t<0)all*=u.m;else pr[u.t]*=u.m;}});
+  UPS.forEach(u=>{if(!st.ups[u.id])return;switch(u.kind){case 'pr':pr[u.t]*=u.m;break;case 'sp':sp[u.t]*=u.m;break;case 'all':all*=u.m;break;
+    case 'allsp':for(let i=0;i<N;i++)sp[i]*=u.m;break;case 'mgr':for(let i=0;i<N;i++)if(st.tiers[i].mgr)pr[i]*=u.m;break;}});
   if(ADD){let aA=0,aS=0,aM=0;const aT=new Array(N).fill(0),aSp=new Array(N).fill(0),aG=[0,0,0];
     st.pups.forEach(p=>{switch(p.k){case 'all':aA+=p.m;break;case 'tier':aT[p.t]+=p.m;break;case 'speed':aSp[p.t]+=p.m;break;case 'grpspeed':aG[p.t]+=p.m;break;case 'allspeed':aS+=p.m;break;case 'mgr':aM+=p.m;break;}});
     for(let i=0;i<N;i++){pr[i]*=1+aA+aT[i]+(st.tiers[i].mgr?aM:0);sp[i]*=1+aS+aSp[i]+aG[Math.floor(i/4)];}}
@@ -307,16 +324,18 @@ function perSec(st,i,f){const T=st.tiers[i];if(!T.n)return 0;f=f||fx(st);return 
 function incomeManaged(st){const f=fx(st);let s=0;st.tiers.forEach((T,i)=>{if(T.mgr)s+=perSec(st,i,f);});return s;}
 function incomeAll(st){const f=fx(st);let s=0;st.tiers.forEach((T,i)=>{s+=perSec(st,i,f);});return s;}
 /* ---- buying ---- */
-function unitCost(st,i){let c=1;const L=ladder(i),n=st.tiers[i].n;for(let k=0;k<L.length&&n>=L[k];k++){const r=st.msR[i][k];if(r.k==='cost')c*=r.m;}return c*costMult(st);}
+function unitCost(st,i){let c=1;UPS.forEach(u=>{if(u.kind==='cost'&&u.t===i&&st.ups[u.id])c*=u.m;});const L=ladder(i),n=st.tiers[i].n;for(let k=0;k<L.length&&n>=L[k];k++){const r=st.msR[i][k];if(r.k==='cost')c*=r.m;}return c*costMult(st);}
 function costN(st,i,k){const T=W.tiers[i];const n=st.tiers[i].n;return T.cost*Math.pow(T.g,n)*(Math.pow(T.g,k)-1)/(T.g-1)*unitCost(st,i);}
 function maxAfford(st,i){const T=W.tiers[i];const c0=T.cost*Math.pow(T.g,st.tiers[i].n)*unitCost(st,i);if(st.cash<c0)return 0;
   return Math.floor(Math.log(st.cash*(T.g-1)/c0+1)/Math.log(T.g));}
 function allowed(st,i){return !(st.mod&&st.mod.max&&i>=st.mod.max);}
-function buy(st,i,k){if(k<=0||!allowed(st,i))return false;const c=costN(st,i,k);if(c>st.cash)return false;st.cash-=c;st.tiers[i].n+=k;checkGroups(st);return true;}
+function buy(st,i,k){if(k<=0||!allowed(st,i))return false;const c=costN(st,i,k);if(c>st.cash)return false;st.cash-=c;const n0=st.tiers[i].n;st.tiers[i].n+=k;
+  if(W.pers){const L=ladder(i);L.forEach((ms,j)=>{const r=st.msR[i][j];if(r&&r.k==='surge'&&n0<ms&&st.tiers[i].n>=ms)(st.timed=st.timed||[]).push({k:'ttier',t:i,m:r.m,left:120000,txt:`${W.tiers[i].name} surge ×${r.m} for 2 minutes`});});}
+  checkGroups(st);return true;}
 function mgrPrice(st,i){return W.mgrCost[i]*costMult(st)*((st.mod&&st.mod.mgr)||1);}
 function buyMgr(st,i){const c=mgrPrice(st,i);if(st.tiers[i].mgr||c>st.cash||!st.tiers[i].n)return false;st.cash-=c;st.tiers[i].mgr=true;return true;}
 function upPrice(st,u){return u.cost*costMult(st);}
-function buyUp(st,id){const u=UPS.find(x=>x.id===id);if(!u||st.ups[id])return false;const c=upPrice(st,u);if(c>st.cash)return false;st.cash-=c;st.ups[id]=true;return true;}
+function buyUp(st,id){const u=UPS.find(x=>x.id===id);if(!u||st.ups[id])return false;const c=upPrice(st,u);if(c>st.cash)return false;st.cash-=c;st.ups[id]=true;if(u.kind==='free'){st.tiers[u.t].n+=u.m;checkGroups(st);}return true;}
 /* ---- group targets: every item in a band (or all 12) reaches a count ---- */
 const PICK_MS=180000;
 function offer(st,big,src){const opts=[];let guard=0;const want=st.perks.choice4?4:3;while(opts.length<want&&guard++<40){const p=drawPup(st,big);const key=o=>(o.k==='tier'||o.k==='speed'||o.k==='ttier')?o.k+o.t:o.k;if(!opts.some(o=>key(o)===key(p)))opts.push(p);}
@@ -389,7 +408,7 @@ function goldReward(st){const r=rng(st);const inc=Math.max(incomeAll(st),1);
   st.boost={k:'fast',m:3,until:st.now+d*1000};return {k:'fast',txt:(W.goldFast||'Overclock')+`: ×3 speed for ${d}s`};}
 function autoBuy(st){const L=Math.min(3,st.perks.auto||0);if(!L)return;const t=st.now||0;if(t-(st.abT||0)<[0,5000,2000,500][L])return;st.abT=t;
   const frac=[0,.01,.02,.05][L],most=[0,1,5,20][L];st.tiers.forEach((T,i)=>{if(!T.mgr)return;let k=0;while(k<most&&costN(st,i,1)<st.cash*frac){buy(st,i,1);k++;}});}
-return {UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,fx,
+return {pers:W.pers,UPS,PERKS,PUPS,fresh,newRun,tick,tap,buy,buyMgr,buyUp,buyPerk,perkCost,costN,maxAfford,mgrPrice,upPrice,perSec,payout,cycle,fx,
   incomeAll,incomeManaged,away,noteStars,advice,allowed,W,msText,msInfo,crossed,msFx,rollMilestones,perkImpact,pendingStars,starsFor,nextStarAt,migrate,restart,starMult,
   nextMilestone,ladder,choosePup,autoPick,checkGroups,goldGap,goldReward,autoBuy,buyAllUps,hireAll,nextAll,quickCan,rng,currentBand,ADD};
 };
@@ -421,6 +440,12 @@ const DEFS={
   bandTargets:BAND_T,fullTargets:FULL_T,starBase:1.5e5,sa:14,sp:0.23,msBeyond:1.5,upM:2,upGap:1000,gGap:1e5}};
 DEFS.event=Object.assign({},DEFS.belt,{tiers:mkTiers(DEFS.belt.tiers.map(T=>T.name),1,1,1,true),id:'event',stack:'mult',quickCost:[50,200,800],starPer:0.05,msBeyond:2,sa:14,sp:0.12,starBase:1e8,upM:3,upGap:150,gGap:1e4});
 const ECONS={belt:ECON_MAKE(DEFS.belt),coffee:ECON_MAKE(DEFS.coffee),salvage:ECON_MAKE(DEFS.salvage),event:ECON_MAKE(DEFS.event)};
+/* weekly events get a wild economy: items priced out of order, odd milestone ladders and items with personalities */
+function eventEcon(seed){const key='ev_'+seed;if(ECONS[key])return ECONS[key];let s=(seed>>>0)||1;const r=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};const pick=a=>a[Math.floor(r()*a.length)];
+  const LS=[[10,20,30,40,50,60,70,80,90,100,125,150],[50,150,400,900,1500],[7,13,29,61,127,255,511],[5,10,15,20,25,35,45,60,80,100],[25,75,150,250,400,550,700],[10,25,40,60,100,150,200,275],[3,9,27,81,243]];
+  const tiers=DEFS.event.tiers.map(T=>({name:T.name,cost:T.cost*Math.pow(10,(r()-0.5)*3),g:pick([1.05,1.07,1.09,1.12,1.15]),t:T.t*(0.3+r()*2.7),rev:T.rev*(0.3+r()*2.7),pw:pick([0.9,1,1,1.1,1.25])}));
+  const def=Object.assign({},DEFS.event,{id:key,tiers,ladders:tiers.map(()=>pick(LS)),pers:tiers.map(()=>pick(['steady','jackpot','helper','surger','miser'])),mgrCost:DEFS.event.mgrCost.map(c=>c*(0.5+r()*3))});
+  return ECONS[key]=ECON_MAKE(def);}
 /* bonus events get their own shuffled economy: every item has different prices, growth, speed and payout curve */
 function bonusEcon(seed){const key='bonus_'+seed;if(ECONS[key])return ECONS[key];let s=seed>>>0;const r=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};
   const pick=a=>a[Math.floor(r()*a.length)];const names=['Scrap Drone','Comet Net','Ice Hook','Dust Sifter','Gravity Pump','Orbit Crane','Meteor Mill','Nova Press','Void Siphon','Quasar Tap','Nebula Loom','Pulsar Engine'];
@@ -496,7 +521,7 @@ return {
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.08.01';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.09.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -512,8 +537,12 @@ const raw=load();
 if(raw&&raw.v===4)P=raw;
 else P={v:4,cur:'belt',w:{belt:ECONS.belt.fresh(now())},ev:null,tok:0,evBadges:[],audio:raw&&raw.audio,saved:now(),season:!!raw,unl:{}};   // V2.01: complete fresh start, only sound settings kept
 P.evBadges=P.evBadges||[];P.tok=P.tok||0;P.audio=P.audio||{music:false,sfx:false};P.unl=P.unl||{};
-const TOK_CAP=60;   // most tokens one event can give
-function econOf(id){return id==='bonus'?ECONS.event:id==='event'&&P.ev&&P.ev.eco?bonusEcon(P.ev.eco):ECONS[id];}
+const TOK_CAP=100;   // most tokens one event can give
+function econOf(id){return id==='bonus'?ECONS.event:id==='event'&&P.ev&&P.ev.eco?(P.ev.wild?eventEcon(P.ev.eco):bonusEcon(P.ev.eco)):ECONS[id];}
+/* two weekly events can run at once: the weekend event (Fri to Tue) and the Sunday event (Sun to Wed). P.ev is the one being looked at, P.evB the other. */
+function slotEv(s){return P.ev&&(P.ev.slot||'fri')===s?P.ev:P.evB&&(P.evB.slot||'fri')===s?P.evB:null;}
+function useSlot(s){if(P.ev&&(P.ev.slot||'fri')===s)return true;if(P.evB&&(P.evB.slot||'fri')===s){const a=P.ev;P.ev=P.evB;P.evB=a||null;return true;}return false;}
+function evName(e){return e.bonus?'Bonus event':(e.slot==='sun'?'Sunday event':'Weekend event');}
 function evE(){return econOf('event');}
 function stateOf(id){return id==='event'?(P.ev&&P.ev.st):id==='bonus'?(P.br&&P.br.st):P.w[id];}
 function worldIds(){return Object.keys(P.w).concat(P.ev?['event']:[],P.br?['bonus']:[]);}
@@ -543,7 +572,7 @@ function endRound(quit){const b=P.br;if(!b)return;const R=roundOf(b.id);const v=
   openModal(`<h2>${esc(R.name)}: time!</h2><div class="bigstat"><span style="color:${MEDAL_COL[m]}">${m?MEDAL[m]:'No medal'}</span><small>${esc(scoreText(R,v))}${pb?' · new personal best':''}</small></div>
    <p>${gain?`<b>+${gain} trophy points</b>. `:''}Trophy points: <b>${P.tro.pts}</b> (${troRank()}).${m<3?` Next medal at ${esc(scoreText(R,R.goals[m]))}.`:' Top medal!'}</p><p class="muted small">Bonus Rounds only add trophy points. Your worlds are not changed.</p>
    <div class="mact"><button class="ghost" id="awayOk">Done</button><button class="go" data-round="${R.id}">Play again</button></div>`);}
-const TOK_PCT=0.25;   // each event token adds 0.25% to every world (a full event: +15%)
+const TOK_PCT=0.15;   // each event token adds 0.15% to every world (a full event: +15%)
 function tokPct(n){return +(n*TOK_PCT).toFixed(2);}
 function sharedMult(id){let other=0;for(const k in P.w)if(k!==id)other+=P.w[k].starsEver||0;return (1+0.1*Math.sqrt(other/100))*(1+TOK_PCT/100*P.tok);}   // a small bonus that grows slowly
 /* away earnings build up per world and are collected when you next open that world */
@@ -592,15 +621,15 @@ function chalGen(k){const S=P.ev.st;const max=(S.mod&&S.mod.max)||12;const X=evE
   if(ty==='pupsact'){c.need=Math.min(12,c.need);const hv=S.pups.length+(S.timed||[]).length;if(hv>=c.need)c.need=hv+1;}
   if(ty==='mgr'){const have=S.tiers.filter(T=>T.mgr).length;if(have>=c.need){if(have>=max)return chalGen(k);c.need=have+1;}}
   if(ty==='rate'){const cur=evE().incomeAll(S);c.need=Math.max(c.need,Math.pow(10,Math.ceil(Math.log10(Math.max(1,cur)*(wk?2+k/4:4+k)))));}
-  c.ty=ty;c.k=k;c.tok=P.ev.bonus?2+Math.floor(k/3):1+Math.floor(k/5);c.base=0;c.base=ty==='earn'?S.total:ty==='gold'?P.ev.gold:ty==='pup'?(S.pupEver||0):ty==='restart'?S.runs:0;return c;}
-function tokFor(k){return P.ev&&P.ev.bonus?2+Math.floor(k/3):1+Math.floor(k/5);}
+  c.ty=ty;c.k=k;c.tok=P.ev.bonus?2+Math.floor(k/3):1+Math.floor(k/4);c.base=0;c.base=ty==='earn'?S.total:ty==='gold'?P.ev.gold:ty==='pup'?(S.pupEver||0):ty==='restart'?S.runs:0;return c;}
+function tokFor(k){return P.ev&&P.ev.bonus?2+Math.floor(k/3):1+Math.floor(k/4);}
 /* weekly event: a finished challenge's slot refills after a wait that grows (20 min, then 3 min longer each time), so the event stretches over the weekend */
 /* weekly event: tick off (collect) every challenge in the batch of 3 before the next batch opens */
 function collectChal(ci){const c=P.ev.chal[ci];if(!c||!c.done||c.got)return;const g=Math.max(0,Math.min(c.tok,capOf()-P.ev.tok));P.ev.tok+=g;P.ev.done++;c.got=true;AUDIO.play('pick');
   toast(`<b>+${g} token${g===1?'':'s'}</b> ${esc(chalText(c))}`,'star');
   if(P.ev.chal.every(x=>x.got)&&P.ev.tok<capOf()){P.ev.chal=[];fillChal();P.ev.batch=(P.ev.batch||1)+1;toast('<b>New challenges!</b> A fresh batch of 3 is open.','star');}
   save();if(P.ev.tok>=capOf())finishEvent(true);else render(true);}
-const EV_MEDALS=[[20,'Bronze','#D9905A'],[40,'Silver','#C9CFE0'],[60,'Gold','#FFD37A']];
+const EV_MEDALS=[[30,'Bronze','#D9905A'],[65,'Silver','#C9CFE0'],[100,'Gold','#FFD37A']];
 function evMedal(t){let m=null;EV_MEDALS.forEach(x=>{if(t>=x[0])m=x;});return m;}
 function fillChal(){while(P.ev.chal.length<3)P.ev.chal.push(chalGen(P.ev.k++));}
 function capOf(){return (P.ev&&P.ev.cap)||TOK_CAP;}
@@ -609,23 +638,29 @@ function checkChal(){if(!P.ev)return;let got=false;for(let ci=0;ci<P.ev.chal.len
     if(chalValue(c)>=c.need){const g=Math.max(0,Math.min(c.tok,capOf()-P.ev.tok));P.ev.tok+=g;P.ev.done++;got=true;
     toast(`<b>Challenge done</b> ${esc(chalText(c))} · ${g?'+'+g+(P.ev.bonus?' trophy points':' tokens'):'limit reached'}`,'star');AUDIO.play('challenge');P.ev.chal[ci]=chalGen(P.ev.k++);}}if(got)save();if(P.ev.tok>=capOf())finishEvent(true);}
 function eventsOpen(){return (P.w.belt.runs||0)>=1;}
-function eventCheck(){const t=now();const w=eventWindow(t);
-  if(P.ev){const done=P.ev.tok>=((P.ev&&P.ev.cap)||TOK_CAP);if(done||t>=P.ev.end||(!P.ev.bonus&&(P.ev.id!==w.id||!w.live)))finishEvent(done);}
-  if(w.live&&!P.ev&&eventsOpen()&&P.lastEv!==w.id){P.lastEv=w.id;const tw=twistFor(w.id);const S=ECONS.event.fresh(t);S.seed=(w.id*7919)>>>0;S.mod=tw.mod;S.seen=t;ECONS.event.newRun(S);
-    P.ev={id:w.id,end:w.end,tw:tw.id,st:S,tok:0,gold:0,k:0,chal:[],done:0};fillChal();save();}
+function sunWindow(t){const d=new Date(t);const back=d.getDay();const s=new Date(d.getFullYear(),d.getMonth(),d.getDate()-back);
+  const start=s.getTime(),end=new Date(s.getFullYear(),s.getMonth(),s.getDate()+3).getTime(),next=new Date(s.getFullYear(),s.getMonth(),s.getDate()+7).getTime();return {id:Math.round(start/DAY),start,end,next,live:t<end};}
+function sunTwist(id){const a=twistFor(id+3),f=twistFor(eventWindow(id*DAY).id);return a.id===f.id?TWISTS[(TWISTS.indexOf(a)+1)%TWISTS.length]:a;}
+function newEvent(slot,w,tw){const t=now();const eco=((w.id*7919)^(slot==='sun'?0x5bd1e995:0))>>>0;const X=eventEcon(eco);const S=X.fresh(t);S.seed=eco;S.mod=tw.mod;S.seen=t;X.newRun(S);
+  const e={id:w.id,end:w.end,tw:tw.id,st:S,tok:0,gold:0,k:0,chal:[],done:0,slot,eco,wild:true};if(!P.ev)P.ev=e;else if(!P.evB)P.evB=e;else return;
+  const keep=P.ev;P.ev=e;fillChal();P.ev=keep;save();}
+function eventCheck(){const t=now();const w=eventWindow(t),w2=sunWindow(t);
+  [['fri',w],['sun',w2]].forEach(([s,win])=>{const e=slotEv(s);if(!e)return;const done=e.tok>=(e.cap||TOK_CAP);if(done||t>=e.end||(!e.bonus&&(e.id!==win.id||!win.live)))finishEvent(done,e);});
+  if(w.live&&!slotEv('fri')&&eventsOpen()&&P.lastEv!==w.id){P.lastEv=w.id;newEvent('fri',w,twistFor(w.id));}
+  if(w2.live&&!slotEv('sun')&&eventsOpen()&&P.lastEv2!==w2.id){P.lastEv2=w2.id;newEvent('sun',w2,sunTwist(w2.id));}
   return w;}
 /* an event ends early once its token limit is reached; finishing the weekly event unlocks up to 2 short bonus events that week */
-function finishEvent(early){const e=P.ev;if(!e)return;const tw=TWISTS.find(x=>x.id===e.tw)||TWISTS[0];P.ev=null;if(e.bonus)P.tro.pts+=e.tok;else P.tok+=e.tok;
-  if(early&&!e.bonus)P.evDone=e.id;
-  P.evBadges.push({id:e.id,name:(e.bonus?'Bonus: ':'')+tw.name,tok:e.tok,done:e.done,medal:e.bonus?null:(evMedal(e.tok)||[0,''])[1]});if(P.cur==='event'){if(uiReady)switchWorld('belt',true);else P.cur='belt';}
+function finishEvent(early,ev){const e=ev||P.ev;if(!e)return;const tw=TWISTS.find(x=>x.id===e.tw)||TWISTS[0];const wasActive=P.ev===e;if(P.ev===e)P.ev=null;else if(P.evB===e)P.evB=null;if(!P.ev&&P.evB){P.ev=P.evB;P.evB=null;}if(e.bonus)P.tro.pts+=e.tok;else P.tok+=e.tok;
+  if(early&&!e.bonus&&(e.slot||'fri')==='fri')P.evDone=e.id;
+  P.evBadges.push({id:e.id,slot:e.slot||'fri',name:(e.bonus?'Bonus: ':e.slot==='sun'?'Sunday: ':'')+tw.name,tok:e.tok,done:e.done,medal:e.bonus?null:(evMedal(e.tok)||[0,''])[1]});if(P.cur==='event'&&wasActive){if(uiReady)switchWorld('belt',true);else P.cur='belt';}
   const b=bonusAvail();
   if(e.tok)setTimeout(()=>openModal(`<h2>${esc(tw.name)} ${early?'complete!':'is over'}</h2><p>You finished <b>${e.done}</b> challenge${e.done===1?'':'s'}${early?' and reached the token limit':''}.</p>${e.bonus?`<div class="bigstat"><span>+${e.tok}</span><small>trophy points</small></div><p>Trophy points: <b>${P.tro.pts}</b> (${troRank()}).`:`<div class="bigstat"><span>${e.tok} tokens</span><small>${evMedal(e.tok)?evMedal(e.tok)[1]+' medal · ':''}+${tokPct(e.tok)}% to every world, for good</small></div><p>Your event bonus is now <b>+${tokPct(P.tok)}%</b>.`}${b?' You can play another 3-hour bonus event with a new twist and a shuffled economy, for trophy points.':' A new event opens next Friday.'}</p><div class="mact">${b?'<button class="ghost" id="awayOk">Later</button><button class="go" data-bonus>Start a bonus event</button>':'<button class="go" id="awayOk">Nice</button>'}</div>`),300);save();}
 function bonusUsed(){const w=eventWindow(now());return P.bonusWk===w.id?(P.bonusN||0):0;}
-function bonusAvail(){const w=eventWindow(now());return w.live&&!P.ev&&P.evDone===w.id;}
+function bonusAvail(){const w=eventWindow(now());return w.live&&!slotEv('fri')&&P.evDone===w.id&&!(P.ev&&P.evB);}
 function startBonus(){if(!bonusAvail())return;const t=now(),w=eventWindow(t);const n=bonusUsed();P.bonusWk=w.id;P.bonusN=n+1;
   const avoid=[twistFor(w.id).id,P.lastBonusTw];const pool=TWISTS.filter(x=>!avoid.includes(x.id));const tw=pool[Math.floor(Math.random()*pool.length)];P.lastBonusTw=tw.id;
   const eco=(Math.random()*4294967296)>>>0;const X=bonusEcon(eco);const S=X.fresh(t);S.mod=tw.mod;S.seen=t;X.newRun(S);
-  P.ev={id:w.id,end:t+3*3600e3,tw:tw.id,st:S,tok:0,gold:0,k:3,chal:[],done:0,bonus:true,cap:30,eco};fillChal();save();switchWorld('event');}
+  const e={id:w.id,end:t+3*3600e3,tw:tw.id,st:S,tok:0,gold:0,k:3,chal:[],done:0,bonus:true,cap:30,eco,slot:'fri'};if(P.ev){P.evB=P.ev;}P.ev=e;fillChal();save();switchWorld('event');}
 /* V2.07: reopen this week's weekly event once, with the new slower challenge track (its old tokens and badge are taken back) */
 if(!P.reopen1){P.reopen1=1;const w=eventWindow(now());if(w.live&&P.lastEv===w.id&&(!P.ev||P.ev.bonus)){if(P.ev&&P.ev.bonus){P.tro.pts+=P.ev.tok;P.ev=null;if(P.cur==='event')P.cur='belt';}
   const bi=P.evBadges.findIndex(b=>b.id===w.id&&!/^Bonus/.test(b.name));if(bi>=0){P.tok=Math.max(0,P.tok-P.evBadges[bi].tok);P.evBadges.splice(bi,1);}P.lastEv=null;P.evDone=null;}}
@@ -659,14 +694,14 @@ const UNLOCK={coffee:{need:500,from:'belt'},salvage:{need:500,from:'coffee'}};
 function unlocked(id){const u=UNLOCK[id];if(!u)return true;const S=P.w[u.from];return !!S&&(S.starsEver||0)>=u.need;}
 function unlockCoffee(){return unlocked('coffee');}
 function checkUnlocks(){['coffee','salvage'].forEach(id=>{if(!P.unl[id]&&unlocked(id)){P.unl[id]=1;toast(`<b>${esc(ECONS[id].W.name)} unlocked</b> Find it on the Worlds tab.`,'star');AUDIO.play('challenge');}});
-  if(!P.unl.event&&eventsOpen()){P.unl.event=1;toast('<b>Weekly events unlocked</b> A new one opens every Friday. Find it on the Worlds tab.','star');}}
+  if(!P.unl.event&&eventsOpen()){P.unl.event=1;toast('<b>Weekly events unlocked</b> Two each week: the weekend event from Friday and the Sunday event. Find them on the Worlds tab.','star');}}
 const WNUM={belt:1,coffee:2,salvage:3};
 function audioBtns(){const m=$('#musBtn'),x=$('#sfxBtn');m.setAttribute('aria-label',P.audio.music?'Music is on. Turn it off':'Music is off. Turn it on');x.setAttribute('aria-label',P.audio.sfx?'Sounds are on. Turn them off':'Sounds are off. Turn them on');m.setAttribute('aria-pressed',String(P.audio.music));x.setAttribute('aria-pressed',String(P.audio.sfx));}
 function switchWorld(id,quiet){if(UNLOCK[id]&&!P.w[id]){if(!unlocked(id))return;P.w[id]=ECONS[id].fresh(now());}
   if(id==='event'&&!P.ev)return;if(id==='bonus'&&!P.br)return;if(st)st.seen=now();P.cur=id;AUDIO.world(id==='bonus'?'event':id);E=econOf(id);W=E.W;st=stateOf(id);st.now=now();st.nextGold=Math.max(st.nextGold||0,now()+15000);
-  $('#gold').hidden=true;goldIcon();const r=redeem(id);buildEarners();labels();if(!quiet){setTab('earners');if(r&&r.gap>30000)welcome(r);else toast(`<b>${esc(id==='event'?'Weekly event':W.name)}</b> ${id==='event'?'Finish challenges for tokens.':esc(W.blurb)}`);}save();}
+  $('#gold').hidden=true;goldIcon();const r=redeem(id);buildEarners();labels();if(!quiet){setTab('earners');if(r&&r.gap>30000)welcome(r);else toast(`<b>${esc(id==='event'?evName(P.ev):W.name)}</b> ${id==='event'?'Finish challenges for tokens.':esc(W.blurb)}`);}save();}
 function labels(){const ev=P.cur==='event',br=P.cur==='bonus';const tw=ev?TWISTS.find(x=>x.id===P.ev.tw):null;
-  $('#wname').textContent=br?`Bonus round · ${roundOf(P.br.id).name}`:ev?`${P.ev.bonus?'Bonus':'Weekly'} event · ${tw.name}`:`World ${WNUM[P.cur]} · ${W.name}`;$('#curlbl').textContent=W.cur;
+  $('#wname').textContent=br?`Bonus round · ${roundOf(P.br.id).name}`:ev?`${evName(P.ev)} · ${tw.name}`:`World ${WNUM[P.cur]} · ${W.name}`;$('#curlbl').textContent=W.cur;
   $('#starlbl').textContent=br?'Trophies':ev?'Tokens':W.starName;$('[data-tab="stars"] .tl').textContent=br?'Round':ev?'Event':W.starName;document.body.dataset.world=br?'event':P.cur;}
 function setTab(t){tab=t;$$('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));$$('section.pane').forEach(p=>p.hidden=p.id!=='p-'+t);render(true);}
 /* ---- toasts ---- */
@@ -694,7 +729,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.dataset.export!=null){const c=progressCode();openModal(`<h2>Progress code</h2><p>Copy this and paste it to Claude to get a check-up on how your game is going. It doesn't change your game.</p><textarea id="codeBox" readonly rows="6">${esc(c)}</textarea><div class="mact"><button class="ghost" id="rsNo">Close</button><button class="go" id="copyCode">Copy</button></div>`);return;}
   if(b.id==='copyCode'){const ta=$('#codeBox');const done=()=>{b.textContent='Copied';toast('<b>Copied</b> Paste it into your chat.');};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();document.execCommand('copy');done();});else{ta.select();document.execCommand('copy');done();}return;}
-  if(b.dataset.world){switchWorld(b.dataset.world);return;}
+  if(b.dataset.world){if(b.dataset.world==='event'&&b.dataset.slot){if(P.cur==='event'&&P.ev&&(P.ev.slot||'fri')===b.dataset.slot)return;if(P.cur==='event'&&st)st.seen=now();useSlot(b.dataset.slot);if(P.cur==='event'){P.cur='';}}switchWorld(b.dataset.world);return;}
   if(b.id==='restartBtn'){openRestart();return;}
   if(b.id==='rsYes'){if(P.cur==='event'&&P.ev)P.ev.goldRun=0;const p=E.restart(st);AUDIO.play('restart');st.now=now();st.seen=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${SNm()}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
   if(b.id==='rsNo'||b.id==='awayOk'){closeModal();return;}
@@ -731,7 +766,8 @@ function render(full){const t=now();
   else if(ev){const a=E.advice(st);pe.textContent=`Ends in ${fmtT((P.ev.end-t)/1000)} · ${P.ev.done} done`+(a.p?` · +${a.p} Event Stars`:'');pe.className='pill'+(a.level===2?' lv2':'');}
   else{const a=E.advice(st);const sh=a.text.split(',')[0].replace(' to restart','');pe.textContent=a.p?`${sh} · +${fmt(a.p)} ★ → ×${a.b.toFixed(2)}`:a.text;pe.className='pill lv'+a.level;}
   const cn=P.ev&&!P.ev.bonus?P.ev.chal.filter(c=>c.done&&!c.got).length:0;const cp2=$('#colpill');cp2.hidden=!cn||!ev;if(cn&&ev)cp2.textContent=`✓ ${cn} to collect`;
-  const eb=$('#evpill');eb.hidden=!P.ev||ev;if(P.ev&&!ev){eb.textContent=`Event · ${TWISTS.find(x=>x.id===P.ev.tw).name} · ${fmtT((P.ev.end-t)/1000)}`+(cn?` · ✓ ${cn} to collect`:'');eb.classList.toggle('hot',!!cn);}
+  const oe=ev?P.evB:P.ev;const eb=$('#evpill');eb.hidden=!oe;if(oe){const pcn=oe.bonus?0:oe.chal.filter(c=>c.done&&!c.got).length;eb.dataset.slot=oe.slot||'fri';
+    eb.textContent=`${ev?'Also live':(oe.slot==='sun'?'Sunday event':'Event')} · ${TWISTS.find(x=>x.id===oe.tw).name} · ${fmtT((oe.end-t)/1000)}`+(pcn?` · ✓ ${pcn} to collect`:'')+(!ev&&P.evB?' · +1 more':'');eb.classList.toggle('hot',!!pcn);}
   const cb=E.currentBand(st);const cp=$('#curpill');cp.hidden=cb<0;if(cb>=0){const left=W.current-(t%W.current);cp.textContent=`Current: ${W.bands[cb].name} ×${W.curX} · ${mmss(left)}`;}
   if(tab==='earners'){const q=$('#quick');const L=st.perks.quick||0;q.hidden=L<1;if(L>=1){const can=E.quickCan(st);
     const h=`<button data-quick="ups" ${can.ups?'':'disabled'}>All upgrades</button>`+(L>=2?`<button data-quick="mgr" ${can.mgr?'':'disabled'}>All managers</button>`:'')+(L>=3?`<button data-quick="next" ${can.next?'':'disabled'}>All milestones</button>`:'');if(q.innerHTML!==h)q.innerHTML=h;}
@@ -792,7 +828,7 @@ function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(
    <div class="trl"><b>${tk} / ${cap}</b> ${P.ev.bonus?'trophy points':'tokens'}${md&&!P.ev.bonus?` · <span style="color:${md[2]}">${md[1]} medal</span>`:''}<span>${P.ev.done} done · ends in ${fmtT((P.ev.end-now())/1000)}</span></div></div>
    ${chalHTML()}<p class="muted small">Next rewards: ${nextR.map(v=>'+'+v).join(', ')}. One swap an hour.</p>
    <div class="advice lv1"><b>${esc(tw.name)}</b><span>${esc(tw.txt)}</span></div>
-   <p class="lead">${P.ev.bonus?'Bonus event points go to your trophy tally only.':`Finish challenges, then tap Collect to tick them off. When all three in a batch are collected, the next batch opens. Medals at 20, 40 and 60 tokens. Later challenges need event restarts, so use your Event Stars. Each token adds +${TOK_PCT}% to every world, for good (+${tokPct(P.tok)}% so far).`}</p>
+   <p class="lead">${P.ev.bonus?'Bonus event points go to your trophy tally only.':`Finish challenges, then tap Collect to tick them off. When all three in a batch are collected, the next batch opens. Medals at 30, 65 and 100 tokens. Later challenges need event restarts, so use your Event Stars. Each token adds +${TOK_PCT}% to every world, for good (+${tokPct(P.tok)}% so far).`}</p>
    <h3>Event Stars</h3><p class="lead">Stuck? Restart the event to bank Event Stars. Each adds ${Math.round(((st.mod&&st.mod.starPer)||W.starPer)*100)}% to event earnings, for this event only. Tokens and finished challenges are kept.</p>
    <div class="advice lv${a.level}"><b>${esc(a.text.replace('Stars','Event Stars'))}</b>${a.p?`<span>Restarting now: ×${a.a.toFixed(2)} → ×${a.b.toFixed(2)} (+${Math.round(a.gain*100)}%)</span>`:''}</div>
    <button class="go wide" id="restartBtn">${a.p?`Restart for ${a.p} Event Stars`:'Restart the event (no Event Stars yet)'}</button><p class="muted small">Event Stars: ${st.stars} (×${E.starMult(st).toFixed(2)}). Event restarts: ${st.runs}. This event gives at most ${capOf()} tokens and ends early when you reach them.</p>
@@ -801,10 +837,12 @@ function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(
 function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||0,cs=P.w.coffee?P.w.coffee.starsEver||0:0;const card=(id,name,tag,txt,on,lock,btn)=>`<div class="wcard${on?' on':''}${lock?' lock':''}"><span class="tag">${tag}</span><b>${esc(name)}</b><small>${txt}</small>${btn?`<button class="ghost small" data-world="${id}">${btn}</button>`:''}</div>`;
   const tw=P.ev?TWISTS.find(x=>x.id===P.ev.tw):twistFor(eventWindow(w.next).id);
   const wc=(id,num,short)=>{const X=ECONS[id].W,on=unlocked(id),u=UNLOCK[id];return card(id,X.name,P.cur===id?'Playing':on?'World '+num:'Locked',esc(X.blurb)+(on?'':` Unlocks when ${esc(ECONS[u.from].W.name)} reaches ${u.need} ${esc(ECONS[u.from].W.starName)} (${fmt(u.from==='belt'?bs:cs)}/${u.need}).`),P.cur===id,!on,on&&P.cur!==id?(P.w[id]?'Go to '+short:'Open '+X.name):'');};
-  $('#p-worlds').innerHTML=`<p class="lead">Each world plays at its own speed with its own twist. ${esc(ECONS.belt.W.starName)}, Beans and Relics from your other worlds give a small bonus that grows slowly (×${sharedMult(P.cur).toFixed(2)} here now), and event tokens add 0.25% each to every world.</p><div class="worlds">
+  $('#p-worlds').innerHTML=`<p class="lead">Each world plays at its own speed with its own twist. ${esc(ECONS.belt.W.starName)}, Beans and Relics from your other worlds give a small bonus that grows slowly (×${sharedMult(P.cur).toFixed(2)} here now), and event tokens add 0.15% each to every world.</p><div class="worlds">
    ${card('belt','Asteroid Belt',P.cur==='belt'?'Playing':'World 1',esc(ECONS.belt.W.blurb),P.cur==='belt',false,P.cur==='belt'?'':'Go to the Belt')}
    ${wc('coffee',2,'Coffee')}${wc('salvage',3,'the Deep Sea')}
-   ${!eventsOpen()?card('','Weekly events','Locked','Short, wild events every Friday to Monday. Unlock by restarting the Belt once.',false,true,''):P.ev?card('event',(P.ev.bonus?'Bonus event: ':'Weekly event: ')+tw.name,P.cur==='event'?'Playing':'Live now',esc(tw.txt)+` Ends in ${fmtT((P.ev.end-now())/1000)}.`,P.cur==='event',false,P.cur==='event'?'':'Play the event'):card('','Next event: '+tw.name,'Opens Friday',`${esc(tw.txt)} Starts in ${fmtT((w.next-now())/1000)} and runs for 4 days.`,false,true,'')}${bonusAvail()?`<div class="wcard"><span class="tag">Bonus</span><b>Bonus event</b><small>You finished this week's event! Play a 3-hour bonus event with a new twist, with a shuffled economy (every item behaves differently), for up to 30 trophy points. Play as many as you like until the weekend ends.</small><button class="ghost small" data-bonus>Start a bonus event</button></div>`:''}
+   ${!eventsOpen()?card('','Weekly events','Locked','Two wild events every week: the weekend event (Friday to Tuesday) and the Sunday event (Sunday to Wednesday). Unlock by restarting the Belt once.',false,true,''):[['fri',eventWindow(now()),twistFor(eventWindow(now()).id)],['sun',sunWindow(now()),sunTwist(sunWindow(now()).id)]].map(([s,win,ntw])=>{const e=slotEv(s);
+     if(e){const etw=TWISTS.find(x=>x.id===e.tw);const on=P.cur==='event'&&P.ev===e;return `<div class="wcard${on?' on':''}"><span class="tag">${on?'Playing':'Live now'}</span><b>${esc(evName(e))}: ${esc(etw.name)}</b><small>${esc(etw.txt)} ${e.tok}/${e.cap||TOK_CAP} ${e.bonus?'points':'tokens'}. Ends in ${fmtT((e.end-now())/1000)}.</small>${on?'':`<button class="ghost small" data-world="event" data-slot="${s}">Play</button>`}</div>`;}
+     const nx=win.live?null:win.next;const tw2=s==='sun'?sunTwist(Math.round(win.next/DAY)):twistFor(Math.round(win.next/DAY));return card('',(s==='sun'?'Sunday event: ':'Weekend event: ')+(win.live?ntw:tw2).name,win.live?'Finished':'Opens '+(s==='sun'?'Sunday':'Friday'),win.live?'You finished this one. The next opens next week.':`${esc(tw2.txt)} Starts in ${fmtT((win.next-now())/1000)}.`,false,true,'');}).join('')}${bonusAvail()?`<div class="wcard"><span class="tag">Bonus</span><b>Bonus event</b><small>You finished this week's event! Play a 3-hour bonus event with a new twist, with a shuffled economy (every item behaves differently), for up to 30 trophy points. Play as many as you like until the weekend ends.</small><button class="ghost small" data-bonus>Start a bonus event</button></div>`:''}
    ${card('','Wizard\'s Tower','Coming later','Stack spells with cooldowns so they multiply.',false,true,'')}
   </div>${roundsHTML()}${P.evBadges.length?`<h3>Event badges</h3><div class="evb">${P.evBadges.slice(-12).reverse().map(b=>`<span>${b.medal?`<b style="color:${(EV_MEDALS.find(x=>x[1]===b.medal)||[0,0,'inherit'])[2]}">● </b>`:''}${esc(b.name)} · ${b.tok} ${/^Bonus/.test(b.name)?'points':'tokens'}</span>`).join('')}</div>`:''}`;}
 const PERK_TIP={keepMgr:'best if you restart often',head:'speeds up the first minutes',startPup:'a free random power-up each run',luck:'more bursts if you play actively',goldLen:'bigger bursts for active play',msBoost:'every item earns more as it grows',choice4:'more say over your power-ups',quick:'fewer taps, you still choose when'};
@@ -869,7 +907,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=n
   AUDIO.wake();if(gap>2000){const r=redeem(P.cur);last=now();if(r&&r.gap>30000)welcome(r);render(true);save();}}});addEventListener('pagehide',save);
 if(P.season){P.season=false;save();openModal(`<h2>A fresh start</h2><p>Asteroid Belt Idle has been rebalanced, so everyone starts again from the first Pickaxe Bot.</p><ul class="muted"><li>The Belt grows steadily: restarts pay off every time, without running away.</li><li>Items never max out. After each item's milestone list, a new milestone comes every +100.</li><li>Unlock Coffee Empire at 500 Stars, then the new Deep-Sea Salvage at 500 Beans.</li><li>Weekly events unlock after your first restart, and they're the wild ones.</li><li>Star perks have many more levels. Each costs more than the last, so Stars always have a use.</li></ul><p>Everything starts from zero, including the event bonus and badges. Only your sound settings are kept.</p><div class="mact"><button class="go" id="awayOk">Let's go</button></div>`);}
 else if(awayMsg)welcome(awayMsg);
-window.__belt={checkChal,st:()=>st,E:()=>E,P:()=>P,save,switchWorld,eventCheck,finishEvent};
+window.__belt={useSlot,checkChal,st:()=>st,E:()=>E,P:()=>P,save,switchWorld,eventCheck,finishEvent};
 })();
 
 </script>
