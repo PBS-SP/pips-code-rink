@@ -793,7 +793,7 @@ if(typeof module!=='undefined')module.exports={M3};
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.11.00';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.11.01';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -1048,7 +1048,7 @@ function timedGroups(S){const g={};(S.timed||[]).forEach(x=>{const k=x.k;g[k]=g[
   const nm={tx:'Profit boosts',tfast:'Speed boosts',ttier:'Item boosts'};
   return ['tx','tfast','ttier'].filter(k=>g[k]).map(k=>{const x=g[k];x.name=nm[k];x.label=k==='tx'?'⚡×'+fmt(x.m):k==='tfast'?'»×'+fmt(x.m):'⛏'+x.items.size+' item'+(x.items.size>1?'s':'');return x;});}
 function SNm(){return P.cur==='event'?'Event Stars':W.starName;}
-function render(full){const t=now();if(typeof renderAct==='function'&&uiReady)renderAct();if(uiReady)arcPill();
+function render(full){const t=now();if(actsReady&&uiReady)renderAct();if(uiReady)arcPill();
   $('#cash').textContent=fmt(st.cash);$('#ps').textContent=fmt(E.incomeAll(st))+'/s';
   const ev=P.cur==='event',br=P.cur==='bonus';$('#stars').textContent=br?P.tro.pts:ev?P.ev.tok:st.stars;$('#starx').textContent=br?troRank():ev?`of ${capOf()}`:'×'+E.starMult(st).toFixed(2);
   /* timed boosts collapse into one chip per kind: total effect, how many, and the soonest to run out */
@@ -1210,7 +1210,7 @@ else if(!P.n210){P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0
 else if(awayMsg)welcome(awayMsg);
 /* ===================== WORLD ACTIONS: each newer world has something hands-on (the Belt stays the steady old friend) ===================== */
 P.act=P.act||{};
-function actOf(id){return P.act[id]=P.act[id]||{};}
+function actOf(id){P.act=P.act||{};return P.act[id]=P.act[id]||{};}
 const MIN=60000;
 function incNow(){return Math.max(E.incomeAll(st),1);}
 function giveCash(sec){const v=incNow()*sec;E.earn(st,v);return v;}
@@ -1258,6 +1258,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-spell],[da
     else if(r<0.85){addTimed('tfast',2,90000,'Sonar school of fish ×2 speed for 2 minutes');toast('<b>A school of fish!</b> ×2 speed for 90 seconds.','pup');}
     else{addTimed('tx',6,40000,'Sonar treasure map ×6 for 1 minutes');toast('<b>A treasure map!</b> ×6 for 40 seconds.','pup');}}
   actKeyLast='';save();render(true);});
+var actsReady=true;
 
 /* ===================== ARCADE: Cat Naps, Royal Rocks and the Kingdom ===================== */
 P.arc=Object.assign({cr:0,crEver:0,cat:1,m3:1,built:0,tok:[],daily:null,wins:0,seen:false},P.arc||{});
