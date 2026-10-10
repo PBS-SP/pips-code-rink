@@ -207,7 +207,7 @@ body.arc-on .app,body.arc-on #gold{display:none!important}
 .mv b{font:700 26px/1 var(--disp)}.mv small{color:var(--muted);font-size:11px}.mv.low b{color:#FF7A6B}
 .goals{display:flex;flex-wrap:wrap;gap:6px;flex:1}.goals span{display:flex;align-items:center;gap:5px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font:700 15px var(--disp)}.goals span.ok{border-color:var(--ok);color:var(--ok)}
 .gl{width:22px;height:22px;border-radius:5px;display:inline-block}img.gl{border-radius:0}.gl.crate{background:#C98B5E;box-shadow:inset 0 0 0 2px #8A5A32}.gl.ice{background:#AAE1FF;box-shadow:inset 0 0 0 2px #fff}.gl.chain{background:transparent;border:3px solid #C9CFE0;border-radius:50%}
-.m3wrap{display:flex;justify-content:center;background:#0E0B1F;border:1px solid var(--line);border-radius:14px;padding:6px}
+.m3wrap{display:flex;justify-content:center;background:rgba(10,12,40,.55);border:1px solid var(--line);border-radius:14px;padding:6px}
 .m3wrap canvas{touch-action:none;display:block}
 </style>
 <canvas id="sky" aria-hidden="true"></canvas>
@@ -794,7 +794,7 @@ if(typeof module!=='undefined')module.exports={M3};
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.11.05';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.11.06';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -1381,11 +1381,11 @@ function catHint(){if(!cat||cat.won)return;const N=cat.N;
 function catClear(){if(!cat||cat.won)return;cat.s=cat.s.map((row,r)=>row.map((v,c)=>cat.lock.has(r+','+c)?2:0));catDraw();}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-arc-modal]');if(!b)return;closeModal();arcShow(b.dataset.arcModal);});
 /* ===== Royal Rocks ===== */
-const GEMC=['#FF3349','#2E8BFF','#1FC46A','#FFC21A','#A64DFF'],GEMD=['#9E0018','#0A3C9E','#06703A','#A86E00','#5410A6'];
+const GEMC=['#FF5A6A','#4FA3FF','#5FD38A','#FFD24A','#B57BFF'],GEMD=['#9E0018','#0A3C9E','#06703A','#A86E00','#5410A6'];
 const SPR={};
 /* flat gems: one bright solid colour with a thin darker edge. No shading, no highlights. */
-function gemSprite(c,px){const key=c+':'+px;if(SPR[key])return SPR[key];const cv=document.createElement('canvas');cv.width=cv.height=px;const x=cv.getContext('2d');const s=px*0.41,cx=px/2,cy=px/2;x.lineJoin='round';
-  x.fillStyle=GEMC[c];gemPath(x,c,cx,cy,s);x.fill();x.strokeStyle=GEMD[c];x.lineWidth=Math.max(1.5,px*0.04);gemPath(x,c,cx,cy,s*0.98);x.stroke();
+function gemSprite(c,px){const key=c+':'+px;if(SPR[key])return SPR[key];const cv=document.createElement('canvas');cv.width=cv.height=px;const x=cv.getContext('2d');const s=px*0.38,cx=px/2,cy=px/2;x.lineJoin='round';
+  x.fillStyle=GEMC[c];gemPath(x,c,cx,cy,s);x.fill();
   return SPR[key]=cv;}
 function gemURL(c){return gemSprite(c,48).toDataURL();}
 function gemIcon(){return '<svg viewBox="0 0 16 16" width="40" height="40" aria-hidden="true"><path d="M8 1 15 8 8 15 1 8Z" fill="#FF5A6A"/><path d="M8 3 12 8 8 8Z" fill="#FFB0B8"/><circle cx="12" cy="12" r="3.5" fill="#4FA3FF"/><rect x="1" y="10" width="5" height="5" rx="1" fill="#5FD38A"/></svg>';}
@@ -1464,7 +1464,7 @@ function drawGem(ctx,g,cx,cy,cs,sc){const t=now()/1000;const S=cs*sc,px=Math.rou
 let lastT=0;
 function m3Frame(){const cv=$('#m3c');if(!cv||!m3)return;const ctx=cv.getContext('2d');const t=now(),dt=Math.min(0.05,(t-(lastT||t))/1000);lastT=t;const b=m3.b,cs=m3.cs;
   ctx.setTransform(m3.dpr,0,0,m3.dpr,0,0);ctx.clearRect(0,0,cs*M3.COLS,cs*M3.ROWS);
-  for(let r=0;r<M3.ROWS;r++)for(let c=0;c<M3.COLS;c++){if(!M3.playable(b,r,c))continue;ctx.fillStyle=(r+c)%2?'#1C1838':'#221D42';rr(ctx,c*cs+1,r*cs+1,cs-2,cs-2,cs*0.14);ctx.fill();
+  for(let r=0;r<M3.ROWS;r++)for(let c=0;c<M3.COLS;c++){if(!M3.playable(b,r,c))continue;ctx.fillStyle=(r+c)%2?'rgba(255,255,255,.09)':'rgba(255,255,255,.15)';rr(ctx,c*cs+1,r*cs+1,cs-2,cs-2,cs*0.14);ctx.fill();
     if(b.ice[r][c]){ctx.fillStyle='rgba(120,210,255,.55)';ctx.strokeStyle='rgba(220,245,255,.9)';ctx.lineWidth=1.5;rr(ctx,c*cs+2,r*cs+2,cs-4,cs-4,cs*0.14);ctx.stroke();ctx.fillStyle='rgba(120,210,255,.55)';rr(ctx,c*cs+2,r*cs+2,cs-4,cs-4,cs*0.14);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(c*cs+cs*0.2,r*cs+cs*0.75);ctx.lineTo(c*cs+cs*0.38,r*cs+cs*0.6);ctx.moveTo(c*cs+cs*0.62,r*cs+cs*0.3);ctx.lineTo(c*cs+cs*0.8,r*cs+cs*0.18);ctx.stroke();}}
   if(m3.sel){const [r,c]=m3.sel;ctx.strokeStyle='#FFD24A';ctx.lineWidth=3;rr(ctx,c*cs+2,r*cs+2,cs-4,cs-4,cs*0.18);ctx.stroke();}
   ctx.save();ctx.beginPath();for(let c=0;c<M3.COLS;c++){const [a,z]=b.cols[c];ctx.rect(c*cs,a*cs,cs,(z-a+1)*cs);}ctx.clip();
