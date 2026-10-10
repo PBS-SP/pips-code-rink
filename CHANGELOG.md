@@ -44,6 +44,7 @@ Called Clover's Code Garden in V1.00.00.
 ## Asteroid Belt Idle (idle game, `idle/` folder)
 | Version | Date | Commit | What's in it |
 |---|---|---|---|
+| V2.11.05 | 2026-10-10 | 00b7a1b | Royal Rocks gems are flat and bright: one solid, saturated colour each (the brighter colours from V2.11.02) with a thin darker edge. No shading, highlights or inner shapes. The board is darker again so the gems pop. The orb is now a flat five-colour wheel and the bomb has no shading. |
 | V2.11.04 | 2026-10-10 | 0b9ef54 | Royal Rocks specials have their own icons instead of sitting on a gem: a double-nosed rocket (sideways or upright), a light bomb with a lit fuse, a spinning propeller (was the homing star, renamed so it isn't confused with the yellow star gem) and the rainbow orb. Specials no longer join colour lines; tap one, swap it with any gem, or swap two together to set them off. |
 | V2.11.03 | 2026-10-10 | 94f3d6d | Royal Rocks goes flat: the 3D shading is gone. Gems are solid, softer colours with a light rim and a simple facet so they stand off the dark board; board squares are a little lighter; the bomb is now a light ball with a dark outline and coloured band so it no longer vanishes; the orb is softer with a white ring. |
 | V2.11.02 | 2026-10-10 | effd562 | Royal Rocks looks sharper: glossy 3D gems with outlines, shading and drop shadows, drawn at full screen resolution; stronger, more distinct colours on a darker, plainer board; goal chips now show the actual gem shape; outlined rockets and stars, a shinier bomb and orb, and clearer ice. |
