@@ -690,17 +690,17 @@ function make(L,seed){const R=rngOf(seed||L.seed);const b={L,R,nc:L.nc,cols:L.co
   if(!hasMove(b))shuffle(b);return b;}
 function gem(c,r,col,s){return {c,s:s||null,id:UID++,x:col,y:r,vy:0,pop:0};}
 function playable(b,r,c){return c>=0&&c<COLS&&r>=0&&r<ROWS&&r>=b.cols[c][0]&&r<=b.cols[c][1];}
-function same(b,r,c,col){const x=b.g[r]&&b.g[r][c];return !!x&&x.c===col&&x.s!=='o';}
+function same(b,r,c,col){const x=b.g[r]&&b.g[r][c];return !!x&&x.c===col&&!x.s;}
 function movable(b,r,c){return playable(b,r,c)&&!b.crate[r][c]&&!b.chain[r][c]&&!!b.g[r][c];}
 /* ---- finding lines ---- */
 function findGroups(b){const runs=[];
-  for(let r=0;r<ROWS;r++){let c=0;while(c<COLS){const x=b.g[r][c];if(!x||x.s==='o'){c++;continue;}let e=c+1;while(e<COLS&&same(b,r,e,x.c))e++;if(e-c>=3)runs.push({dir:'h',cells:Array.from({length:e-c},(_,i)=>[r,c+i])});c=e;}}
-  for(let c=0;c<COLS;c++){let r=0;while(r<ROWS){const x=b.g[r][c];if(!x||x.s==='o'){r++;continue;}let e=r+1;while(e<ROWS&&same(b,e,c,x.c))e++;if(e-r>=3)runs.push({dir:'v',cells:Array.from({length:e-r},(_,i)=>[r+i,c])});r=e;}}
+  for(let r=0;r<ROWS;r++){let c=0;while(c<COLS){const x=b.g[r][c];if(!x||x.s){c++;continue;}let e=c+1;while(e<COLS&&same(b,r,e,x.c))e++;if(e-c>=3)runs.push({dir:'h',cells:Array.from({length:e-c},(_,i)=>[r,c+i])});c=e;}}
+  for(let c=0;c<COLS;c++){let r=0;while(r<ROWS){const x=b.g[r][c];if(!x||x.s){r++;continue;}let e=r+1;while(e<ROWS&&same(b,e,c,x.c))e++;if(e-r>=3)runs.push({dir:'v',cells:Array.from({length:e-r},(_,i)=>[r+i,c])});r=e;}}
   /* join runs that share a square (T and L shapes) */
   const groups=[];runs.forEach(run=>{const key=new Set(run.cells.map(p=>p+''));const hit=groups.filter(g=>g.cells.some(p=>key.has(p+'')));
     const g={runs:[run],cells:run.cells.slice()};hit.forEach(h=>{g.runs.push(...h.runs);h.cells.forEach(p=>{if(!g.cells.some(q=>q+''===p+''))g.cells.push(p);});groups.splice(groups.indexOf(h),1);});groups.push(g);});
   /* 2x2 squares make a homing star (like a propeller) */
-  for(let r=0;r<ROWS-1;r++)for(let c=0;c<COLS-1;c++){const x=b.g[r][c];if(!x||x.s==='o')continue;if(same(b,r,c+1,x.c)&&same(b,r+1,c,x.c)&&same(b,r+1,c+1,x.c)){const sq=[[r,c],[r,c+1],[r+1,c],[r+1,c+1]];
+  for(let r=0;r<ROWS-1;r++)for(let c=0;c<COLS-1;c++){const x=b.g[r][c];if(!x||x.s)continue;if(same(b,r,c+1,x.c)&&same(b,r+1,c,x.c)&&same(b,r+1,c+1,x.c)){const sq=[[r,c],[r,c+1],[r+1,c],[r+1,c+1]];
     if(groups.some(g=>sq.every(p=>g.cells.some(q=>q+''===p+''))&&g.runs.some(u=>u.cells.length>=4)))continue;
     const hit=groups.filter(g=>g.cells.some(p=>sq.some(q=>q+''===p+'')));if(hit.length){const g=hit[0];sq.forEach(p=>{if(!g.cells.some(q=>q+''===p+''))g.cells.push(p);});g.square=true;}else groups.push({runs:[],cells:sq,square:true});}}
   groups.forEach(g=>{const long=Math.max(0,...g.runs.map(u=>u.cells.length));const dirs=new Set(g.runs.map(u=>u.dir));
@@ -722,7 +722,7 @@ function area(b,r,c,s,extra){const out=[];const add=(a,d)=>{if(playable(b,a,d))o
   if(s==='b'||s==='bb'){const k=s==='bb'?3:2;for(let a=r-k;a<=r+k;a++)for(let d=c-k;d<=c+k;d++)add(a,d);}
   if(s==='rb'){for(let a=r-1;a<=r+1;a++)for(let d=0;d<COLS;d++)add(a,d);for(let d=c-1;d<=c+1;d++)for(let a=0;a<ROWS;a++)add(a,d);}
   if(s==='p'){[[r,c],...DIRS.map(([x,y])=>[r+x,c+y])].forEach(([a,d])=>add(a,d));const t=target(b);if(t)out.push(...(extra==='pb'?area(b,t[0],t[1],'b'):extra==='ph'?area(b,t[0],t[1],b.R()<.5?'h':'v'):[t]));}
-  if(s==='o'){const col=extra!=null?extra:commonColor(b);for(let a=0;a<ROWS;a++)for(let d=0;d<COLS;d++){const x=b.g[a][d];if(x&&x.c===col&&x.s!=='o')out.push([a,d]);}out.push([r,c]);}
+  if(s==='o'){const col=extra!=null?extra:commonColor(b);for(let a=0;a<ROWS;a++)for(let d=0;d<COLS;d++){const x=b.g[a][d];if(x&&x.c===col&&!x.s)out.push([a,d]);}out.push([r,c]);}
   if(s==='all')for(let a=0;a<ROWS;a++)for(let d=0;d<COLS;d++)add(a,d);
   return out;}
 /* the homing star flies to whatever the goals still need most */
@@ -730,7 +730,7 @@ function target(b){const opts=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
   if(b.crate[r][c]&&b.left.crate>0)w=3;else if(b.chain[r][c]&&b.left.chain>0)w=3;else if(b.ice[r][c]&&b.left.ice>0)w=2.5;else{const x=b.g[r][c];if(x&&b.left['c'+x.c]>0)w=1;}
   if(w)opts.push([w+b.R()*0.5,r,c]);}
   if(!opts.length)return null;opts.sort((a,b2)=>b2[0]-a[0]);return [opts[0][1],opts[0][2]];}
-function commonColor(b){const n=new Array(b.nc).fill(0);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=b.g[r][c];if(x&&x.s!=='o')n[x.c]+=1+(b.left['c'+x.c]>0?2:0);}return n.indexOf(Math.max(...n));}
+function commonColor(b){const n=new Array(b.nc).fill(0);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=b.g[r][c];if(x&&!x.s)n[x.c]+=1+(b.left['c'+x.c]>0?2:0);}return n.indexOf(Math.max(...n));}
 /* ---- clearing a set of squares; specials inside go off too ---- */
 function blast(b,cells,opt){opt=opt||{};const done=new Set(),hitCrate=new Set();const q=cells.slice();let n=0;
   const keep=opt.keep||new Set();
@@ -739,7 +739,7 @@ function blast(b,cells,opt){opt=opt||{};const done=new Set(),hitCrate=new Set();
     const x=b.g[r][c];if(!x)continue;if(keep.has(k))continue;
     if(b.chain[r][c]){b.chain[r][c]=0;goal(b,'chain');b.fx.push({t:'chain',r,c});continue;}   // a chain breaks first, the gem stays
     if(b.ice[r][c]){b.ice[r][c]=0;goal(b,'ice');b.fx.push({t:'ice',r,c});}
-    goal(b,'c'+x.c);b.g[r][c]=null;n++;b.fx.push({t:'pop',r,c,g:x});
+    if(!x.s)goal(b,'c'+x.c);b.g[r][c]=null;n++;b.fx.push({t:'pop',r,c,g:x});
     if(x.s){const ex=x.s==='o'?null:undefined;const more=area(b,r,c,x.s,ex);b.fx.push({t:'sp',s:x.s,r,c,cells:more});more.forEach(p=>q.push(p));}}
   /* matches also knock the crates next to them */
   if(opt.match)opt.match.forEach(([r,c])=>DIRS.forEach(([dr,dc])=>{const a=r+dr,d=c+dc,k=a+','+d;if(playable(b,a,d)&&b.crate[a][d]&&!hitCrate.has(k)){hitCrate.add(k);hitCr(b,a,d);}}));
@@ -770,12 +770,13 @@ function trySwap(b,r,c,a,d){if(!movable(b,r,c)||!movable(b,a,d)||Math.abs(r-a)+M
   if(x.s&&y.s)return combo(b,r,c,a,d);
   if(x.s==='o'||y.s==='o'){const [or,oc,other]=x.s==='o'?[r,c,y]:[a,d,x];swapRaw(b,r,c,a,d);b.moves--;b.fx.push({t:'swap'});
     const [pr,pc]=x.s==='o'?[a,d]:[r,c];b.g[pr][pc].s=null;const cells=area(b,pr,pc,'o',other.c);b.fx.push({t:'sp',s:'o',r:pr,c:pc,cells});blast(b,cells);return {ok:true};}
+  if(x.s||y.s){/* a special swapped with a gem goes off where it lands; any line the gem makes counts too */swapRaw(b,r,c,a,d);b.moves--;const [sr,sc]=x.s?[a,d]:[r,c];matchStep(b,[[r,c],[a,d]]);if(b.g[sr][sc]&&b.g[sr][sc].s)blast(b,[[sr,sc]]);return {ok:true};}
   swapRaw(b,r,c,a,d);if(!findGroups(b).length){swapRaw(b,r,c,a,d);return {ok:false};}
   b.moves--;matchStep(b,[[r,c],[a,d]]);return {ok:true};}
 function combo(b,r,c,a,d){const x=b.g[r][c],y=b.g[a][d];const ss=[x.s,y.s].sort().join('');b.moves--;b.g[r][c]=null;b.g[a][d]=null;b.fx.push({t:'combo',s:ss,r:a,c:d});
   let cells;const H=s=>s==='h'||s==='v';
   if(ss==='oo')cells=area(b,a,d,'all');
-  else if(x.s==='o'||y.s==='o'){const other=x.s==='o'?y:x;const col=other.c;cells=[];
+  else if(x.s==='o'||y.s==='o'){const other=x.s==='o'?y:x;const col=commonColor(b);cells=[];
     for(let i=0;i<ROWS;i++)for(let j=0;j<COLS;j++){const z=b.g[i][j];if(z&&z.c===col&&!z.s){z.s=H(other.s)?(b.R()<.5?'h':'v'):other.s;cells.push([i,j]);}}cells.push([a,d]);}
   else if(ss==='bb')cells=area(b,a,d,'bb');
   else if(H(x.s)&&H(y.s))cells=area(b,a,d,'cross');
@@ -793,7 +794,7 @@ if(typeof module!=='undefined')module.exports={M3};
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.11.03';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.11.04';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -1205,7 +1206,7 @@ function welcome(r){const others=worldIds().filter(id=>id!==r.id).length;
 document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=now();AUDIO.sleep();save();}else if(hiddenAt){const gap=now()-hiddenAt;hiddenAt=0;
   AUDIO.wake();if(gap>2000){const r=redeem(P.cur);last=now();if(r&&r.gap>30000)welcome(r);render(true);save();}}});addEventListener('pagehide',save);
 if(P.season){P.season=false;save();openModal(`<h2>A fresh start</h2><p>Asteroid Belt Idle has been rebalanced, so everyone starts again from the first Pickaxe Bot.</p><ul class="muted"><li>The Belt grows steadily: restarts pay off every time, without running away.</li><li>Items never max out. After each item's milestone list, a new milestone comes every +100.</li><li>Unlock Coffee Empire at 500 Stars, then Deep-Sea Salvage, Wizard's Tower, Candy Factory, Robot Foundry and Dino Park, each at 500 of the world before.</li><li>Weekly events unlock after your first restart, and they're the wild ones.</li><li>Star perks have many more levels. Each costs more than the last, so Stars always have a use.</li></ul><p>Everything starts from zero, including the event bonus and badges. Only your sound settings are kept.</p><div class="mact"><button class="go" id="awayOk">Let's go</button></div>`);}
-else if(!P.n211){P.n211=1;P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0||(P.w.belt.life||0)>1e4)openModal(`<h2>The Arcade is open</h2><p>Tap <b>♛ Arcade</b> at the top any time.</p><ul class="muted"><li><b>Cat Naps</b>: a logic puzzle. One cat per row, column and colour patch, and cats never touch.</li><li><b>Royal Rocks</b>: match-3 with rockets, bombs, stars, orbs, crates, ice and chains.</li><li>Win crowns and <b>build a kingdom</b>. Every building gives a gift: a timed boost for any world.</li><li>The newer worlds got hands-on extras: <b>spells</b> in the Tower, <b>orders</b> in Candy, <b>blueprints</b> in the Foundry, <b>expeditions</b> in Dino Park, <b>rush hour</b> in Coffee and <b>sonar</b> in Deep-Sea Salvage. The Belt stays the same old friend.</li></ul><div class="mact"><button class="ghost" id="awayOk">Later</button><button class="go" id="arcGo">Open the Arcade</button></div>`);}
+else if(!P.n211){P.n211=1;P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0||(P.w.belt.life||0)>1e4)openModal(`<h2>The Arcade is open</h2><p>Tap <b>♛ Arcade</b> at the top any time.</p><ul class="muted"><li><b>Cat Naps</b>: a logic puzzle. One cat per row, column and colour patch, and cats never touch.</li><li><b>Royal Rocks</b>: match-3 with rockets, bombs, propellers, orbs, crates, ice and chains.</li><li>Win crowns and <b>build a kingdom</b>. Every building gives a gift: a timed boost for any world.</li><li>The newer worlds got hands-on extras: <b>spells</b> in the Tower, <b>orders</b> in Candy, <b>blueprints</b> in the Foundry, <b>expeditions</b> in Dino Park, <b>rush hour</b> in Coffee and <b>sonar</b> in Deep-Sea Salvage. The Belt stays the same old friend.</li></ul><div class="mact"><button class="ghost" id="awayOk">Later</button><button class="go" id="arcGo">Open the Arcade</button></div>`);}
 else if(!P.n210){P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0)openModal(`<h2>Big expansion</h2><p>Four new worlds, a third weekly event and more twists.</p><ul class="muted"><li><b>Wizard's Tower</b>: own 50 of an item to add to the spell circle.</li><li><b>Candy Factory</b>: buying 25 or more at once is 40% cheaper.</li><li><b>Robot Foundry</b>: machines run hot (×3 speed), then cool down.</li><li><b>Dino Park</b>: keep each herd at least as big as the one above for ×2.5.</li><li>Each new world unlocks at 500 of the world before (after Deep-Sea Salvage). Every item has its own milestones and personality.</li><li>New <b>Midweek event</b> from Wednesday to Friday, 7 new twists and 3 new Bonus Rounds.</li></ul><div class="mact"><button class="go" id="awayOk">Nice</button></div>`);}
 else if(awayMsg)welcome(awayMsg);
 /* ===================== WORLD ACTIONS: each newer world has something hands-on (the Belt stays the steady old friend) ===================== */
@@ -1397,7 +1398,7 @@ function m3Start(n){const L=M3.level(n);m3={L,b:M3.make(L),busy:false,sel:null,f
   ARC.innerHTML=`${topBar(`Royal Rocks ${n}`,"home")}
    <div class="m3hud"><div class="mv"><b id="m3mv">${L.moves}</b><small>moves</small></div><div class="goals" id="m3goals"></div></div>
    <div class="m3wrap"><canvas id="m3c"></canvas></div>
-   <p class="muted small">Swap two side-by-side gems to make a line of 3 or more. A line of 4 makes a <b>rocket</b>, an L or T a <b>bomb</b>, a square a homing <b>star</b>, a line of 5 an <b>orb</b>. Tap a special to set it off, or swap two specials for a combo.</p>`;
+   <p class="muted small">Swap two side-by-side gems to make a line of 3 or more. A line of 4 makes a <b>rocket</b>, an L or T a <b>bomb</b>, a square a <b>propeller</b> (it flies to what you need), a line of 5 an <b>orb</b>. Specials don't match by colour: tap one to set it off, swap it with a gem, or swap two specials for a combo.</p>`;
   m3Goals();const cv=$('#m3c');m3Size();m3Input(cv);startLoop(m3Frame);}
 function m3Size(){const cv=$('#m3c');if(!cv)return;const w=Math.min(ARC.clientWidth-32-16,440);const cs=Math.floor(w/M3.COLS);const dpr=Math.min(2,window.devicePixelRatio||1);
   cv.style.width=cs*M3.COLS+'px';cv.style.height=cs*M3.ROWS+'px';cv.width=cs*M3.COLS*dpr;cv.height=cs*M3.ROWS*dpr;m3.cs=cs;m3.dpr=dpr;}
@@ -1445,16 +1446,26 @@ function gemPath(ctx,c,cx,cy,s){ctx.beginPath();if(c===0){ctx.moveTo(cx,cy-s);ct
   else if(c===3){for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rad=i%2?s*0.45:s;ctx.lineTo(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad);}}
   else{for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3;ctx.lineTo(cx+Math.cos(a)*s*0.92,cy+Math.sin(a)*s*0.92);}}
   ctx.closePath();}
-function drawGem(ctx,g,cx,cy,cs,sc){const t=now()/1000;const S=cs*sc,px=Math.round(cs*(m3?m3.dpr:2));const s=cs*0.38*sc;
-  if(g.s==='o'){ctx.save();const gr=ctx.createRadialGradient(cx-s*0.35,cy-s*0.35,s*0.05,cx,cy,s*0.95);gr.addColorStop(0,'#fff');gr.addColorStop(0.3,`hsl(${(t*140)%360},75%,72%)`);gr.addColorStop(0.7,`hsl(${(t*140+120)%360},70%,62%)`);gr.addColorStop(1,`hsl(${(t*140+240)%360},65%,55%)`);
-    ctx.fillStyle=gr;ctx.beginPath();ctx.arc(cx,cy,s*0.95,0,Math.PI*2);ctx.fill();ctx.restore();ctx.strokeStyle='#FFFFFF';ctx.lineWidth=cs*0.045;ctx.beginPath();ctx.arc(cx,cy,s*0.95,0,Math.PI*2);ctx.stroke();return;}
-  const spr=gemSprite(g.c,px,g.s==='b'?'b':'');ctx.drawImage(spr,cx-S/2,cy-S/2,S,S);
-  if(g.s==='b'){ctx.fillStyle=Math.sin(t*20)>0?'#FFE14A':'#FF6A2A';ctx.beginPath();ctx.arc(cx+s*0.84,cy-s*0.92,s*0.17,0,Math.PI*2);ctx.fill();return;}
-  if(g.s==='h'||g.s==='v'){ctx.save();ctx.translate(cx,cy);if(g.s==='v')ctx.rotate(Math.PI/2);ctx.fillStyle='#fff';ctx.strokeStyle='rgba(15,10,35,.85)';ctx.lineWidth=cs*0.035;ctx.lineJoin='round';
-    const ar=()=>{ctx.beginPath();ctx.moveTo(-s*1.08,0);ctx.lineTo(-s*0.5,-s*0.42);ctx.lineTo(-s*0.5,-s*0.14);ctx.lineTo(s*0.5,-s*0.14);ctx.lineTo(s*0.5,-s*0.42);ctx.lineTo(s*1.08,0);ctx.lineTo(s*0.5,s*0.42);ctx.lineTo(s*0.5,s*0.14);ctx.lineTo(-s*0.5,s*0.14);ctx.lineTo(-s*0.5,s*0.42);ctx.closePath();};
-    ar();ctx.stroke();ar();ctx.fill();ctx.restore();}
-  if(g.s==='p'){ctx.save();ctx.translate(cx,cy);ctx.rotate(t*4);ctx.fillStyle='#fff';ctx.strokeStyle='rgba(15,10,35,.85)';ctx.lineWidth=cs*0.03;for(let i=0;i<4;i++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.ellipse(s*0.48,0,s*0.44,s*0.17,0,0,Math.PI*2);ctx.stroke();ctx.fill();}
-    ctx.fillStyle='#FFE14A';ctx.beginPath();ctx.arc(0,0,s*0.18,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}}
+/* specials have their own icons (they don't match by colour) */
+const INK='#14122A';
+function drawGem(ctx,g,cx,cy,cs,sc){const t=now()/1000;const S=cs*sc,px=Math.round(cs*(m3?m3.dpr:2));const s=cs*0.38*sc,lw=Math.max(1.5,cs*0.045);ctx.lineJoin='round';ctx.lineCap='round';
+  if(!g.s){ctx.drawImage(gemSprite(g.c,px),cx-S/2,cy-S/2,S,S);return;}
+  if(g.s==='o'){const gr=ctx.createRadialGradient(cx-s*0.3,cy-s*0.3,s*0.05,cx,cy,s*0.95);gr.addColorStop(0,'#fff');gr.addColorStop(0.3,`hsl(${(t*140)%360},75%,72%)`);gr.addColorStop(0.7,`hsl(${(t*140+120)%360},70%,62%)`);gr.addColorStop(1,`hsl(${(t*140+240)%360},65%,55%)`);
+    ctx.fillStyle=gr;ctx.beginPath();ctx.arc(cx,cy,s*0.92,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#FFFFFF';ctx.lineWidth=lw;ctx.stroke();return;}
+  if(g.s==='h'||g.s==='v'){ctx.save();ctx.translate(cx,cy);if(g.s==='v')ctx.rotate(Math.PI/2);const L=s*1.0,H=s*0.36;
+    /* fins */ctx.fillStyle='#F2545B';ctx.strokeStyle=INK;ctx.lineWidth=lw;for(const k of [-1,1]){ctx.beginPath();ctx.moveTo(k*s*0.12,-H);ctx.lineTo(k*s*0.4,-H-s*0.2);ctx.lineTo(k*s*0.55,-H);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(k*s*0.12,H);ctx.lineTo(k*s*0.4,H+s*0.2);ctx.lineTo(k*s*0.55,H);ctx.closePath();ctx.fill();ctx.stroke();}
+    /* body with a nose at each end */ctx.beginPath();ctx.moveTo(-L,0);ctx.quadraticCurveTo(-L*0.75,-H,-L*0.5,-H);ctx.lineTo(L*0.5,-H);ctx.quadraticCurveTo(L*0.75,-H,L,0);ctx.quadraticCurveTo(L*0.75,H,L*0.5,H);ctx.lineTo(-L*0.5,H);ctx.quadraticCurveTo(-L*0.75,H,-L,0);ctx.closePath();
+    ctx.fillStyle='#EEF1F8';ctx.fill();ctx.stroke();
+    ctx.fillStyle='#F2545B';for(const k of [-1,1]){ctx.beginPath();ctx.moveTo(k*L,0);ctx.quadraticCurveTo(k*L*0.85,-H*0.7,k*L*0.66,-H*0.82);ctx.lineTo(k*L*0.66,H*0.82);ctx.quadraticCurveTo(k*L*0.85,H*0.7,k*L,0);ctx.closePath();ctx.fill();ctx.stroke();}
+    ctx.fillStyle='#4C9AF0';ctx.beginPath();ctx.arc(0,0,H*0.55,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();return;}
+  if(g.s==='b'){const R=s*0.78,y0=cy+s*0.12;ctx.fillStyle='#DCD8EA';ctx.strokeStyle=INK;ctx.lineWidth=lw;ctx.beginPath();ctx.arc(cx,y0,R,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#9C98B4';ctx.beginPath();ctx.arc(cx+R*0.25,y0+R*0.25,R*0.55,0,Math.PI*2);ctx.globalAlpha=0.35;ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle='#DCD8EA';ctx.fillRect(cx+R*0.35,y0-R*1.12,R*0.42,R*0.34);ctx.strokeRect(cx+R*0.35,y0-R*1.12,R*0.42,R*0.34);
+    ctx.lineWidth=lw*1.3;ctx.beginPath();ctx.moveTo(cx+R*0.56,y0-R*1.12);ctx.quadraticCurveTo(cx+R*0.8,y0-R*1.5,cx+R*1.05,y0-R*1.38);ctx.stroke();
+    const f=0.75+0.25*Math.sin(t*22);ctx.fillStyle='#FFB020';ctx.beginPath();ctx.arc(cx+R*1.08,y0-R*1.4,s*0.2*f,0,Math.PI*2);ctx.fill();ctx.fillStyle='#FFF3B0';ctx.beginPath();ctx.arc(cx+R*1.08,y0-R*1.4,s*0.09*f,0,Math.PI*2);ctx.fill();return;}
+  if(g.s==='p'){ctx.save();ctx.translate(cx,cy);ctx.rotate(t*5);ctx.scale(1.15,1.15);ctx.fillStyle='#EEF1F8';ctx.strokeStyle=INK;ctx.lineWidth=lw;
+    for(let i=0;i<3;i++){ctx.rotate(Math.PI*2/3);ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(s*0.3,-s*0.45,s*0.95,-s*0.35,s*0.92,0);ctx.bezierCurveTo(s*0.85,s*0.18,s*0.35,s*0.15,0,0);ctx.closePath();ctx.fill();ctx.stroke();}
+    ctx.fillStyle='#3DBE7A';ctx.beginPath();ctx.arc(0,0,s*0.22,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}}
 let lastT=0;
 function m3Frame(){const cv=$('#m3c');if(!cv||!m3)return;const ctx=cv.getContext('2d');const t=now(),dt=Math.min(0.05,(t-(lastT||t))/1000);lastT=t;const b=m3.b,cs=m3.cs;
   ctx.setTransform(m3.dpr,0,0,m3.dpr,0,0);ctx.clearRect(0,0,cs*M3.COLS,cs*M3.ROWS);
