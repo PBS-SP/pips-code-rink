@@ -209,6 +209,39 @@ body.arc-on .app,body.arc-on #gold{display:none!important}
 .gl{width:22px;height:22px;border-radius:5px;display:inline-block}img.gl{border-radius:0}.gl.crate{background:#C98B5E;box-shadow:inset 0 0 0 2px #8A5A32}.gl.ice{background:#AAE1FF;box-shadow:inset 0 0 0 2px #fff}.gl.chain{background:transparent;border:3px solid #C9CFE0;border-radius:50%}
 .m3wrap{display:flex;justify-content:center;background:rgba(10,12,40,.55);border:1px solid var(--line);border-radius:14px;padding:6px}
 .m3wrap canvas{touch-action:none;display:block}
+.m3hud .m3help{margin-left:auto}
+.lgrow{display:flex;gap:12px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}.lgrow canvas{width:44px;height:44px;flex:none;background:rgba(255,255,255,.08);border-radius:10px}.lgrow b{font:600 16px var(--disp)}.lgrow small{display:block;color:var(--muted);font-size:13px}
+.lgcombo{display:grid;gap:6px}.lgcombo div{background:var(--panel);border-radius:10px;padding:6px 10px}.lgcombo b{font:600 14px var(--disp);display:block}.lgcombo small{color:var(--muted);font-size:12.5px}
+
+/* ===== V2.12 refresh: bottom tab bar on phones, one-row status strip, compact toasts ===== */
+.tabs [data-tab="earners"]{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='3' width='8' height='8' rx='2'/><rect x='13' y='3' width='8' height='8' rx='2'/><rect x='3' y='13' width='8' height='8' rx='2'/><rect x='13' y='13' width='8' height='8' rx='2'/></svg>")}
+.tabs [data-tab="upgrades"]{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2l8 9h-5v10H9V11H4z'/></svg>")}
+.tabs [data-tab="powerups"]{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14 1L4 14h7l-2 9 11-14h-7z'/></svg>")}
+.tabs [data-tab="stars"]{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1.5l3.2 6.8 7.3.8-5.4 5 1.5 7.3L12 17.8l-6.6 3.6 1.5-7.3-5.4-5 7.3-.8z'/></svg>")}
+.tabs [data-tab="worlds"]{--ic:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='6.5'/><path d='M1 16.5c3 2.5 19-3 22-9l-2.2.6C17 12 6 15.8 3 14.8z'/></svg>")}
+.hud{padding-block:8px 6px}.sub{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding:2px 16px 4px;gap:6px;-webkit-mask:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 18px),transparent)}
+.sub::-webkit-scrollbar{display:none}.sub>*{flex:none;white-space:nowrap}.sub .timed{display:contents}
+.pill{border-radius:10px;padding:5px 10px}
+.row{border-radius:14px}
+@media (max-width:520px){
+ .tabs{position:fixed;top:auto;left:0;right:0;bottom:0;margin:0;border-radius:18px 18px 0 0;border-width:1px 0 0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgba(0,0,0,.5);z-index:8;background:var(--deep);gap:2px}
+ .tabs button{display:grid;justify-items:center;gap:3px;padding:6px 0 5px;font:600 10.5px var(--disp);letter-spacing:.02em;border-radius:12px;white-space:nowrap}
+ .tabs button::before{content:'';width:22px;height:22px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+ .tabs button[aria-selected="true"]{background:var(--panel2);color:var(--ore2)}
+ .tabs .badge{top:3px;right:calc(50% - 20px)}
+ .app{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+ .modes{top:calc(env(safe-area-inset-top,0px) + var(--hudH,112px))}
+ #toasts{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+}
+#toasts .toast{padding:8px 12px;font-size:13px;line-height:1.35;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.chestpill,.merchpill{background:#FF9F5A;color:#2A1024;border-color:#FF9F5A;font-weight:700;cursor:pointer;animation:arcp 1.6s ease-in-out infinite}.merchpill{background:#6FD3C8;border-color:#6FD3C8}
+.hintpill{cursor:pointer;color:var(--text);border-color:var(--ok);background:var(--panel2)}.qpill{cursor:pointer;color:var(--text)}.qpill.hot{background:var(--ok);color:var(--ink);border-color:var(--ok);font-weight:700}
+.qrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.qrow>div{flex:1;min-width:0}.qrow b{font:600 14px var(--disp);display:block}.qrow small{color:var(--muted);font-size:12px}
+.qbar{height:8px;border-radius:5px;background:var(--deep);overflow:hidden;margin:4px 0 2px}.qbar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),#B8F5C8)}.qrow.got{opacity:.6}.qok{color:var(--ok);font:700 20px var(--disp)}
+.chestrow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.chestrow span{display:grid;justify-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 0}.chestrow b{font:600 12px var(--disp)}.chestrow small{font-size:11px;color:var(--muted)}
+.chestrow .past{opacity:.5}.chestrow .now{border-color:#FFD37A;background:#3A2E14}.chestrow .now small{color:#FFD37A}
+.row{position:relative}.row.burst{animation:rburst .7s ease-out}@keyframes rburst{0%{box-shadow:0 0 0 0 rgba(255,211,92,.0)}30%{box-shadow:0 0 0 3px rgba(255,211,92,.8),0 0 24px rgba(255,211,92,.5)}100%{box-shadow:0 0 0 0 rgba(255,211,92,0)}}
+.msfloat{position:absolute;left:50%;top:6px;transform:translateX(-50%);font:700 15px var(--disp);color:#FFD37A;text-shadow:0 2px 0 #000;pointer-events:none;animation:msf 1.1s ease-out forwards}@keyframes msf{to{transform:translate(-50%,-28px);opacity:0}}
 </style>
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="app">
@@ -216,7 +249,7 @@ body.arc-on .app,body.arc-on #gold{display:none!important}
     <div class="world"><span id="wname">World 1 · Asteroid Belt</span><span class="snds"><button class="snd" data-export title="Copy progress code" aria-label="Copy progress code">⧉</button><button class="snd" id="musBtn" aria-pressed="false" title="Music">♪</button><button class="snd" id="sfxBtn" aria-pressed="false" title="Sounds">Fx</button></span></div>
     <div><div class="cash"><span id="cash">0</span><small id="curlbl">credits</small></div><div class="ps" id="ps">0/s</div></div>
     <div class="starchip"><b id="stars">0</b><span id="starlbl">Stars</span> <span id="starx">×1.00</span></div>
-    <div class="sub"><button class="pill arcpill" id="arcpill" aria-label="Open the Arcade">♛ Arcade</button><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><span class="pill curpill" id="curpill" hidden></span><span class="pill mechpill" id="mechpill" hidden></span><button class="pill colpill" id="colpill" hidden></button><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
+    <div class="sub"><button class="pill arcpill" id="arcpill" aria-label="Open the Arcade">♛ Arcade</button><button class="pill chestpill" id="chestpill" hidden>🎁 Daily chest</button><button class="pill merchpill" id="merchpill" hidden>Merchant</button><button class="pill hintpill" id="hintpill" hidden></button><button class="pill qpill" id="qpill">Quests 0/3</button><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><span class="pill curpill" id="curpill" hidden></span><span class="pill mechpill" id="mechpill" hidden></span><button class="pill colpill" id="colpill" hidden></button><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
   </header>
   <nav class="tabs" role="tablist">
     <button data-tab="earners" role="tab">Items</button><button data-tab="upgrades" role="tab">Upgrades<i class="badge" hidden></i></button>
@@ -715,15 +748,17 @@ function shuffle(b){const list=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)
     if(!findGroups(b).length&&hasMove(b))return;}
   /* rare: recolour until it works */
   for(let tries=0;tries<200;tries++){list.forEach(x=>x.c=Math.floor(b.R()*b.nc));if(!findGroups(b).length&&hasMove(b))return;}}
-/* ---- what a special clears ---- */
-function area(b,r,c,s,extra){const out=[];const add=(a,d)=>{if(playable(b,a,d))out.push([a,d]);};
-  if(s==='h'||s==='cross')for(let d=0;d<COLS;d++)add(r,d);
-  if(s==='v'||s==='cross')for(let a=0;a<ROWS;a++)add(a,c);
-  if(s==='b'||s==='bb'){const k=s==='bb'?3:2;for(let a=r-k;a<=r+k;a++)for(let d=c-k;d<=c+k;d++)add(a,d);}
-  if(s==='rb'){for(let a=r-1;a<=r+1;a++)for(let d=0;d<COLS;d++)add(a,d);for(let d=c-1;d<=c+1;d++)for(let a=0;a<ROWS;a++)add(a,d);}
-  if(s==='p'){[[r,c],...DIRS.map(([x,y])=>[r+x,c+y])].forEach(([a,d])=>add(a,d));const t=target(b);if(t)out.push(...(extra==='pb'?area(b,t[0],t[1],'b'):extra==='ph'?area(b,t[0],t[1],b.R()<.5?'h':'v'):[t]));}
-  if(s==='o'){const col=extra!=null?extra:commonColor(b);for(let a=0;a<ROWS;a++)for(let d=0;d<COLS;d++){const x=b.g[a][d];if(x&&x.c===col&&!x.s)out.push([a,d]);}out.push([r,c]);}
-  if(s==='all')for(let a=0;a<ROWS;a++)for(let d=0;d<COLS;d++)add(a,d);
+/* ---- what a special clears: each square comes with a delay (seconds) so the board can show it travelling ---- */
+function area(b,r,c,s,extra){const out=[];const add=(a,d,dt)=>{if(playable(b,a,d))out.push([a,d,dt]);};const RK=0.05,ch=(a,d)=>Math.max(Math.abs(a-r),Math.abs(d-c));
+  if(s==='h')for(let d=0;d<COLS;d++)add(r,d,0.08+Math.abs(d-c)*RK);
+  if(s==='v')for(let a=0;a<ROWS;a++)add(a,c,0.08+Math.abs(a-r)*RK);
+  if(s==='star')for(let k=-ROWS;k<=ROWS;k++){const dt=0.1+Math.abs(k)*RK;add(r,c+k,dt);add(r+k,c,dt);add(r+k,c+k,dt);add(r+k,c-k,dt);}
+  if(s==='b'||s==='bb'){const k=s==='bb'?3:2;for(let a=r-k;a<=r+k;a++)for(let d=c-k;d<=c+k;d++)add(a,d,0.12+ch(a,d)*0.04);}
+  if(s==='rb'){for(let a=r-1;a<=r+1;a++)for(let d=0;d<COLS;d++)add(a,d,0.1+Math.abs(d-c)*RK);for(let d=c-1;d<=c+1;d++)for(let a=0;a<ROWS;a++)add(a,d,0.1+Math.abs(a-r)*RK);}
+  if(s==='p'){[[r,c],...DIRS.map(([x,y])=>[r+x,c+y])].forEach(([a,d])=>add(a,d,0.05));const t=target(b);
+    if(t){b._tg=t;const F=0.65;const pay=extra==='pb'?area(b,t[0],t[1],'b'):extra==='ph'?area(b,t[0],t[1],b.R()<.5?'h':'v'):[[t[0],t[1],0]];pay.forEach(([a,d,dt])=>out.push([a,d,F+dt]));}}
+  if(s==='o'){const col=extra!=null?extra:commonColor(b);let n=0;for(let a=0;a<ROWS;a++)for(let d=0;d<COLS;d++){const x=b.g[a][d];if(x&&x.c===col&&!x.s)out.push([a,d,0.15+(n++)*0.045]);}out.push([r,c,0.2+n*0.045]);}
+  if(s==='all')for(let a=0;a<ROWS;a++)for(let d=0;d<COLS;d++)add(a,d,0.15+ch(a,d)*0.06);
   return out;}
 /* the homing star flies to whatever the goals still need most */
 function target(b){const opts=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(!playable(b,r,c))continue;let w=0;
@@ -731,25 +766,25 @@ function target(b){const opts=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
   if(w)opts.push([w+b.R()*0.5,r,c]);}
   if(!opts.length)return null;opts.sort((a,b2)=>b2[0]-a[0]);return [opts[0][1],opts[0][2]];}
 function commonColor(b){const n=new Array(b.nc).fill(0);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=b.g[r][c];if(x&&!x.s)n[x.c]+=1+(b.left['c'+x.c]>0?2:0);}return n.indexOf(Math.max(...n));}
-/* ---- clearing a set of squares; specials inside go off too ---- */
-function blast(b,cells,opt){opt=opt||{};const done=new Set(),hitCrate=new Set();const q=cells.slice();let n=0;
+/* ---- clearing a set of squares; specials inside go off too (in time order) ---- */
+function blast(b,cells,opt){opt=opt||{};const done=new Set(),hitCrate=new Set();const q=cells.map(p=>[p[0],p[1],p[2]||opt.t0||0]);let n=0;
   const keep=opt.keep||new Set();
-  while(q.length){const [r,c]=q.shift();const k=r+','+c;if(done.has(k))continue;done.add(k);if(!playable(b,r,c))continue;
-    if(b.crate[r][c]){if(!hitCrate.has(k)){hitCrate.add(k);hitCr(b,r,c);}continue;}
+  while(q.length){let mi=0;for(let i=1;i<q.length;i++)if(q[i][2]<q[mi][2])mi=i;const [r,c,t]=q.splice(mi,1)[0];const k=r+','+c;if(done.has(k))continue;done.add(k);if(!playable(b,r,c))continue;
+    if(b.crate[r][c]){if(!hitCrate.has(k)){hitCrate.add(k);hitCr(b,r,c,t);}continue;}
     const x=b.g[r][c];if(!x)continue;if(keep.has(k))continue;
-    if(b.chain[r][c]){b.chain[r][c]=0;goal(b,'chain');b.fx.push({t:'chain',r,c});continue;}   // a chain breaks first, the gem stays
-    if(b.ice[r][c]){b.ice[r][c]=0;goal(b,'ice');b.fx.push({t:'ice',r,c});}
-    if(!x.s)goal(b,'c'+x.c);b.g[r][c]=null;n++;b.fx.push({t:'pop',r,c,g:x});
-    if(x.s){const ex=x.s==='o'?null:undefined;const more=area(b,r,c,x.s,ex);b.fx.push({t:'sp',s:x.s,r,c,cells:more});more.forEach(p=>q.push(p));}}
+    if(b.chain[r][c]){b.chain[r][c]=0;goal(b,'chain');b.fx.push({t:'chain',r,c,d:t});continue;}   // a chain breaks first, the gem stays
+    if(b.ice[r][c]){b.ice[r][c]=0;goal(b,'ice');b.fx.push({t:'ice',r,c,d:t});}
+    if(!x.s)goal(b,'c'+x.c);if(x.gold)b.gold=(b.gold||0)+1;b.g[r][c]=null;n++;b.fx.push({t:'pop',r,c,g:x,d:t});
+    if(x.s){b._tg=null;const more=area(b,r,c,x.s,x.s==='o'?null:undefined);b.fx.push({t:'sp',s:x.s,r,c,d:t,cells:more.map(p=>[p[0],p[1],t+p[2]]),tg:b._tg});more.forEach(p=>q.push([p[0],p[1],t+p[2]]));}}
   /* matches also knock the crates next to them */
-  if(opt.match)opt.match.forEach(([r,c])=>DIRS.forEach(([dr,dc])=>{const a=r+dr,d=c+dc,k=a+','+d;if(playable(b,a,d)&&b.crate[a][d]&&!hitCrate.has(k)){hitCrate.add(k);hitCr(b,a,d);}}));
+  if(opt.match)opt.match.forEach(([r,c])=>DIRS.forEach(([dr,dc])=>{const a=r+dr,d=c+dc,k=a+','+d;if(playable(b,a,d)&&b.crate[a][d]&&!hitCrate.has(k)){hitCrate.add(k);hitCr(b,a,d,0);}}));
   b.score+=n*10;return n;}
-function hitCr(b,r,c){b.crate[r][c]--;b.fx.push({t:'crate',r,c,left:b.crate[r][c]});if(!b.crate[r][c])goal(b,'crate');}
+function hitCr(b,r,c,t){b.crate[r][c]--;b.fx.push({t:'crate',r,c,left:b.crate[r][c],d:t||0});if(!b.crate[r][c])goal(b,'crate');}
 function goal(b,k){if(b.left[k]>0)b.left[k]--;}
 /* resolve all matches on the board once; returns true if anything happened */
-function matchStep(b,swapAt){const gs=findGroups(b);if(!gs.length)return false;const keep=new Set(),made=[];
+function matchStep(b,swapAt,dir){const gs=findGroups(b);if(!gs.length)return false;const keep=new Set(),made=[];
   gs.forEach(g=>{if(!g.make)return;let at=g.cells.find(p=>swapAt&&swapAt.some(q=>q[0]===p[0]&&q[1]===p[1]))||g.cells[Math.floor(g.cells.length/2)];
-    const x=b.g[at[0]][at[1]];if(x&&x.s)at=g.cells.find(p=>!b.g[p[0]][p[1]].s)||at;keep.add(at+'');made.push({at,s:g.make,c:b.g[at[0]][at[1]].c});});
+    const x=b.g[at[0]][at[1]];if(x&&x.s)at=g.cells.find(p=>!b.g[p[0]][p[1]].s)||at;keep.add(at+'');let mk=g.make;if((mk==='h'||mk==='v')&&dir&&swapAt&&swapAt.some(q=>q[0]===at[0]&&q[1]===at[1]))mk=dir;made.push({at,s:mk,c:b.g[at[0]][at[1]].c});});
   const cells=[];gs.forEach(g=>g.cells.forEach(p=>cells.push(p)));
   blast(b,cells,{keep,match:cells});
   made.forEach(m=>{const [r,c]=m.at;const x=b.g[r][c];if(x){if(x.s){blast(b,[[r,c]]);}else{goal(b,'c'+x.c);if(b.ice[r][c]){b.ice[r][c]=0;goal(b,'ice');}}
@@ -758,7 +793,7 @@ function matchStep(b,swapAt){const gs=findGroups(b);if(!gs.length)return false;c
 /* ---- falling: straight down, sliding round crates diagonally, new gems from the top ---- */
 function fall(b){let moved=true,guard=0;while(moved&&guard++<200){moved=false;
   for(let r=ROWS-1;r>=0;r--)for(let c=0;c<COLS;c++){if(!playable(b,r,c)||b.crate[r][c]||b.g[r][c])continue;
-    if(r===b.cols[c][0]){b.g[r][c]=gem(Math.floor(b.R()*b.nc),r,c);b.g[r][c].y=r-1.2;moved=true;continue;}
+    if(r===b.cols[c][0]){b.g[r][c]=gem(Math.floor(b.R()*b.nc),r,c);b.g[r][c].y=r-1.2;if(b.R()<0.006)b.g[r][c].gold=true;moved=true;continue;}
     if(playable(b,r-1,c)&&!b.crate[r-1][c]&&b.g[r-1][c]&&!b.chain[r-1][c]){b.g[r][c]=b.g[r-1][c];b.g[r-1][c]=null;moved=true;continue;}
     const blocked=!playable(b,r-1,c)||b.crate[r-1][c]||b.chain[r-1][c]||(!b.g[r-1][c]&&upBlocked(b,r-1,c));
     if(blocked){for(const d of [c-1,c+1]){if(playable(b,r-1,d)&&!b.crate[r-1][d]&&!b.chain[r-1][d]&&b.g[r-1][d]&&(!playable(b,r,d)||b.crate[r][d]||b.g[r][d])){b.g[r][c]=b.g[r-1][d];b.g[r-1][d]=null;moved=true;break;}}}}}
@@ -770,31 +805,33 @@ function trySwap(b,r,c,a,d){if(!movable(b,r,c)||!movable(b,a,d)||Math.abs(r-a)+M
   if(x.s&&y.s)return combo(b,r,c,a,d);
   if(x.s==='o'||y.s==='o'){const [or,oc,other]=x.s==='o'?[r,c,y]:[a,d,x];swapRaw(b,r,c,a,d);b.moves--;b.fx.push({t:'swap'});
     const [pr,pc]=x.s==='o'?[a,d]:[r,c];b.g[pr][pc].s=null;const cells=area(b,pr,pc,'o',other.c);b.fx.push({t:'sp',s:'o',r:pr,c:pc,cells});blast(b,cells);return {ok:true};}
-  if(x.s||y.s){/* a special swapped with a gem goes off where it lands; any line the gem makes counts too */swapRaw(b,r,c,a,d);b.moves--;const [sr,sc]=x.s?[a,d]:[r,c];matchStep(b,[[r,c],[a,d]]);if(b.g[sr][sc]&&b.g[sr][sc].s)blast(b,[[sr,sc]]);return {ok:true};}
+  if(x.s||y.s){/* a special swapped with a gem goes off where it lands; any line the gem makes counts too */swapRaw(b,r,c,a,d);b.moves--;const [sr,sc]=x.s?[a,d]:[r,c];matchStep(b,[[r,c],[a,d]],r===a?'h':'v');if(b.g[sr][sc]&&b.g[sr][sc].s)blast(b,[[sr,sc]]);return {ok:true};}
   swapRaw(b,r,c,a,d);if(!findGroups(b).length){swapRaw(b,r,c,a,d);return {ok:false};}
-  b.moves--;matchStep(b,[[r,c],[a,d]]);return {ok:true};}
-function combo(b,r,c,a,d){const x=b.g[r][c],y=b.g[a][d];const ss=[x.s,y.s].sort().join('');b.moves--;b.g[r][c]=null;b.g[a][d]=null;b.fx.push({t:'combo',s:ss,r:a,c:d});
-  let cells;const H=s=>s==='h'||s==='v';
-  if(ss==='oo')cells=area(b,a,d,'all');
-  else if(x.s==='o'||y.s==='o'){const other=x.s==='o'?y:x;const col=commonColor(b);cells=[];
-    for(let i=0;i<ROWS;i++)for(let j=0;j<COLS;j++){const z=b.g[i][j];if(z&&z.c===col&&!z.s){z.s=H(other.s)?(b.R()<.5?'h':'v'):other.s;cells.push([i,j]);}}cells.push([a,d]);}
-  else if(ss==='bb')cells=area(b,a,d,'bb');
-  else if(H(x.s)&&H(y.s))cells=area(b,a,d,'cross');
-  else if((x.s==='b'&&H(y.s))||(y.s==='b'&&H(x.s)))cells=area(b,a,d,'rb');
-  else if(ss==='pp'){cells=area(b,a,d,'p');cells=cells.concat(area(b,a,d,'p'),area(b,a,d,'p'));}
-  else if(ss==='bp')cells=area(b,a,d,'p','pb');
-  else cells=area(b,a,d,'p','ph');
+  b.moves--;matchStep(b,[[r,c],[a,d]],r===a?'h':'v');return {ok:true};}
+const COMBO_NAME={oo:'Supernova',o:'Colour Storm',bb:'Mega Blast',hh:'Star Burst',bh:'Mega Cross',pp:'Seeker Swarm',bp:'Seeker Bomb',hp:'Seeker Rocket'};
+function combo(b,r,c,a,d){const x=b.g[r][c],y=b.g[a][d];const H=s=>s==='h'||s==='v';const n=s=>H(s)?'h':s;const ss=[n(x.s),n(y.s)].sort().join('');b.moves--;b.g[r][c]=null;b.g[a][d]=null;
+  const key=ss==='oo'?'oo':ss.includes('o')?'o':ss;b.fx.push({t:'combo',s:key,name:COMBO_NAME[key],r:a,c:d,d:0});
+  let cells;b._tg=null;
+  if(key==='oo')cells=area(b,a,d,'all');
+  else if(key==='o'){const other=x.s==='o'?y:x;const col=commonColor(b);cells=[];let k=0;
+    for(let i=0;i<ROWS;i++)for(let j=0;j<COLS;j++){const z=b.g[i][j];if(z&&z.c===col&&!z.s){z.s=H(other.s)?(b.R()<.5?'h':'v'):other.s;b.fx.push({t:'make',r:i,c:j,s:z.s,d:0.1+k*0.05});cells.push([i,j,0.5+k*0.08]);k++;}}}
+  else if(key==='bb')cells=area(b,a,d,'bb');
+  else if(key==='hh')cells=area(b,a,d,'star');
+  else if(key==='bh')cells=area(b,a,d,'rb');
+  else if(key==='pp'){cells=[];for(let k=0;k<3;k++){b._tg=null;const one=area(b,a,d,'p');b.fx.push({t:'sp',s:'p',r:a,c:d,d:k*0.12,tg:b._tg,cells:[]});one.forEach(p=>cells.push([p[0],p[1],p[2]+k*0.12]));}}
+  else{cells=area(b,a,d,'p',key==='bp'?'pb':'ph');b.fx.push({t:'sp',s:'p',r:a,c:d,d:0,tg:b._tg,cells:[],carry:key==='bp'?'b':'h'});}
+  if(['oo','bb','hh','bh'].includes(key))b.fx.push({t:'sp',s:{oo:'all',bb:'bb',hh:'star',bh:'rb'}[key],r:a,c:d,d:0,cells:cells.map(p=>[p[0],p[1],p[2]])});
   blast(b,cells);return {ok:true};}
 function tapSpecial(b,r,c){if(!movable(b,r,c)||!b.g[r][c].s)return null;b.moves--;blast(b,[[r,c]]);return {ok:true};}
 /* settle everything after a move: fall, then keep matching until calm */
 function settle(b,onStep){let guard=0;while(guard++<60){fall(b);if(onStep)onStep();if(!matchStep(b))break;}if(!won(b)&&!hasMove(b)){shuffle(b);b.fx.push({t:'shuffle'});}}
-return {COLS,ROWS,level,make,trySwap,tapSpecial,settle,fall,matchStep,findGroups,hasMove,won,playable,movable,shuffle,rngOf};
+return {COMBO_NAME,COLS,ROWS,level,make,trySwap,tapSpecial,settle,fall,matchStep,findGroups,hasMove,won,playable,movable,shuffle,rngOf};
 })();
 if(typeof module!=='undefined')module.exports={M3};
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.11.06';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.12.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -998,17 +1035,17 @@ function labels(){const ev=P.cur==='event',br=P.cur==='bonus';const tw=ev?TWISTS
   $('#starlbl').textContent=br?'Trophies':ev?'Tokens':W.starName;$('[data-tab="stars"] .tl').textContent=br?'Round':ev?'Event':W.starName;document.body.dataset.world=br?'event':P.cur;}
 function setTab(t){tab=t;$$('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));$$('section.pane').forEach(p=>p.hidden=p.id!=='p-'+t);render(true);}
 /* ---- toasts ---- */
-function toast(html,cls=''){const box=$('#toasts');while(box.children.length>=2)box.firstChild.remove();const d=document.createElement('div');d.className='toast '+cls;d.innerHTML=html;$('#toasts').appendChild(d);setTimeout(()=>d.classList.add('out'),3400);setTimeout(()=>d.remove(),4000);}
+function toast(html,cls=''){const box=$('#toasts');while(box.children.length>=1)box.firstChild.remove();const d=document.createElement('div');d.className='toast '+cls;d.innerHTML=html;d.addEventListener('click',()=>d.remove());box.appendChild(d);setTimeout(()=>d.classList.add('out'),2900);setTimeout(()=>d.remove(),3400);}
 function announce(got){got.forEach(p=>toast(`<b>Power-up to choose</b> ${esc(p.src)}<small>Pick 1 of ${p.opts.length} on the Power-ups tab. One is picked for you after 3 minutes.</small>`,'pup'));}
 /* ---- actions ---- */
 function amount(i){if(mode==='max')return Math.max(1,E.maxAfford(st,i));if(mode==='next'){const nm=E.nextMilestone(st.tiers[i].n,i);return nm?nm-st.tiers[i].n:1;}return mode;}
 document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap]');if(!b)return;
   if(b.dataset.tap!=null){E.tap(st,+b.dataset.tap);return;}
-  if(b.dataset.buy!=null){const i=+b.dataset.buy;const before=(st.picks||[]).length;const n0=st.tiers[i].n;if(E.buy(st,i,amount(i))){const got=(st.picks||[]).slice(before);announce(got);
-    const hit=E.crossed(i,n0,st.tiers[i].n);AUDIO.play(got.length?'offer':hit?'milestone':'buy');}render();return;}
-  if(b.dataset.mgr!=null){const i=+b.dataset.mgr;if(E.buyMgr(st,i)&&(AUDIO.play('mgr'),1))toast(`<b>Manager hired</b> ${esc(W.tiers[i].name)} runs by itself now, even while you're away.`);render();return;}
-  if(b.dataset.pick!=null){const [pi,c]=b.dataset.pick.split(':').map(Number);const p=E.choosePup(st,pi,c);if(p){toast(`<b>Power-up!</b> ${esc(p.txt)}`,'pup');AUDIO.play('pick');save();render(true);}return;}
-  if(b.dataset.up){if(E.buyUp(st,b.dataset.up))render(true);return;}
+  if(b.dataset.buy!=null){const i=+b.dataset.buy;const before=(st.picks||[]).length;const n0=st.tiers[i].n;if(E.buy(st,i,amount(i))){const got=(st.picks||[]).slice(before);announce(got);questBump('buy',st.tiers[i].n-n0);
+    const hit=E.crossed(i,n0,st.tiers[i].n);if(hit)burst(i);AUDIO.play(got.length?'offer':hit?'milestone':'buy');}render();return;}
+  if(b.dataset.mgr!=null){const i=+b.dataset.mgr;if(E.buyMgr(st,i)&&(AUDIO.play('mgr'),questBump('mgr'),1))toast(`<b>Manager hired</b> ${esc(W.tiers[i].name)} runs by itself now, even while you're away.`);render();return;}
+  if(b.dataset.pick!=null){const [pi,c]=b.dataset.pick.split(':').map(Number);const p=E.choosePup(st,pi,c);if(p){questBump('pup');toast(`<b>Power-up!</b> ${esc(p.txt)}`,'pup');AUDIO.play('pick');save();render(true);}return;}
+  if(b.dataset.up){if(E.buyUp(st,b.dataset.up)){questBump('up');render(true);}return;}
   if(b.dataset.perk){const pk=E.PERKS.find(x=>x.id===b.dataset.perk);const im=E.perkImpact(st,pk);
     if(im&&im.drop>0.2&&!b.dataset.sure){openModal(`<h2>Big cut to your bonus</h2><p>This perk spends <b>${im.c}</b> of your <b>${st.stars}</b> ${W.starName}. All earnings go from <b>×${im.a.toFixed(2)}</b> to <b>×${im.b.toFixed(2)}</b>, a ${Math.round(im.drop*100)}% cut.</p><p>${PERK_TIP[pk.id][0].toUpperCase()+PERK_TIP[pk.id].slice(1)}. It may be worth waiting until you have more Stars.</p><div class="mact"><button class="ghost" id="rsNo">Wait</button><button class="go" data-perk="${pk.id}" data-sure="1">Buy anyway</button></div>`);return;}
     if(E.buyPerk(st,b.dataset.perk)){closeModal();save();render(true);}return;}
@@ -1026,7 +1063,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.id==='arcpill'){openArcade();return;}
   if(b.id==='arcGo'){closeModal();openArcade();return;}
   if(b.id==='restartBtn'){openRestart();return;}
-  if(b.id==='rsYes'){if(P.cur==='event'&&P.ev)P.ev.goldRun=0;const p=E.restart(st);AUDIO.play('restart');st.now=now();st.seen=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${SNm()}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
+  if(b.id==='rsYes'){if(P.cur==='event'&&P.ev)P.ev.goldRun=0;const p=E.restart(st);AUDIO.play('restart');questBump('restart');st.now=now();st.seen=now();st.nextGold=now()+30000;closeModal();save();toast(`<b>Restarted</b> +${p} ${SNm()}. Everything here earns ${Math.round(E.starMult(st)*100-100)}% more.`,'star');render(true);return;}
   if(b.id==='rsNo'||b.id==='awayOk'){closeModal();return;}
   if(b.dataset.bonus!=null){closeModal();startBonus();return;}
   if(b.id==='colpill'){if(P.cur!=='event')switchWorld('event',true);setTab('stars');return;}
@@ -1034,7 +1071,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,[data-tap
   if(b.dataset.skip!=null){if(!P.ev||!skipReady())return;const i=+b.dataset.skip;if(P.ev.chal[i].wait||P.ev.chal[i].done)return;P.ev.chal[i]=chalGen(P.ev.k++);P.ev.skipAt=now();save();render(true);toast('<b>Challenge swapped</b> Next swap in 1 hour.');return;}
   if(b.dataset.round){closeModal();if(P.br&&P.br.id!==b.dataset.round){toast('<b>Finish or quit your current round first</b>');return;}if(P.br)switchWorld('bonus');else startRound(b.dataset.round);return;}
   if(b.id==='quitRound'){endRound(true);return;}
-  if(b.id==='gold'){const r=E.goldReward(st);AUDIO.play('gold');if(P.cur==='event'){P.ev.gold++;P.ev.goldRun=(P.ev.goldRun||0)+1;}if(P.cur==='bonus')P.br.gold++;b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} ${W.cur}`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
+  if(b.id==='gold'){const r=E.goldReward(st);AUDIO.play('gold');questBump('gold');if(P.cur==='event'){P.ev.gold++;P.ev.goldRun=(P.ev.goldRun||0)+1;}if(P.cur==='bonus')P.br.gold++;b.hidden=true;toast(`<b>${esc(r.txt)}</b>${r.v?` +${fmt(r.v)} ${W.cur}`:''}`,'gold');st.nextGold=now()+E.goldGap(st);render();return;}
 });
 function openModal(h){$('#modalCard').innerHTML=h;$('#modal').hidden=false;}
 function closeModal(){$('#modal').hidden=true;}
@@ -1049,7 +1086,7 @@ function timedGroups(S){const g={};(S.timed||[]).forEach(x=>{const k=x.k;g[k]=g[
   const nm={tx:'Profit boosts',tfast:'Speed boosts',ttier:'Item boosts'};
   return ['tx','tfast','ttier'].filter(k=>g[k]).map(k=>{const x=g[k];x.name=nm[k];x.label=k==='tx'?'⚡×'+fmt(x.m):k==='tfast'?'»×'+fmt(x.m):'⛏'+x.items.size+' item'+(x.items.size>1?'s':'');return x;});}
 function SNm(){return P.cur==='event'?'Event Stars':W.starName;}
-function render(full){const t=now();if(actsReady&&uiReady)renderAct();if(uiReady)arcPill();
+function render(full){const t=now();if(actsReady&&uiReady)renderAct();if(questsReady&&uiReady)dailyRender();if(uiReady)arcPill();
   $('#cash').textContent=fmt(st.cash);$('#ps').textContent=fmt(E.incomeAll(st))+'/s';
   const ev=P.cur==='event',br=P.cur==='bonus';$('#stars').textContent=br?P.tro.pts:ev?P.ev.tok:st.stars;$('#starx').textContent=br?troRank():ev?`of ${capOf()}`:'×'+E.starMult(st).toFixed(2);
   /* timed boosts collapse into one chip per kind: total effect, how many, and the soonest to run out */
@@ -1209,6 +1246,68 @@ if(P.season){P.season=false;save();openModal(`<h2>A fresh start</h2><p>Asteroid 
 else if(!P.n211){P.n211=1;P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0||(P.w.belt.life||0)>1e4)openModal(`<h2>The Arcade is open</h2><p>Tap <b>♛ Arcade</b> at the top any time.</p><ul class="muted"><li><b>Cat Naps</b>: a logic puzzle. One cat per row, column and colour patch, and cats never touch.</li><li><b>Royal Rocks</b>: match-3 with rockets, bombs, propellers, orbs, crates, ice and chains.</li><li>Win crowns and <b>build a kingdom</b>. Every building gives a gift: a timed boost for any world.</li><li>The newer worlds got hands-on extras: <b>spells</b> in the Tower, <b>orders</b> in Candy, <b>blueprints</b> in the Foundry, <b>expeditions</b> in Dino Park, <b>rush hour</b> in Coffee and <b>sonar</b> in Deep-Sea Salvage. The Belt stays the same old friend.</li></ul><div class="mact"><button class="ghost" id="awayOk">Later</button><button class="go" id="arcGo">Open the Arcade</button></div>`);}
 else if(!P.n210){P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0)openModal(`<h2>Big expansion</h2><p>Four new worlds, a third weekly event and more twists.</p><ul class="muted"><li><b>Wizard's Tower</b>: own 50 of an item to add to the spell circle.</li><li><b>Candy Factory</b>: buying 25 or more at once is 40% cheaper.</li><li><b>Robot Foundry</b>: machines run hot (×3 speed), then cool down.</li><li><b>Dino Park</b>: keep each herd at least as big as the one above for ×2.5.</li><li>Each new world unlocks at 500 of the world before (after Deep-Sea Salvage). Every item has its own milestones and personality.</li><li>New <b>Midweek event</b> from Wednesday to Friday, 7 new twists and 3 new Bonus Rounds.</li></ul><div class="mact"><button class="go" id="awayOk">Nice</button></div>`);}
 else if(awayMsg)welcome(awayMsg);
+/* ===================== DAILY: quests, the daily chest, hints, and a few things that turn up now and then ===================== */
+function qDay(){const d=new Date();return Math.round(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5);}
+const QPOOL=[{k:'buy',t:'Buy {n} items',n:[150,300,600]},{k:'mgr',t:'Hire {n} managers',n:[2,3,4]},{k:'gold',t:'Catch {n} golden bonuses',n:[3,4,6]},{k:'up',t:'Buy {n} upgrades',n:[3,5,8]},
+  {k:'pup',t:'Pick {n} power-ups',n:[2,3,4]},{k:'restart',t:'Restart any world',n:[1]},{k:'m3',t:'Win {n} Royal Rocks level{s}',n:[1,2],arc:1},{k:'cat',t:'Solve {n} Cat Naps puzzle{s}',n:[1,2],arc:1},
+  {k:'act',t:'Use {n} world actions (spells, orders and more)',n:[2,3,5],act:1}];
+function qState(){const d=qDay();if(!P.q||P.q.day!==d){let s=(d*2654435761)>>>0;const R=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};
+    const hasAct=['coffee','salvage','tower','candy','foundry','dino'].some(w=>P.w[w]);const pool=QPOOL.filter(q=>!q.act||hasAct);const arc=pool.filter(q=>q.arc),idle=pool.filter(q=>!q.arc);
+    const pick=(list,used)=>{let q;do{q=list[Math.floor(R()*list.length)];}while(used.includes(q.k));used.push(q.k);return q;};const used=[];
+    const chosen=[pick(idle,used),pick(idle,used),pick(arc,used)];
+    P.q={day:d,all:false,list:chosen.map(q=>{const n=q.n[Math.floor(R()*q.n.length)];return {k:q.k,need:n,have:0,done:false,got:false,t:q.t.replace('{n}',n).replace('{s}',n>1?'s':'')};})};}
+  return P.q;}
+function questBump(k,n){if(!P||!P.w)return;const Q=qState();Q.list.forEach(q=>{if(q.k!==k||q.done)return;q.have=Math.min(q.need,q.have+(n||1));if(q.have>=q.need){q.done=true;toast(`<b>Quest done!</b> ${esc(q.t)} · tap Quests to claim`,'star');AUDIO.play('challenge');}});}
+function questsOpen(){const Q=qState();const ok=Q.list.filter(q=>q.got).length;
+  openModal(`<h2>Today's quests</h2><p>New quests every day. Each one pays <b>2 crowns</b>; finish all three for a <b>×2 gift for 20 minutes</b>.</p>
+   ${Q.list.map((q,i)=>`<div class="qrow${q.got?' got':''}"><div><b>${esc(q.t)}</b><div class="qbar"><i style="width:${q.have/q.need*100}%"></i></div><small>${q.have}/${q.need}</small></div>${q.got?'<span class="qok">✓</span>':`<button class="go small" data-qclaim="${i}" ${q.done?'':'disabled'}>Claim</button>`}</div>`).join('')}
+   <p class="muted small">${ok}/3 claimed${Q.all?' · gift collected':''}. Crowns build your kingdom in the Arcade.</p><div class="mact"><button class="ghost" id="awayOk">Close</button></div>`);}
+/* the daily chest: come back each day to grow the streak */
+const CHEST=[{cr:1},{cr:2},{gift:{m:2,min:10}},{cr:3},{cr:3},{gift:{m:3,min:15}},{cr:5,gift:{m:3,min:30}}];
+function chestReady(){return !P.login||P.login.last!==qDay();}
+function chestOpen(){if(!chestReady())return;const d=qDay();const streak=P.login&&P.login.last===d-1?P.login.streak+1:1;P.login={last:d,streak};const R=CHEST[(streak-1)%7];
+  if(R.cr){P.arc.cr+=R.cr;P.arc.crEver=(P.arc.crEver||0)+R.cr;}if(R.gift)P.arc.tok.push(R.gift);save();AUDIO.play('pick');
+  openModal(`<h2>Daily chest</h2><div class="chestrow">${CHEST.map((c,i)=>`<span class="${i<((streak-1)%7)?'past':i===(streak-1)%7?'now':''}"><b>${i+1}</b><small>${c.gift&&c.cr?'★':c.gift?'×'+c.gift.m:c.cr+'♛'}</small></span>`).join('')}</div>
+   <div class="bigstat"><span>${[R.cr?`+${R.cr} ♛`:'',R.gift?`×${R.gift.m} gift`:''].filter(Boolean).join(' + ')}</span><small>Day ${streak} streak${R.gift?` · the gift is ${R.gift.min} minutes, saved in the Arcade`:''}</small></div>
+   <p class="muted small">Open it again tomorrow to keep the streak going. Day 7 is the big one.</p><div class="mact"><button class="go" id="awayOk">Nice</button></div>`);}
+/* hint chip: the next sensible thing to do here, and tapping it does it */
+let hintAt=0,hintCur=null;
+function bestHint(){if(P.cur==='bonus'||!st)return null;const f=E.fx(st);
+  for(let i=0;i<st.tiers.length;i++){const T=st.tiers[i];if(T.n&&!T.mgr&&E.allowed(st,i)&&E.mgrPrice(st,i)<=st.cash)return {txt:`Hire the ${W.tiers[i].name} manager`,go(){if(E.buyMgr(st,i)){AUDIO.play('mgr');questBump('mgr');}}};}
+  let up=null;E.UPS.forEach(u=>{if(st.ups[u.id]||!(u.t<0||(st.tiers[u.t].n&&E.allowed(st,u.t))))return;const c=E.upPrice(st,u);if(c<=st.cash&&(!up||c<up.c))up={u,c};});
+  if(up)return {txt:`Upgrade: ${up.u.txt||up.u.name||'boost'}`,go(){if(E.buyUp(st,up.u.id)){AUDIO.play('buy');questBump('up');}}};
+  let best=null;st.tiers.forEach((T,i)=>{if(!T.n||!E.allowed(st,i))return;const k=E.nextMilestone(T.n,i)-T.n;const c=E.costN(st,i,k);if(c<=st.cash&&(!best||c<best.c))best={i,k,c};});
+  if(best)return {txt:`Buy ${best.k} ${W.tiers[best.i].name} for a milestone`,go(){const n0=st.tiers[best.i].n;if(E.buy(st,best.i,best.k)){AUDIO.play('milestone');questBump('buy',best.k);burst(best.i);}}};
+  for(let i=0;i<st.tiers.length;i++){if(!st.tiers[i].n&&E.allowed(st,i)&&(i===0||st.tiers[i-1].n)&&E.costN(st,i,1)<=st.cash)return {txt:`Buy your first ${W.tiers[i].name}`,go(){if(E.buy(st,i,1)){AUDIO.play('buy');questBump('buy');}}};}
+  return null;}
+/* milestone fanfare */
+function burst(i){const row=$('#r'+i);if(!row)return;row.classList.remove('burst');void row.offsetWidth;row.classList.add('burst');const f=document.createElement('span');f.className='msfloat';f.textContent='Milestone!';row.appendChild(f);setTimeout(()=>f.remove(),1100);}
+/* now and then */
+function mainWorld(){return P.cur!=='event'&&P.cur!=='bonus';}
+function luckTick(){const t=now();P.luck=P.luck||{shower:0,showerNext:t+(15+Math.random()*15)*MIN2,merch:null,merchNext:t+(20+Math.random()*20)*MIN2};const L=P.luck;
+  if(mainWorld()&&t>L.showerNext&&!(L.shower>t)){L.shower=t+22000;L.showerNext=t+(25+Math.random()*30)*MIN2;toast(`<b>Meteor shower!</b> Quick, catch them!`,'gold');AUDIO.play('gold');}
+  if(L.shower>t&&mainWorld())st.nextGold=Math.min(st.nextGold,t);
+  if(mainWorld()&&!L.merch&&t>L.merchNext){L.merch={until:t+150000,k:Math.random()<0.5?'boost':'crowns',w:P.cur};L.merchNext=t+(45+Math.random()*45)*MIN2;toast('<b>A travelling merchant has arrived</b> They won\'t stay long.','star');}
+  if(L.merch&&t>L.merch.until)L.merch=null;}
+const MIN2=60000;
+function merchOpen(){const L=P.luck,m=L&&L.merch;if(!m)return;const pct=m.k==='boost'?25:40;const cost=st.cash*pct/100;
+  openModal(`<h2>Travelling merchant</h2><p>"${m.k==='boost'?'A fine charm, friend. Makes everything here earn ×4 for ten minutes.':'Crowns! Shiny royal crowns. Three of them.'}"</p><div class="bigstat"><span>${m.k==='boost'?'×4 · 10 min':'+3 ♛'}</span><small>Price: ${pct}% of your ${esc(W.cur)} (${fmt(cost)})</small></div>
+   <div class="mact"><button class="ghost" id="awayOk">No thanks</button><button class="go" data-merch ${cost<1?'disabled':''}>Trade</button></div>`);}
+document.addEventListener('click',e=>{const b=e.target.closest('#qpill,#chestpill,#merchpill,#hintpill,[data-qclaim],[data-merch]');if(!b||b.disabled)return;
+  if(b.id==='qpill')questsOpen();else if(b.id==='chestpill')chestOpen();else if(b.id==='merchpill')merchOpen();
+  else if(b.id==='hintpill'){if(hintCur){hintCur.go();hintAt=0;save();render(true);}}
+  else if(b.dataset.qclaim!=null){const Q=qState(),q=Q.list[+b.dataset.qclaim];if(!q||!q.done||q.got)return;q.got=true;P.arc.cr+=2;P.arc.crEver=(P.arc.crEver||0)+2;AUDIO.play('pick');
+    if(Q.list.every(x=>x.got)&&!Q.all){Q.all=true;P.arc.tok.push({m:2,min:20});toast('<b>All quests done!</b> A ×2 gift is waiting in the Arcade.','gold');}save();questsOpen();}
+  else if(b.dataset.merch!=null){const L=P.luck,m=L&&L.merch;if(!m)return;const pct=m.k==='boost'?25:40;st.cash-=st.cash*pct/100;
+    if(m.k==='boost')(st.timed=st.timed||[]).push({k:'tx',m:4,left:10*MIN2,txt:'Merchant charm ×4 for 10 minutes'});else{P.arc.cr+=3;P.arc.crEver=(P.arc.crEver||0)+3;}
+    L.merch=null;closeModal();save();AUDIO.play('challenge');toast(m.k==='boost'?'<b>Charm bought</b> ×4 for 10 minutes.':'<b>+3 crowns</b> Spend them in the Arcade.','gold');render(true);}});
+function dailyRender(){const t=now();luckTick();const Q=qState();const done=Q.list.filter(q=>q.done&&!q.got).length,got=Q.list.filter(q=>q.got).length;
+  const qp=$('#qpill');const qt=done?`✓ Quest${done>1?'s':''} to claim`:`Quests ${got}/3`;if(qp.textContent!==qt)qp.textContent=qt;qp.classList.toggle('hot',!!done);qp.hidden=got===3&&Q.all;
+  const cp=$('#chestpill');cp.hidden=!chestReady();
+  const mp=$('#merchpill'),m=P.luck&&P.luck.merch;mp.hidden=!m||!mainWorld();if(m)mp.textContent=`Merchant · ${mmss(m.until-t)}`;
+  if(t-hintAt>1500){hintAt=t;hintCur=bestHint();const hp=$('#hintpill');hp.hidden=!hintCur;if(hintCur)hp.textContent='💡 '+hintCur.txt;}}
+var questsReady=true;
+
 /* ===================== WORLD ACTIONS: each newer world has something hands-on (the Belt stays the steady old friend) ===================== */
 P.act=P.act||{};
 function actOf(id){P.act=P.act||{};return P.act[id]=P.act[id]||{};}
@@ -1258,7 +1357,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-spell],[da
     if(r<0.5){const v=giveCash(120+Math.random()*240);toast(`<b>Sunken chest!</b> +${fmt(v)} ${W.cur}`,'gold');}
     else if(r<0.85){addTimed('tfast',2,90000,'Sonar school of fish ×2 speed for 2 minutes');toast('<b>A school of fish!</b> ×2 speed for 90 seconds.','pup');}
     else{addTimed('tx',6,40000,'Sonar treasure map ×6 for 1 minutes');toast('<b>A treasure map!</b> ×6 for 40 seconds.','pup');}}
-  actKeyLast='';save();render(true);});
+  questBump('act');actKeyLast='';save();render(true);});
 var actsReady=true;
 
 /* ===================== ARCADE: Cat Naps, Royal Rocks and the Kingdom ===================== */
@@ -1345,7 +1444,7 @@ ARC.addEventListener('click',e=>{const b=e.target.closest('[data-arc]');if(!b)re
 const CAT_COL=['#F7B5C4','#B5D8F7','#C6EBB0','#FBE29A','#D9C3F5','#F9C9A0','#A9E6DD','#F3B3E6','#C9CCD6'];
 function catSize(l){return l<=3?5:l<=10?6:l<=25?7:l<=45?8:9;}
 function catStart(lvl,daily){const N=daily?8:catSize(lvl);const seed=daily?dayId()*104729+11:lvl*7919+13;const pz=catGen(N,seed);
-  cat={N,reg:pz.reg,sol:pz.sol,s:[...Array(N)].map(()=>new Array(N).fill(0)),hints:0,t0:now(),lvl,daily,won:false,lock:new Set()};
+  cat={lucky:!daily&&((lvl*2654435761)>>>0)%9===4,N,reg:pz.reg,sol:pz.sol,s:[...Array(N)].map(()=>new Array(N).fill(0)),hints:0,t0:now(),lvl,daily,won:false,lock:new Set()};
   ARC.innerHTML=`${topBar(daily?'Daily cat puzzle':`Cat Naps · Level ${lvl}`,'home')}
    <p class="rules">Put one sleeping cat in every <b>row</b>, every <b>column</b> and every <b>colour patch</b>. Cats need their space: no two cats touch, not even at the corners.</p>
    <div class="cgrid" id="cgrid" style="--n:${N}">${cat.reg.map((row,r)=>row.map((k,c)=>{const bt=r===0||cat.reg[r-1][c]!==k,bb=r===N-1||cat.reg[r+1][c]!==k,bl=c===0||row[c-1]!==k,br=c===N-1||row[c+1]!==k;
@@ -1367,12 +1466,12 @@ function catBad(){const N=cat.N,bad=new Set(),cats=[];for(let r=0;r<N;r++)for(le
   return {bad,cats};}
 function catDraw(){const {bad,cats}=catBad();$$('#cgrid .cc').forEach(el=>{const r=+el.dataset.r,c=+el.dataset.c,v=cat.s[r][c];el.innerHTML=v===2?CAT_SVG:v===1?XMARK:'';el.classList.toggle('bad',bad.has(r+','+c));el.classList.toggle('lk',cat.lock.has(r+','+c));});
   const cc=$('#ccount');if(cc)cc.textContent=`${cats.length}/${cat.N} cats`;}
-function catCheck(){const {bad,cats}=catBad();if(cats.length!==cat.N||bad.size)return;cat.won=true;const secs=(now()-cat.t0)/1000;const stars=cat.hints===0?3:cat.hints===1?2:1;
+function catCheck(){const {bad,cats}=catBad();if(cats.length!==cat.N||bad.size)return;cat.won=true;const lucky=cat.lucky;const secs=(now()-cat.t0)/1000;const stars=cat.hints===0?3:cat.hints===1?2:1;
   $('#cgrid').classList.add('won');AUDIO.play('challenge');
   let msg;if(cat.daily){A.daily={id:dayId(),done:true};gainCrowns(2);A.tok.push({m:2,min:15});msg=`<p><b>+2 crowns</b> and a <b>×2 gift for 15 minutes</b>.</p>`;}
   else{gainCrowns(stars);A.cat=cat.lvl+1;msg=`<p><b>+${stars} crown${stars>1?'s':''}</b>${stars<3?' (3 without hints)':''}.</p>`;}
-  A.wins++;save();
-  setTimeout(()=>openModal(`<h2>Purr-fect!</h2><div class="bigstat"><span>${'★'.repeat(cat.daily?3:stars)}${'☆'.repeat(cat.daily?0:3-stars)}</span><small>Solved in ${mmss(secs*1000)}${cat.hints?` with ${cat.hints} hint${cat.hints>1?'s':''}`:''}</small></div>${msg}
+  A.wins++;questBump('cat');if(lucky){gainCrowns(cat.daily?2:stars);msg+='<p><b>Lucky cat!</b> Crowns doubled.</p>';}save();
+  setTimeout(()=>openModal(`<h2>${lucky?'Lucky cat!':'Purr-fect!'}</h2><div class="bigstat"><span>${'★'.repeat(cat.daily?3:stars)}${'☆'.repeat(cat.daily?0:3-stars)}</span><small>Solved in ${mmss(secs*1000)}${cat.hints?` with ${cat.hints} hint${cat.hints>1?'s':''}`:''}</small></div>${msg}
     <div class="mact"><button class="ghost" id="awayOk" data-arc-modal="home">Arcade</button>${cat.daily?'':'<button class="go" data-arc-modal="cat">Next puzzle</button>'}</div>`),700);}
 function catHint(){if(!cat||cat.won)return;const N=cat.N;
   for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(cat.s[r][c]===2&&cat.sol[r]!==c){cat.s[r][c]=0;cat.hints++;catDraw();toast('<b>Hint</b> That cat was in the wrong spot, so it moved off.');return;}
@@ -1391,9 +1490,9 @@ function gemURL(c){return gemSprite(c,48).toDataURL();}
 function gemIcon(){return '<svg viewBox="0 0 16 16" width="40" height="40" aria-hidden="true"><path d="M8 1 15 8 8 15 1 8Z" fill="#FF5A6A"/><path d="M8 3 12 8 8 8Z" fill="#FFB0B8"/><circle cx="12" cy="12" r="3.5" fill="#4FA3FF"/><rect x="1" y="10" width="5" height="5" rx="1" fill="#5FD38A"/></svg>';}
 function m3Start(n){const L=M3.level(n);m3={L,b:M3.make(L),busy:false,sel:null,fx:[],t:now(),bonus:false,extra:false,done:false};
   ARC.innerHTML=`${topBar(`Royal Rocks ${n}`,"home")}
-   <div class="m3hud"><div class="mv"><b id="m3mv">${L.moves}</b><small>moves</small></div><div class="goals" id="m3goals"></div></div>
+   <div class="m3hud"><div class="mv"><b id="m3mv">${L.moves}</b><small>moves</small></div><div class="goals" id="m3goals"></div><button class="ab m3help" data-m3help aria-label="What the specials do">?</button></div>
    <div class="m3wrap"><canvas id="m3c"></canvas></div>
-   <p class="muted small">Swap two side-by-side gems to make a line of 3 or more. A line of 4 makes a <b>rocket</b>, an L or T a <b>bomb</b>, a square a <b>propeller</b> (it flies to what you need), a line of 5 an <b>orb</b>. Specials don't match by colour: tap one to set it off, swap it with a gem, or swap two specials for a combo.</p>`;
+   <p class="muted small">Swap side-by-side gems to make lines of 3 or more. Tap <b>?</b> to see the specials.</p>`;
   m3Goals();const cv=$('#m3c');m3Size();m3Input(cv);startLoop(m3Frame);}
 function m3Size(){const cv=$('#m3c');if(!cv)return;const w=Math.min(ARC.clientWidth-32-16,440);const cs=Math.floor(w/M3.COLS);const dpr=Math.min(2,window.devicePixelRatio||1);
   cv.style.width=cs*M3.COLS+'px';cv.style.height=cs*M3.ROWS+'px';cv.width=cs*M3.COLS*dpr;cv.height=cs*M3.ROWS*dpr;m3.cs=cs;m3.dpr=dpr;}
@@ -1411,22 +1510,26 @@ function m3Input(cv){let down=null;
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function settled(){const b=m3.b;for(let r=0;r<M3.ROWS;r++)for(let c=0;c<M3.COLS;c++){const g=b.g[r][c];if(g&&(Math.abs(g.x-c)>0.02||Math.abs(g.y-r)>0.02))return false;}return true;}
 async function untilSettled(){let n=0;while(!settled()&&n++<120)await wait(16);}
-function takeFx(){const b=m3.b;const t=now();b.fx.forEach(f=>{f.t0=t;m3.fx.push(f);});const pops=b.fx.filter(f=>f.t==='pop').length,sp=b.fx.some(f=>f.t==='sp'||f.t==='combo');b.fx.length=0;if(sp)AUDIO.play('gold');else if(pops)AUDIO.play('milestone');}
+function takeFx(){const b=m3.b;const t=now();let mx=0;
+  b.fx.forEach(f=>{f.t0=t;f.d=f.d||0;let end=f.d+0.45;if(f.cells&&f.cells.length)end=Math.max(end,...f.cells.map(p=>p[2]))+0.35;if(f.t==='sp'&&f.tg)end=Math.max(end,f.d+0.9);if(f.t==='combo')end=1.6;f.end=end;
+    if(f.t==='pop'||f.t==='crate'||f.t==='ice'||f.t==='chain')mx=Math.max(mx,f.d);m3.fx.push(f);
+    if(f.t==='pop'&&f.g&&f.g.gold){gainCrowns(1);save();setTimeout(()=>{toast(`<b>Golden gem!</b> +1 crown`,'gold');const e=$('.acr b');if(e)e.textContent=A.cr;},f.d*1000);}});
+  const pops=b.fx.filter(f=>f.t==='pop').length,sp=b.fx.some(f=>f.t==='sp'||f.t==='combo');if(b.fx.some(f=>f.t==='combo'))AUDIO.play('challenge');else if(sp)AUDIO.play('gold');else if(pops)AUDIO.play('milestone');b.fx.length=0;return mx;}
 async function m3Move(r,c,a,d){const b=m3.b;if(m3.busy||b.moves<=0||!M3.movable(b,r,c)||!M3.movable(b,a,d))return;m3.busy=true;
   const x=b.g[r][c],y=b.g[a][d];const res=M3.trySwap(b,r,c,a,d);
   if(!res||!res.ok){/* not a match: wiggle back */x.x+=(d-c)*0.45;x.y+=(a-r)*0.45;y.x-=(d-c)*0.45;y.y-=(a-r)*0.45;await wait(160);m3.busy=false;return;}
   await afterMove();}
 async function m3Tap(r,c){const b=m3.b;if(m3.busy||b.moves<=0)return;m3.busy=true;M3.tapSpecial(b,r,c);await afterMove();}
-async function afterMove(){const b=m3.b;await untilSettled();takeFx();m3Goals();await wait(170);
-  for(let k=0;k<60;k++){M3.fall(b);await untilSettled();if(!M3.matchStep(b))break;takeFx();m3Goals();await wait(170);}
+async function afterMove(){const b=m3.b;await untilSettled();let w=takeFx();m3Goals();await wait(170+w*1000);
+  for(let k=0;k<60;k++){M3.fall(b);await untilSettled();if(!M3.matchStep(b))break;w=takeFx();m3Goals();await wait(170+w*1000);}
   if(!M3.won(b)&&!M3.hasMove(b)){M3.shuffle(b);toast('<b>No moves left</b> The gems were shuffled.');}
   m3Goals();m3.busy=false;
   if(M3.won(b))return m3Win();if(b.moves<=0)return m3Lose();}
 async function m3Win(){const b=m3.b;m3.done=true;m3.busy=true;const left=b.moves,f=left/m3.L.moves;const stars=f>=0.3?3:f>=0.15?2:1;
   /* royal finale: leftover moves turn into rockets */
   const n=Math.min(left,8);for(let i=0;i<n;i++){const opts=[];for(let r=0;r<M3.ROWS;r++)for(let c=0;c<M3.COLS;c++){const g=b.g[r][c];if(g&&!g.s&&!b.chain[r][c])opts.push([r,c]);}if(!opts.length)break;
-    const [r,c]=opts[Math.floor(Math.random()*opts.length)];b.g[r][c].s=Math.random()<.5?'h':'v';await wait(140);M3.tapSpecial(b,r,c);m3Goals();takeFx();await wait(150);M3.fall(b);await untilSettled();while(M3.matchStep(b)){takeFx();await wait(120);M3.fall(b);await untilSettled();}}
-  gainCrowns(stars);A.m3=m3.L.n+1;A.wins++;save();AUDIO.play('challenge');
+    const [r,c]=opts[Math.floor(Math.random()*opts.length)];b.g[r][c].s=Math.random()<.5?'h':'v';await wait(140);M3.tapSpecial(b,r,c);m3Goals();let w=takeFx();await wait(150+w*1000);M3.fall(b);await untilSettled();while(M3.matchStep(b)){w=takeFx();await wait(120+w*1000);M3.fall(b);await untilSettled();}}
+  gainCrowns(stars);A.m3=m3.L.n+1;A.wins++;questBump('m3');save();AUDIO.play('challenge');
   openModal(`<h2>Level ${m3.L.n} cleared!</h2><div class="bigstat"><span>${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</span><small>${left} move${left===1?'':'s'} to spare</small></div><p><b>+${stars} crown${stars>1?'s':''}</b>. ${stars<3?'Finish with more moves left for 3.':''}</p>
    <div class="mact"><button class="ghost" id="awayOk" data-arc-modal="home">Arcade</button><button class="go" data-arc-modal="m3">Next level</button></div>`);}
 function m3Lose(){m3.done=true;const can=!m3.extra&&A.cr>=2;
@@ -1444,7 +1547,7 @@ function gemPath(ctx,c,cx,cy,s){ctx.beginPath();if(c===0){ctx.moveTo(cx,cy-s);ct
 /* specials have their own icons (they don't match by colour) */
 const INK='#14122A';
 function drawGem(ctx,g,cx,cy,cs,sc){const t=now()/1000;const S=cs*sc,px=Math.round(cs*(m3?m3.dpr:2));const s=cs*0.38*sc,lw=Math.max(1.5,cs*0.045);ctx.lineJoin='round';ctx.lineCap='round';
-  if(!g.s){ctx.drawImage(gemSprite(g.c,px),cx-S/2,cy-S/2,S,S);return;}
+  if(!g.s){ctx.drawImage(gemSprite(g.c,px),cx-S/2,cy-S/2,S,S);if(g.gold){ctx.strokeStyle='#FFD24A';ctx.lineWidth=Math.max(2,cs*0.07);ctx.beginPath();ctx.arc(cx,cy,s*1.12,0,Math.PI*2);ctx.stroke();const a=(t*3)%(Math.PI*2);ctx.fillStyle='#FFF6C8';ctx.beginPath();ctx.arc(cx+Math.cos(a)*s*1.12,cy+Math.sin(a)*s*1.12,cs*0.06,0,Math.PI*2);ctx.fill();}return;}
   if(g.s==='o'){const R=s*0.92;for(let k=0;k<5;k++){const a0=(t*2)%(Math.PI*2)+k*Math.PI*2/5;ctx.fillStyle=GEMC[k];ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,a0,a0+Math.PI*2/5+0.01);ctx.closePath();ctx.fill();}
     ctx.fillStyle='#FFFFFF';ctx.beginPath();ctx.arc(cx,cy,R*0.32,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#FFFFFF';ctx.lineWidth=lw;ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();return;}
   if(g.s==='h'||g.s==='v'){ctx.save();ctx.translate(cx,cy);if(g.s==='v')ctx.rotate(Math.PI/2);const L=s*1.0,H=s*0.36;
@@ -1477,18 +1580,49 @@ function m3Frame(){const cv=$('#m3c');if(!cv||!m3)return;const ctx=cv.getContext
   ctx.restore();
   for(let r=0;r<M3.ROWS;r++)for(let c=0;c<M3.COLS;c++){const h=b.crate[r][c];if(!h)continue;const x=c*cs+2,y=r*cs+2,w=cs-4;ctx.fillStyle=h>1?'#8A5A32':'#C98B5E';rr(ctx,x,y,w,w,cs*0.1);ctx.fill();ctx.strokeStyle=h>1?'#5A3A1E':'#8A5A32';ctx.lineWidth=2;ctx.strokeRect(x+w*0.12,y+w*0.12,w*0.76,w*0.76);
     ctx.beginPath();ctx.moveTo(x+w*0.12,y+w*0.12);ctx.lineTo(x+w*0.88,y+w*0.88);ctx.stroke();if(h>1){ctx.fillStyle='#C9CFE0';ctx.fillRect(x,y+w*0.42,w,w*0.16);}}
-  /* effects */
-  m3.fx=m3.fx.filter(f=>t-f.t0<500);m3.fx.forEach(f=>{const k=(t-f.t0)/500;
-    if(f.t==='pop'&&f.g){ctx.globalAlpha=1-k;drawGem(ctx,f.g,f.c*cs+cs/2,f.r*cs+cs/2,cs,1+k*0.6);ctx.globalAlpha=1;}
-    else if(f.t==='sp'&&(f.s==='h'||f.s==='v'||f.s==='cross')){ctx.fillStyle=`rgba(255,240,180,${0.8*(1-k)})`;if(f.s!=='v')ctx.fillRect(0,f.r*cs+cs*0.3,cs*M3.COLS,cs*0.4);if(f.s!=='h')ctx.fillRect(f.c*cs+cs*0.3,0,cs*0.4,cs*M3.ROWS);}
-    else if(f.t==='sp'||f.t==='combo'){ctx.fillStyle=`rgba(255,200,120,${0.5*(1-k)})`;ctx.beginPath();ctx.arc(f.c*cs+cs/2,f.r*cs+cs/2,cs*(0.5+k*3),0,Math.PI*2);ctx.fill();}
-    else if(f.t==='crate'||f.t==='ice'||f.t==='chain'){ctx.fillStyle=f.t==='ice'?`rgba(200,240,255,${1-k})`:f.t==='chain'?`rgba(220,225,235,${1-k})`:`rgba(201,139,94,${1-k})`;for(let i=0;i<5;i++){const a=i*1.3;ctx.fillRect(f.c*cs+cs/2+Math.cos(a)*k*cs*0.7-3,f.r*cs+cs/2+Math.sin(a)*k*cs*0.7-3,6,6);}}
-    else if(f.t==='make'){ctx.strokeStyle=`rgba(255,255,255,${1-k})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(f.c*cs+cs/2,f.r*cs+cs/2,cs*(0.3+k*0.5),0,Math.PI*2);ctx.stroke();}});}
+  /* effects: each one starts after its own delay so you can follow what a special does */
+  const X=c=>c*cs+cs/2,Y=r=>r*cs+cs/2;
+  m3.fx=m3.fx.filter(f=>(t-f.t0)/1000<f.end);
+  m3.fx.forEach(f=>{const e=(t-f.t0)/1000-f.d;
+    if(f.t==='pop'&&f.g){if(e<0)drawGem(ctx,f.g,X(f.c),Y(f.r),cs,1);else if(e<0.3){ctx.globalAlpha=1-e/0.3;drawGem(ctx,f.g,X(f.c),Y(f.r),cs,1+e*1.8);ctx.globalAlpha=1;}return;}
+    if(f.t==='ice'&&e<0){ctx.fillStyle='rgba(120,210,255,.45)';rr(ctx,f.c*cs+2,f.r*cs+2,cs-4,cs-4,cs*0.14);ctx.fill();return;}
+    if(f.t==='crate'&&e<0&&!f.left){ctx.fillStyle='#C98B5E';rr(ctx,f.c*cs+2,f.r*cs+2,cs-4,cs-4,cs*0.1);ctx.fill();return;}
+    if(e<0)return;
+    if(f.t==='crate'||f.t==='ice'||f.t==='chain'){const k=Math.min(1,e/0.45);ctx.fillStyle=f.t==='ice'?`rgba(200,240,255,${1-k})`:f.t==='chain'?`rgba(220,225,235,${1-k})`:`rgba(201,139,94,${1-k})`;for(let i=0;i<6;i++){const a=i*1.05;ctx.fillRect(X(f.c)+Math.cos(a)*k*cs*0.7-3,Y(f.r)+Math.sin(a)*k*cs*0.7-3,6,6);}return;}
+    if(f.t==='make'){const k=Math.min(1,e/0.4);ctx.strokeStyle=`rgba(255,255,255,${1-k})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(X(f.c),Y(f.r),cs*(0.3+k*0.6),0,Math.PI*2);ctx.stroke();return;}
+    if(f.t==='combo'){const k=Math.min(1,e/0.25),fade=e>1.2?Math.max(0,1-(e-1.2)/0.35):1;ctx.save();ctx.globalAlpha=fade;ctx.translate(cs*M3.COLS/2,cs*M3.ROWS*0.42);ctx.scale(0.6+0.4*k,0.6+0.4*k);
+      ctx.font=`700 ${Math.round(cs*0.8)}px Fredoka, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=cs*0.16;ctx.strokeStyle='#1A1030';ctx.strokeText(f.name,0,0);ctx.fillStyle='#FFD24A';ctx.fillText(f.name,0,0);ctx.restore();return;}
+    if(f.t!=='sp')return;
+    const beam=(x0,y0,dx,dy,L,w)=>{ctx.strokeStyle='rgba(255,236,170,.75)';ctx.lineWidth=cs*w;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0+dx*L*cs,y0+dy*L*cs);ctx.stroke();};
+    if(f.s==='h'||f.s==='v'||f.s==='star'||f.s==='rb'){if(e>0.9)return;const L=Math.max(0,(e-0.06)/0.05);ctx.lineCap='round';
+      const dirs=f.s==='h'?[[1,0],[-1,0]]:f.s==='v'?[[0,1],[0,-1]]:f.s==='star'?[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]:[[1,0],[-1,0],[0,1],[0,-1]];
+      const offs=f.s==='rb'?[-1,0,1]:[0];const fade=e>0.55?Math.max(0,1-(e-0.55)/0.35):1;ctx.globalAlpha=fade;
+      dirs.forEach(([dx,dy])=>offs.forEach(o=>{const x0=X(f.c)+(dy?o*cs:0),y0=Y(f.r)+(dx?o*cs:0);beam(x0,y0,dx,dy,L,f.s==='rb'?0.5:0.28);
+        if(L<10){ctx.save();ctx.translate(x0+dx*L*cs,y0+dy*L*cs);ctx.rotate(Math.atan2(dy,dx));drawGem(ctx,{s:'h'},0,0,cs*0.85,1);ctx.restore();}}));ctx.globalAlpha=1;return;}
+    if(f.s==='b'||f.s==='bb'||f.s==='all'){const k=f.s==='b'?2:f.s==='bb'?3:9,T=f.s==='all'?0.7:0.12+k*0.04,p=Math.min(1,e/T),R=(k+0.5)*cs*p,fade=e>T?Math.max(0,1-(e-T)/0.3):1;
+      ctx.fillStyle=`rgba(255,${f.s==='all'?255:190},${f.s==='all'?255:100},${0.35*fade})`;ctx.beginPath();ctx.arc(X(f.c),Y(f.r),R,0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgba(255,255,255,${0.9*fade})`;ctx.lineWidth=cs*0.12;ctx.stroke();return;}
+    if(f.s==='o'){ctx.strokeStyle='rgba(200,240,255,.95)';ctx.lineWidth=2.5;(f.cells||[]).forEach(([r,c,dt])=>{const le=(t-f.t0)/1000-dt;if(le<-0.05||le>0.25)return;ctx.beginPath();ctx.moveTo(X(f.c),Y(f.r));
+        const sx=X(c)-X(f.c),sy=Y(r)-Y(f.r);for(let i=1;i<5;i++){ctx.lineTo(X(f.c)+sx*i/5+(Math.random()-.5)*cs*0.35,Y(f.r)+sy*i/5+(Math.random()-.5)*cs*0.35);}ctx.lineTo(X(c),Y(r));ctx.stroke();});
+      if(e<1.2){ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.arc(X(f.c),Y(f.r),cs*0.7,0,Math.PI*2);ctx.fill();}return;}
+    if(f.s==='p'&&f.tg){const q=Math.min(1,Math.max(0,(e-0.05)/0.6));if(q>=1)return;const [tr,tc]=f.tg;const x0=X(f.c),y0=Y(f.r),x1=X(tc),y1=Y(tr),mx=(x0+x1)/2,my=Math.min(y0,y1)-cs*2.2;
+      const px=(1-q)*(1-q)*x0+2*(1-q)*q*mx+q*q*x1,py=(1-q)*(1-q)*y0+2*(1-q)*q*my+q*q*y1;
+      ctx.strokeStyle='rgba(255,255,255,.35)';ctx.setLineDash([4,6]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px,py);ctx.quadraticCurveTo(mx+(x1-mx)*q,my+(y1-my)*q,x1,y1);ctx.stroke();ctx.setLineDash([]);
+      ctx.strokeStyle='rgba(255,211,92,.9)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x1,y1,cs*0.45,0,Math.PI*2);ctx.stroke();
+      if(f.carry)drawGem(ctx,{s:f.carry==='b'?'b':'h'},px,py+cs*0.18,cs*0.7,1);drawGem(ctx,{s:'p'},px,py,cs,1.15);}
+  });}
+const LEGEND=[['h','Rocket','Line up 4. Fires both ways along the row or column, in the direction you swiped.'],['b','Bomb','Make an L or T shape. Blasts everything around it.'],
+ ['p','Seeker','Make a 2×2 square. Clears a little cross, then flies off to hit what your goals still need.'],['o','Orb','Line up 5. Zaps every gem of the colour you swap it with.']];
+const LEGEND2=[['Rocket + Rocket','Star Burst: row, column and both diagonals'],['Rocket + Bomb','Mega Cross: three rows and three columns'],['Bomb + Bomb','Mega Blast: a huge 7×7 blast'],['Seeker + any','The seeker carries the other special to its target'],['Orb + special','Colour Storm: a whole colour turns into that special'],['Orb + Orb','Supernova: clears the whole board']];
+document.addEventListener('click',e=>{if(!e.target.closest('[data-m3help]'))return;
+  openModal(`<h2>Specials</h2>${LEGEND.map(([k,n,tx])=>`<div class="lgrow"><canvas class="lgc" data-k="${k}" width="88" height="88"></canvas><div><b>${n}</b><small>${tx}</small></div></div>`).join('')}
+   <p><b>Tap</b> a special to set it off, or <b>swap</b> it with any gem. Specials don't count as a colour.</p><h3 class="ah">Swap two specials together</h3><div class="lgcombo">${LEGEND2.map(([a,b2])=>`<div><b>${a}</b><small>${b2}</small></div>`).join('')}</div>
+   <div class="mact"><button class="go" id="awayOk">Got it</button></div>`);
+  $$('.lgc').forEach(cv=>{const x=cv.getContext('2d');x.setTransform(2,0,0,2,0,0);drawGem(x,{s:cv.dataset.k,c:0},22,22,44,1);});});
 function startLoop(fn){stopLoop();const go=()=>{fn();raf=requestAnimationFrame(go);};raf=requestAnimationFrame(go);}
 function stopLoop(){if(raf)cancelAnimationFrame(raf);raf=0;lastT=0;}
 window.addEventListener('resize',()=>{if(arcView==='m3'&&m3)m3Size();});
 
-window.__belt={useSlot,checkChal,st:()=>st,E:()=>E,P:()=>P,save,switchWorld,eventCheck,finishEvent,openArcade,arc:()=>({m3,cat,A}),M3};
+window.__belt={qb:questBump,useSlot,checkChal,st:()=>st,E:()=>E,P:()=>P,save,switchWorld,eventCheck,finishEvent,openArcade,arc:()=>({m3,cat,A}),M3};
 })();
 
 </script>
