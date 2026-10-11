@@ -833,7 +833,7 @@ if(typeof module!=='undefined')module.exports={M3};
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.12.01';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.12.02';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -1454,6 +1454,9 @@ const CAT_COL=['#F7B5C4','#B5D8F7','#C6EBB0','#FBE29A','#D9C3F5','#F9C9A0','#A9E
 function catSize(l){return l<=3?5:l<=10?6:l<=25?7:l<=45?8:9;}
 function catStart(lvl,daily){const N=daily?8:catSize(lvl);const seed=daily?dayId()*104729+11:lvl*7919+13;const pz=catGen(N,seed);
   cat={lucky:!daily&&((lvl*2654435761)>>>0)%9===4,N,reg:pz.reg,sol:pz.sol,s:[...Array(N)].map(()=>new Array(N).fill(0)),hints:0,t0:now(),lvl,daily,won:false,lock:new Set()};
+  cat.key=daily?'D'+dayId():'L'+lvl;A.cs=A.cs||{};const sv=A.cs[cat.key];   /* pick up where you left off */
+  if(sv&&sv.N===N){cat.s=sv.s;cat.hints=sv.h||0;cat.lock=new Set(sv.lock||[]);cat.t0=now()-(sv.ms||0);}
+  for(const k in A.cs)if(k!==cat.key&&!(k[0]==='L'?k==='L'+A.cat:k==='D'+dayId()))delete A.cs[k];
   ARC.innerHTML=`${topBar(daily?'Daily cat puzzle':`Cat Naps · Level ${lvl}`,'home')}
    <p class="rules">Put one sleeping cat in every <b>row</b>, every <b>column</b> and every <b>colour patch</b>. Cats need their space: no two cats touch, not even at the corners.</p>
    <div class="cgrid" id="cgrid" style="--n:${N}">${cat.reg.map((row,r)=>row.map((k,c)=>{const bt=r===0||cat.reg[r-1][c]!==k,bb=r===N-1||cat.reg[r+1][c]!==k,bl=c===0||row[c-1]!==k,br=c===N-1||row[c+1]!==k;
@@ -1473,9 +1476,10 @@ function setCell(r,c,v,dragging){if(cat.lock.has(r+','+c))return;if(dragging&&ca
 function catBad(){const N=cat.N,bad=new Set(),cats=[];for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(cat.s[r][c]===2)cats.push([r,c]);
   for(let i=0;i<cats.length;i++)for(let j=i+1;j<cats.length;j++){const [a,b]=cats[i],[x,y]=cats[j];if(a===x||b===y||cat.reg[a][b]===cat.reg[x][y]||(Math.abs(a-x)<=1&&Math.abs(b-y)<=1)){bad.add(a+','+b);bad.add(x+','+y);}}
   return {bad,cats};}
-function catDraw(){const {bad,cats}=catBad();$$('#cgrid .cc').forEach(el=>{const r=+el.dataset.r,c=+el.dataset.c,v=cat.s[r][c];el.innerHTML=v===2?CAT_SVG:v===1?XMARK:'';el.classList.toggle('bad',bad.has(r+','+c));el.classList.toggle('lk',cat.lock.has(r+','+c));});
+let catSaveT=0;function catSaveNow(){if(!cat||cat.won)return;A.cs=A.cs||{};A.cs[cat.key]={N:cat.N,s:cat.s,h:cat.hints,lock:[...cat.lock],ms:now()-cat.t0};clearTimeout(catSaveT);catSaveT=setTimeout(save,400);}
+function catDraw(){catSaveNow();const {bad,cats}=catBad();$$('#cgrid .cc').forEach(el=>{const r=+el.dataset.r,c=+el.dataset.c,v=cat.s[r][c];el.innerHTML=v===2?CAT_SVG:v===1?XMARK:'';el.classList.toggle('bad',bad.has(r+','+c));el.classList.toggle('lk',cat.lock.has(r+','+c));});
   const cc=$('#ccount');if(cc)cc.textContent=`${cats.length}/${cat.N} cats`;}
-function catCheck(){const {bad,cats}=catBad();if(cats.length!==cat.N||bad.size)return;cat.won=true;const lucky=cat.lucky;const secs=(now()-cat.t0)/1000;const stars=cat.hints===0?3:cat.hints===1?2:1;
+function catCheck(){const {bad,cats}=catBad();if(cats.length!==cat.N||bad.size)return;cat.won=true;if(A.cs)delete A.cs[cat.key];const lucky=cat.lucky;const secs=(now()-cat.t0)/1000;const stars=cat.hints===0?3:cat.hints===1?2:1;
   $('#cgrid').classList.add('won');AUDIO.play('challenge');
   let msg;if(cat.daily){A.daily={id:dayId(),done:true};gainCrowns(2);A.tok.push({m:2,min:15});msg=`<p><b>+2 crowns</b> and a <b>×2 gift for 15 minutes</b>.</p>`;}
   else{gainCrowns(stars);A.cat=cat.lvl+1;msg=`<p><b>+${stars} crown${stars>1?'s':''}</b>${stars<3?' (3 without hints)':''}.</p>`;}
