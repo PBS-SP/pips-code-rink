@@ -246,6 +246,11 @@ body.arc-on .app,body.arc-on #gold{display:none!important}
 .qtip{display:block;color:var(--muted);font-size:12px;margin-top:1px}
 .arcbtn{font-size:14px!important;padding:2px 10px!important}
 @media (max-width:420px){.world{letter-spacing:.08em}}
+.gl.stone{background:#8E93A6;box-shadow:inset 0 0 0 2px #4A4F62;border-radius:6px}
+.cpar{font-size:12px;color:var(--muted);margin-left:-2px}
+.achcard{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--panel);border:1px solid #6B5A2A;border-radius:12px;padding:10px 12px;color:var(--text);cursor:pointer;margin-bottom:10px;text-align:left}
+.achcard b{font:600 15px var(--disp)}.achcard small{color:var(--muted)}.achcard em{font-style:normal;color:var(--ok);font-weight:700}
+.achs{display:grid;max-height:60vh;overflow:auto}.ach{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}.ach>div{flex:1;min-width:0}.ach b{font:600 13.5px var(--disp)}.ach small{color:var(--muted);font-size:12px}.ach.got{opacity:.55}
 </style>
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="app">
@@ -382,7 +387,8 @@ function msInfo(st,i){const n=st.tiers[i].n,L=ladder(i);const next=nextMilestone
   const prev=k>0?L[k-1]:k===0?0:next-W.msStep;return {prev,next,txt:msText(st,i,k<0?L.length:k)};}
 function crossed(i,a,b){return nextMilestone(a,i)<=b;}
 /* ---- all multipliers in one pass ---- */
-function starMult(st){return 1+((st.mod&&st.mod.starPer)||W.starPer)*st.stars;}
+function multOf(st,stars){const L=1+((st.mod&&st.mod.starPer)||W.starPer)*stars;return (W.stack==='mult'||L<=20)?L:20*Math.pow(L/20,0.6);}   // past ×20 each Star counts a bit less, so worlds never run away
+function starMult(st){return multOf(st,st.stars);}
 /* Robot Foundry: machines run hot (×3 speed) for 4 minutes, then cool down (×0.5) for 1 minute */
 function heatX(st){if(!W.heat&&!(st.mod&&st.mod.heat))return 1;return ((st.now||0)%300000)<240000?3:0.5;}
 function heatLeft(st){const p=(st.now||0)%300000;return p<240000?{hot:true,left:240000-p}:{hot:false,left:300000-p};}
@@ -456,7 +462,7 @@ function nextStarAt(st){return lifeFor((st.starsEver||0)+pendingStars(st)+1)-st.
 function restart(st){const p=pendingStars(st);st.stars+=p;st.starsEver+=p;st.runs++;st.best=Math.max(st.best||0,st.runEarned);return newRun(st),p;}
 function noteStars(st){const p=pendingStars(st);st.pHist=st.pHist||[];const t=st.now||0;const last=st.pHist[st.pHist.length-1];
   if(!last||t-last.t>=20000){st.pHist.push({t,p});while(st.pHist.length>12)st.pHist.shift();}}
-function advice(st){const p=pendingStars(st);const sp=(st.mod&&st.mod.starPer)||W.starPer;const a=starMult(st),b=1+sp*(st.stars+p);const gain=b/a-1;
+function advice(st){const p=pendingStars(st);const sp=(st.mod&&st.mod.starPer)||W.starPer;const a=starMult(st),b=multOf(st,st.stars+p);const gain=b/a-1;
   const h=(st.pHist||[]).filter(x=>x.t>=(st.now||0)-120000&&x.t>=(st.runStart||0));const old=h.length?h[0]:null;
   const climb=old&&p>0&&(st.now-old.t)>=60000?(p-old.p)/p:1;
   const goodAt=st.runs===0?1.0:st.runs<8?0.4:st.runs<20?0.25:0.12;
@@ -470,7 +476,7 @@ const HEAD=[0,100,1e4,1e6,1e8,1e10,1e12],HEADT=['','100','10K','1M','100M','10B'
 const PERKS=[
  {id:'head',max:6,cost:[10,40,150,600,2500,10000],txt:l=>`Start each run with ${HEADT[l]} ${W.cur}`},
  {id:'keepMgr',max:12,cost:[20,35,65,120,210,380,690,1250,2250,4000,7200,13000],txt:l=>`Keep the first ${l} manager${l>1?'s':''} after a restart`},
- {id:'luck',max:4,cost:[10,60,300,1500],txt:l=>`${W.goldName||'Golden asteroids'} come ${[0,30,60,100,150][l]}% more often`},
+ {id:'luck',max:4,cost:[10,60,300,1500],txt:l=>`${W.goldName||'Golden asteroids'} come ${[0,20,40,60,80][l]}% more often`},
  {id:'goldLen',max:3,cost:[40,250,1500],txt:l=>`${W.goldName||'Golden asteroid'} boosts last ${[30,45,60,90][l]}s`},
  {id:'msBoost',max:3,cost:[100,800,6000],txt:l=>`Milestone profit rewards ×${[2,2.25,2.5,2.75][l]} instead of ×2`},
  {id:'startPup',max:3,cost:[30,200,1500],txt:l=>`Start each run with ${l} random power-up${l>1?'s':''}`},
@@ -486,10 +492,10 @@ function quickCan(st){const ups=UPS.some(u=>!st.ups[u.id]&&(u.t<0||(st.tiers[u.t
   const mgr=st.tiers.some((T,i)=>!T.mgr&&T.n&&allowed(st,i)&&mgrPrice(st,i)<=st.cash);
   const next=st.tiers.some((T,i)=>T.n&&allowed(st,i)&&costN(st,i,nextMilestone(T.n,i)-T.n)<=st.cash);return {ups,mgr,next};}
 function perkCost(st,p){const l=st.perks[p.id]||0;return l>=p.max?null:p.cost[l];}
-function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=1+((st.mod&&st.mod.starPer)||W.starPer)*(st.stars-c);return {c,a,b,drop:1-b/a};}
+function perkImpact(st,p){const c=perkCost(st,p);if(c==null)return null;const a=starMult(st),b=multOf(st,st.stars-c);return {c,a,b,drop:1-b/a};}
 function buyPerk(st,id){const p=PERKS.find(x=>x.id===id);const c=perkCost(st,p);if(c==null||st.stars<c)return false;st.stars-=c;st.perks[id]=(st.perks[id]||0)+1;return true;}
 /* ---- golden bonus ---- */
-function goldGap(st){return (45+rng(st)*75)*1000/(1+[0,.3,.6,1,1.5][st.perks.luck||0])/((st.mod&&st.mod.gold)||1);}
+function goldGap(st){return (60+rng(st)*90)*1000/(1+[0,.2,.4,.6,.8][Math.min(4,st.perks.luck||0)])/((st.mod&&st.mod.gold)||1);}   // roughly one every 1-2.5 minutes
 function goldReward(st){const r=rng(st);const inc=Math.max(incomeAll(st),1);
   if(r<.45){const v=Math.max(inc*90,st.cash*0.15,50);earn(st,v);return {k:'cash',v,txt:W.goldCash||'Ore strike'};}
   const d=[30,45,60,90][st.perks.goldLen||0];
@@ -684,10 +690,34 @@ function catGen(N,seed){const R=catRng(seed);
       if(!done)break;}}
   return null;}
 if(typeof module!=='undefined')module.exports={catGen,catSolve,catRng};
+/* ---- how hard is it for a person? Solve with the moves people use and count the tricky ones ---- */
+function catRate(N,reg){const st=[...Array(N)].map(()=>new Array(N).fill(0));/* 0 maybe, 1 blocked, 2 cat */let score=0,cats=0;
+  const groups=[];for(let i=0;i<N;i++){groups.push([...Array(N)].map((_,c)=>[i,c]));groups.push([...Array(N)].map((_,r)=>[r,i]));}
+  const rg=[...Array(N)].map(()=>[]);for(let r=0;r<N;r++)for(let c=0;c<N;c++)rg[reg[r][c]].push([r,c]);rg.forEach(g=>groups.push(g));
+  const place=(r,c,S)=>{S[r][c]=2;for(let i=0;i<N;i++){if(S[r][i]===0)S[r][i]=1;if(S[i][c]===0)S[i][c]=1;}rg[reg[r][c]].forEach(([a,b])=>{if(S[a][b]===0)S[a][b]=1;});
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const a=r+dr,b=c+dc;if(a>=0&&b>=0&&a<N&&b<N&&S[a][b]===0)S[a][b]=1;}};
+  const dead=S=>groups.some(g=>!g.some(([r,c])=>S[r][c]!==1));
+  for(let guard=0;guard<400&&cats<N;guard++){
+    /* singles */let did=false;for(const g of groups){if(g.some(([r,c])=>st[r][c]===2))continue;const m=g.filter(([r,c])=>st[r][c]===0);if(m.length===1){place(m[0][0],m[0][1],st);cats++;did=true;break;}}if(did)continue;
+    /* a region squeezed into one row or column clears the rest of that line (and the other way round) */
+    for(const g of groups){if(g.some(([r,c])=>st[r][c]===2))continue;const m=g.filter(([r,c])=>st[r][c]===0);if(!m.length)continue;
+      const k=reg[m[0][0]][m[0][1]];
+      if(m.every(([r])=>r===m[0][0])){const r=m[0][0];for(let c=0;c<N;c++)if(st[r][c]===0&&!m.some(p=>p[1]===c)){st[r][c]=1;did=true;}}
+      if(m.every(([,c])=>c===m[0][1])){const c=m[0][1];for(let r=0;r<N;r++)if(st[r][c]===0&&!m.some(p=>p[0]===r)){st[r][c]=1;did=true;}}
+      if(m.every(([r,c])=>reg[r][c]===k)){rg[k].forEach(([a,b])=>{if(st[a][b]===0&&!m.some(p=>p[0]===a&&p[1]===b)){st[a][b]=1;did=true;}});}
+      if(did){score+=1;break;}}if(did)continue;
+    /* try a cat: if it would leave a line or patch with no room, it can't go there */
+    for(let r=0;r<N&&!did;r++)for(let c=0;c<N&&!did;c++){if(st[r][c]!==0)continue;const S=st.map(x=>x.slice());place(r,c,S);if(dead(S)){st[r][c]=1;did=true;score+=3;}}
+    if(!did)return {score:score+60,solved:false};}
+  return {score,solved:cats===N};}
+function catPick(N,seed,target){/* try several puzzles, keep the one nearest the wanted difficulty */let best=null;
+  for(let k=0;k<24;k++){const p=catGen(N,seed+k*7919);if(!p)continue;const r=catRate(N,p.reg);p.rate=r.score;const d=Math.abs(r.score-target);if(!best||d<best.d){best=p;best.d=d;}if(d<=1)break;}return best;}
+if(typeof module!=='undefined')module.exports.catRate=catRate,module.exports.catPick=catPick;
 
 /* ===================== ROYAL ROCKS: match-3 engine (no drawing here) ===================== */
 const M3=(function(){
-const MOVES=[15,16,20,17,15,16,15,15,17,16,27,30,15,36,15,15,36,19,26,15,24,21,15,28,26,35,15,20,22,18,29,22,35,15,32,18,21,31,29,36,15,34,17,15,27,23,21,17,33,16,23,36,24,36,15,29,15,15,28,19,33,15,25,19,15,24,19,20,15,32,15,20,29,18,21,17,19,15,15,29,22,15,15,20,15,18,24,22,28,15,25,17,15,29,29,16,15,27,19,15];MOVES[58]+=4;MOVES[74]+=4;for(let i=0;i<30;i++)MOVES[i]+=i<10?5:3;
+const SCALE=typeof process!=='undefined'&&process.env&&process.env.M3SC?JSON.parse(require('fs').readFileSync(process.env.M3SC)):[1.17,1.03,1.35,1.87,0.96,0.98,1.4,1.46,1.69,1.81,1.3,0.56,1.67,0.4,1.63,1.21,0.32,0.86,0.38,3,1.54,2.02,0.93,0.36,1.45,0.72,3,1.99,2.53,1.04,1.2,0.12,0.91,0.77,0.53,0.56,3,0.74,0.28,0.46,0.74,0.92,0.12,3,0.84,0.89,0.54,0.34,0.66,0.14,2.84,0.82,0.21,1.08,0.12,0.86,0.8,3,1.24,0.66,0.12,0.29,1.01,0.12,0.81,1,1.46,3,0.15,0.59,0.79,0.12,0.78,0.96,1.31,3,0.43,0.28,1.19,0.45,0.88,0.69,1.37,3,0.31,0.71,0.88,0.38,0.96,0.68,1.34,3,0.12,0.31,1.02,0.5,0.89,0.26,1.59,3];
+const MOVES=[14,14,14,14,14,14,14,14,14,14,14,18,14,20,14,17,23,14,20,20,15,17,18,20,18,25,14,19,20,16,16,31,24,24,24,29,14,21,28,26,26,22,28,14,18,21,32,31,20,31,19,31,30,34,30,29,31,16,31,28,48,25,27,48,35,35,24,20,32,31,26,42,29,34,23,14,33,36,22,38,29,27,25,14,30,35,35,37,22,36,29,14,43,34,23,27,25,31,23,14];
 const COLS=8,ROWS=9,DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
 let UID=1;
 function rngOf(seed){let s=seed>>>0||1;return ()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
@@ -699,29 +729,37 @@ const SHAPES=[
   ()=>Array.from({length:COLS},(_,c)=>[c<2||c>5?2:0,ROWS-1]),
   ()=>Array.from({length:COLS},(_,c)=>[0,ROWS-1-Math.max(0,Math.abs(c-3.5)-1.5|0)]),
   ()=>Array.from({length:COLS},(_,c)=>[c%7===0?0:c===3||c===4?1:0,c%7===0?ROWS-3:ROWS-1])];
-/* ---- level recipe, worked out from the level number ---- */
-function level(n){const n0=n;n=(n-1)%100+1;const R=rngOf(n*2654435761+17+(n0>100?Math.floor((n0-1)/100)*977:0));const shape=n<=2?0:Math.floor(R()*SHAPES.length);const cols=SHAPES[shape]();
-  const nc=5;const kind=n<=2?'collect':['crate','collect','ice','mix','chain','crate','ice'][n%7];
+/* ---- level recipe, worked out from the level number. Four chapters get steadily harder:
+   1-10 learn the ropes, 11-30 ice and chains join, 31-60 stones (only specials break them) and 3-hit crates, 61+ everything at once ---- */
+function level(n){const n0=n;n=(n-1)%100+1;const R=rngOf(n*2654435761+17+(n0>100?Math.floor((n0-1)/100)*977:0));const shape=n<=3?0:Math.floor(R()*SHAPES.length);const cols=SHAPES[shape]();
+  const nc=5;const ch=n<=10?0:n<=30?1:n<=60?2:3;const diff=Math.min(1,(n-1)/80);
+  const KINDS=[['collect','crate','collect','ice','crate'],['crate','ice','chain','mix','collect','crate','ice'],['stone','mix','ice','chain','crate','stone','mix3'],['mix3','stone','mix','chain','ice','mix3','crate','stone']][ch];
+  const kind=n<=2?'collect':KINDS[n%KINDS.length];
   const play=(r,c)=>r>=cols[c][0]&&r<=cols[c][1];
-  const crates=[],ice=[],chains=[],goals=[];const hits=n>=12?2:1;
+  const crates=[],ice=[],chains=[],stones=[],goals=[];const top=ch===0?1:ch===1?2:3;
+  const has=(r,c)=>crates.some(x=>x[0]===r&&x[1]===c)||stones.some(x=>x[0]===r&&x[1]===c);
   const sym=(r,c,list,extra)=>{[[r,c],[r,COLS-1-c]].forEach(([a,b])=>{if(play(a,b)&&!list.some(x=>x[0]===a&&x[1]===b))list.push(extra!=null?[a,b,extra]:[a,b]);});};
-  const diff=Math.min(1,n/40);
-  if(kind==='crate'||kind==='mix'){const rows=2+Math.floor(diff*2+R()*1.5);for(let i=0;i<rows;i++){const r=ROWS-1-i-(R()<0.3?1:0);for(let c=0;c<4;c++)if(R()<0.55+diff*0.3)sym(r,c,crates,i===0?hits:1);}
-    if(crates.length<4){for(let c=0;c<4;c++)sym(ROWS-1,c,crates,1);}
-    while(crates.length>24)crates.pop();goals.push({k:'crate',n:crates.length});}
-  if(kind==='ice'||kind==='mix'){const top=2+Math.floor(R()*2),h=3+Math.floor(diff*3);for(let r=top;r<Math.min(ROWS,top+h);r++)for(let c=0;c<4;c++)if(R()<0.6)sym(r,c,ice);
-    const ic=ice.filter(([r,c])=>!crates.some(x=>x[0]===r&&x[1]===c));ice.length=0;ic.slice(0,22).forEach(x=>ice.push(x));goals.push({k:'ice',n:ice.length});}
-  if(kind==='chain'){for(let r=2;r<ROWS-1;r++)for(let c=0;c<4;c++)if(R()<0.25+diff*0.15)sym(r,c,chains);goals.push({k:'chain',n:chains.length});}
-  if(kind==='collect'||kind==='chain'||(kind==='mix'&&n>20)){const a=Math.floor(R()*nc);let b=(a+1+Math.floor(R()*(nc-1)))%nc;const amt=Math.round(14+diff*16+R()*6);
-    goals.push({k:'c'+a,n:amt});if(kind==='collect')goals.push({k:'c'+b,n:Math.round(amt*0.8)});}
-  /* moves: tuned with the bot in m3sim.js; early levels are generous */
-  const mv=MOVES[(n-1)%MOVES.length]-(n>MOVES.length?2:0);
-  return {n,cols,nc,goals,crates,ice,chains,moves:Math.max(14,Math.min(36,mv)),seed:n0*7919+3,n:n0};}
+  if(kind==='crate'||kind==='mix'||kind==='mix3'){const rows=2+Math.floor(diff*2.5+R()*1.5);for(let i=0;i<rows;i++){const r=ROWS-1-i-(R()<0.3?1:0);for(let c=0;c<4;c++)if(R()<0.5+diff*0.35)sym(r,c,crates,Math.max(1,top-i));}
+    if(crates.length<4){for(let c=0;c<4;c++)sym(ROWS-1,c,crates,1);}while(crates.length>26)crates.pop();goals.push({k:'crate',n:crates.length});}
+  if(kind==='stone'||(ch===3&&kind==='mix3')){const k=3+Math.floor(diff*6+R()*3);const rowsS=[ROWS-2,ROWS-3,ROWS-4];for(let t=0;t<k*2;t++){const r=rowsS[Math.floor(R()*3)],c=Math.floor(R()*4);if(!has(r,c)&&!has(r,COLS-1-c))sym(r,c,stones);if(stones.length>=k)break;}
+    if(stones.length)goals.push({k:'stone',n:stones.length});}
+  if(kind==='ice'||kind==='mix'||kind==='mix3'){const t0=2+Math.floor(R()*2),h=3+Math.floor(diff*4);for(let r=t0;r<Math.min(ROWS,t0+h);r++)for(let c=0;c<4;c++)if(R()<0.55+diff*0.2)sym(r,c,ice);
+    const ic=ice.filter(([r,c])=>!has(r,c));ice.length=0;ic.slice(0,26).forEach(x=>ice.push(x));goals.push({k:'ice',n:ice.length});}
+  if(kind==='chain'){for(let r=2;r<ROWS-1;r++)for(let c=0;c<4;c++)if(R()<0.25+diff*0.2)sym(r,c,chains);goals.push({k:'chain',n:chains.length});}
+  if(kind==='collect'||kind==='chain'||kind==='stone'||kind==='mix3'||(kind==='mix'&&ch>=2)){const a=Math.floor(R()*nc);let b=(a+1+Math.floor(R()*(nc-1)))%nc;const amt=Math.round(12+diff*24+R()*6);
+    goals.push({k:'c'+a,n:amt});if(kind==='collect')goals.push({k:'c'+b,n:Math.round(amt*0.85)});}
+  /* each level's goals are scaled so difficulty climbs smoothly (scale worked out with the bot in m3bake.js) */
+  const sc=SCALE[n-1]||1;const trim=list=>{const k=Math.max(2,Math.ceil(list.length*Math.min(1,sc)));list.length=Math.min(list.length,k);};
+  if(sc<1){trim(crates);trim(ice);trim(chains);trim(stones);}
+  goals.forEach(g=>{if(g.k==='crate')g.n=crates.length;else if(g.k==='ice')g.n=ice.length;else if(g.k==='chain')g.n=chains.length;else if(g.k==='stone')g.n=stones.length;else g.n=Math.max(6,Math.round(g.n*sc));});
+  if(sc>1.4&&!goals.some(g=>g.k[0]==='c'&&g.k!=='crate'&&g.k!=='chain'))goals.push({k:'c'+Math.floor(R()*nc),n:Math.round(8*sc)});
+  const mv=(typeof process!=='undefined'&&process.env&&process.env.M3MV)?99:MOVES[(n-1)%MOVES.length]-(n0>100?2:0)+(n0<=10?6:n0<=30?3:0);
+  return {n,cols,nc,goals,crates,ice,chains,stones,moves:Math.max(14,Math.min(40,mv)),seed:n0*7919+3,n:n0,ch};}
 /* ---- a board ---- */
-function make(L,seed){const R=rngOf(seed||L.seed);const b={L,R,nc:L.nc,cols:L.cols,g:[],crate:[],ice:[],chain:[],moves:L.moves,left:{},score:0,fx:[]};
+function make(L,seed){const R=rngOf(seed||L.seed);const b={L,R,nc:L.nc,cols:L.cols,g:[],crate:[],ice:[],chain:[],stone:[],moves:L.moves,left:{},score:0,fx:[]};
   L.goals.forEach(g=>b.left[g.k]=g.n);
-  for(let r=0;r<ROWS;r++){b.g.push(new Array(COLS).fill(null));b.crate.push(new Array(COLS).fill(0));b.ice.push(new Array(COLS).fill(0));b.chain.push(new Array(COLS).fill(0));}
-  L.crates.forEach(([r,c,h])=>b.crate[r][c]=h);L.ice.forEach(([r,c])=>b.ice[r][c]=1);L.chains.forEach(([r,c])=>b.chain[r][c]=1);
+  for(let r=0;r<ROWS;r++){b.g.push(new Array(COLS).fill(null));b.crate.push(new Array(COLS).fill(0));b.ice.push(new Array(COLS).fill(0));b.chain.push(new Array(COLS).fill(0));b.stone.push(new Array(COLS).fill(0));}
+  L.crates.forEach(([r,c,h])=>b.crate[r][c]=h);(L.stones||[]).forEach(([r,c])=>{b.crate[r][c]=1;b.stone[r][c]=1;});L.ice.forEach(([r,c])=>b.ice[r][c]=1);L.chains.forEach(([r,c])=>b.chain[r][c]=1);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(!playable(b,r,c)||b.crate[r][c])continue;let col;do{col=Math.floor(R()*b.nc);}while((c>=2&&same(b,r,c-1,col)&&same(b,r,c-2,col))||(r>=2&&same(b,r-1,c,col)&&same(b,r-2,c,col)));
     b.g[r][c]=gem(col,r,c);}
   if(!hasMove(b))shuffle(b);return b;}
@@ -766,7 +804,7 @@ function area(b,r,c,s,extra){const out=[];const add=(a,d,dt)=>{if(playable(b,a,d
   return out;}
 /* the homing star flies to whatever the goals still need most */
 function target(b){const opts=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){if(!playable(b,r,c))continue;let w=0;
-  if(b.crate[r][c]&&b.left.crate>0)w=3;else if(b.chain[r][c]&&b.left.chain>0)w=3;else if(b.ice[r][c]&&b.left.ice>0)w=2.5;else{const x=b.g[r][c];if(x&&b.left['c'+x.c]>0)w=1;}
+  if(b.stone[r][c]&&b.left.stone>0)w=3.2;else if(b.crate[r][c]&&b.left.crate>0)w=3;else if(b.chain[r][c]&&b.left.chain>0)w=3;else if(b.ice[r][c]&&b.left.ice>0)w=2.5;else{const x=b.g[r][c];if(x&&b.left['c'+x.c]>0)w=1;}
   if(w)opts.push([w+b.R()*0.5,r,c]);}
   if(!opts.length)return null;opts.sort((a,b2)=>b2[0]-a[0]);return [opts[0][1],opts[0][2]];}
 function commonColor(b){const n=new Array(b.nc).fill(0);for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const x=b.g[r][c];if(x&&!x.s)n[x.c]+=1+(b.left['c'+x.c]>0?2:0);}return n.indexOf(Math.max(...n));}
@@ -781,9 +819,9 @@ function blast(b,cells,opt){opt=opt||{};const done=new Set(),hitCrate=new Set();
     if(!x.s)goal(b,'c'+x.c);if(x.gold)b.gold=(b.gold||0)+1;b.g[r][c]=null;n++;b.fx.push({t:'pop',r,c,g:x,d:t});
     if(x.s){b._tg=null;const more=area(b,r,c,x.s,x.s==='o'?null:undefined);b.fx.push({t:'sp',s:x.s,r,c,d:t,cells:more.map(p=>[p[0],p[1],t+p[2]]),tg:b._tg});more.forEach(p=>q.push([p[0],p[1],t+p[2]]));}}
   /* matches also knock the crates next to them */
-  if(opt.match)opt.match.forEach(([r,c])=>DIRS.forEach(([dr,dc])=>{const a=r+dr,d=c+dc,k=a+','+d;if(playable(b,a,d)&&b.crate[a][d]&&!hitCrate.has(k)){hitCrate.add(k);hitCr(b,a,d,0);}}));
+  if(opt.match)opt.match.forEach(([r,c])=>DIRS.forEach(([dr,dc])=>{const a=r+dr,d=c+dc,k=a+','+d;if(playable(b,a,d)&&b.crate[a][d]&&!b.stone[a][d]&&!hitCrate.has(k)){hitCrate.add(k);hitCr(b,a,d,0);}}));
   b.score+=n*10;return n;}
-function hitCr(b,r,c,t){b.crate[r][c]--;b.fx.push({t:'crate',r,c,left:b.crate[r][c],d:t||0});if(!b.crate[r][c])goal(b,'crate');}
+function hitCr(b,r,c,t){b.crate[r][c]--;const st=b.stone[r][c];b.fx.push({t:st?'stone':'crate',r,c,left:b.crate[r][c],d:t||0});if(!b.crate[r][c]){if(st){b.stone[r][c]=0;goal(b,'stone');}else goal(b,'crate');}}
 function goal(b,k){if(b.left[k]>0)b.left[k]--;}
 /* resolve all matches on the board once; returns true if anything happened */
 function matchStep(b,swapAt,dir){const gs=findGroups(b);if(!gs.length)return false;const keep=new Set(),made=[];
@@ -797,7 +835,7 @@ function matchStep(b,swapAt,dir){const gs=findGroups(b);if(!gs.length)return fal
 /* ---- falling: straight down, sliding round crates diagonally, new gems from the top ---- */
 function fall(b){let moved=true,guard=0;while(moved&&guard++<200){moved=false;
   for(let r=ROWS-1;r>=0;r--)for(let c=0;c<COLS;c++){if(!playable(b,r,c)||b.crate[r][c]||b.g[r][c])continue;
-    if(r===b.cols[c][0]){b.g[r][c]=gem(Math.floor(b.R()*b.nc),r,c);b.g[r][c].y=r-1.2;if(b.R()<0.006)b.g[r][c].gold=true;moved=true;continue;}
+    if(r===b.cols[c][0]){b.g[r][c]=gem(Math.floor(b.R()*b.nc),r,c);b.g[r][c].y=r-1.2;if(!b.goldMade&&b.R()<0.0025){b.g[r][c].gold=true;b.goldMade=true;}moved=true;continue;}
     if(playable(b,r-1,c)&&!b.crate[r-1][c]&&b.g[r-1][c]&&!b.chain[r-1][c]){b.g[r][c]=b.g[r-1][c];b.g[r-1][c]=null;moved=true;continue;}
     const blocked=!playable(b,r-1,c)||b.crate[r-1][c]||b.chain[r-1][c]||(!b.g[r-1][c]&&upBlocked(b,r-1,c));
     if(blocked){for(const d of [c-1,c+1]){if(playable(b,r-1,d)&&!b.crate[r-1][d]&&!b.chain[r-1][d]&&b.g[r-1][d]&&(!playable(b,r,d)||b.crate[r][d]||b.g[r][d])){b.g[r][c]=b.g[r-1][d];b.g[r-1][d]=null;moved=true;break;}}}}}
@@ -835,7 +873,7 @@ if(typeof module!=='undefined')module.exports={M3};
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.12.03';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V3.00.00';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -848,8 +886,8 @@ function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(
 function save(){P.saved=now();try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}}
 const raw=load();
 /* V2: a fresh start with the rebalanced game. Sound settings, event badges and event tokens carry over. */
-if(raw&&raw.v===4)P=raw;
-else P={v:4,cur:'belt',w:{belt:ECONS.belt.fresh(now())},ev:null,tok:0,evBadges:[],audio:raw&&raw.audio,saved:now(),season:!!raw,unl:{}};   // V2.01: complete fresh start, only sound settings kept
+if(raw&&raw.v===5)P=raw;
+else P={v:5,cur:'belt',w:{belt:ECONS.belt.fresh(now())},ev:null,tok:0,evBadges:[],audio:raw&&raw.audio,saved:now(),season:!!raw,unl:{},n210:1,n211:1};   // V2.01: complete fresh start, only sound settings kept
 P.evBadges=P.evBadges||[];P.tok=P.tok||0;P.audio=P.audio||{music:false,sfx:false};P.unl=P.unl||{};
 const TOK_CAP=100;   // most tokens one event can give
 function econOf(id){return id==='bonus'?ECONS.event:id==='event'&&P.ev&&P.ev.eco?(P.ev.wild?eventEcon(P.ev.eco):bonusEcon(P.ev.eco)):ECONS[id];}
@@ -1132,7 +1170,7 @@ function renderBadges(){const ups=E.UPS.some(u=>!st.ups[u.id]&&E.upPrice(st,u)<=
   const newP=(st.picks||[]).length;
   const lv=P.cur==='bonus'?0:E.advice(st).level;const perk=E.PERKS.some(pk=>{const im=E.perkImpact(st,pk);return im&&im.c<=st.stars&&im.c<=st.stars*0.05&&(P.cur!=='event'||pk.id==='quick');});
   const set=(t,v)=>{const el=$(`[data-tab="${t}"] .badge`);el.hidden=!v;el.textContent=v===true?'':v;};
-  set('upgrades',ups);set('powerups',newP);const col=P.cur==='event'&&P.ev?P.ev.chal.filter(c=>c.done&&!c.got).length:0;set('stars',col?col:(lv===2||perk)?true:0);set('worlds',(P.ev&&P.cur!=='event'&&!P.evSeen)||WORLD_IDS.some(id=>unlocked(id)&&!P.w[id])?true:0);if(tab==='worlds')P.evSeen=true;}
+  set('upgrades',ups);set('powerups',newP);const col=P.cur==='event'&&P.ev?P.ev.chal.filter(c=>c.done&&!c.got).length:0;set('stars',col?col:(lv===2||perk)?true:0);set('worlds',(questsReady&&achReady()>0)||(P.ev&&P.cur!=='event'&&!P.evSeen)||WORLD_IDS.some(id=>unlocked(id)&&!P.w[id])?true:0);if(tab==='worlds')P.evSeen=true;}
 function groupLine(label,idx,targets,tiers){if(idx>=targets.length)return `<div class="grp done"><b>${label}</b><span>All targets reached</span></div>`;
   const need=targets[idx];const have=tiers.filter(i=>st.tiers[i].n>=need).length;
   const mem=tiers.length>4?`<div class="mem">${tiers.filter(i=>st.tiers[i].n<need).length} item${tiers.filter(i=>st.tiers[i].n<need).length===1?'':'s'} still below ${need}</div>`:
@@ -1179,7 +1217,7 @@ function renderEvent(){const tw=TWISTS.find(x=>x.id===P.ev.tw);const a=E.advice(
 function renderWorlds(){const w=eventWindow(now());const bs=P.w.belt.starsEver||0,cs=P.w.coffee?P.w.coffee.starsEver||0:0;const card=(id,name,tag,txt,on,lock,btn)=>`<div class="wcard${on?' on':''}${lock?' lock':''}"><span class="tag">${tag}</span><b>${esc(name)}</b><small>${txt}</small>${btn?`<button class="ghost small" data-world="${id}">${btn}</button>`:''}</div>`;
   const tw=P.ev?TWISTS.find(x=>x.id===P.ev.tw):twistFor(eventWindow(w.next).id);
   let hid=0;const wc=(id,num,short)=>{const X=ECONS[id].W,on=unlocked(id),u=UNLOCK[id];if(!on&&!unlocked(u.from)){hid++;return '';}return card(id,X.name,P.cur===id?'Playing':on?'World '+num:'Locked',esc(X.blurb)+(on?'':` Unlocks when ${esc(ECONS[u.from].W.name)} reaches ${u.need} ${esc(ECONS[u.from].W.starName)} (${fmt(P.w[u.from]?P.w[u.from].starsEver||0:0)}/${u.need}).`),P.cur===id,!on,on&&P.cur!==id?(P.w[id]?'Go to '+short:'Open '+X.name):'');};
-  $('#p-worlds').innerHTML=`<p class="lead">Each world plays at its own speed with its own twist. Stars from your other worlds give a small bonus that grows slowly (×${sharedMult(P.cur).toFixed(2)} here now), and event tokens add 0.15% each to every world.</p><div class="worlds">
+  $('#p-worlds').innerHTML=`${questsReady?`<button class="achcard" data-achopen><b>Achievements</b><small>${achList().filter(x=>x.got).length}/${achList().length} done${achReady()?` · <em>${achReady()} to claim</em>`:''}</small></button>`:''}<p class="lead">Each world plays at its own speed with its own twist. Stars from your other worlds give a small bonus that grows slowly (×${sharedMult(P.cur).toFixed(2)} here now), and event tokens add 0.15% each to every world.</p><div class="worlds">
    ${card('belt','Asteroid Belt',P.cur==='belt'?'Playing':'World 1',esc(ECONS.belt.W.blurb),P.cur==='belt',false,P.cur==='belt'?'':'Go to the Belt')}
    ${wc('coffee',2,'Coffee')}${wc('salvage',3,'the Deep Sea')}${wc('tower',4,'the Tower')}${wc('candy',5,'the Factory')}${wc('foundry',6,'the Foundry')}${wc('dino',7,'the Park')}${hid?`<div class="wcard lock"><span class="tag">Still to find</span><b>${hid} more world${hid>1?'s':''}</b><small>Each new world unlocks at 500 of the world before it.</small></div>`:''}
    ${!eventsOpen()?card('','Weekly events','Locked','Three wild events every week: the weekend event (Friday to Tuesday), the Sunday event (Sunday to Wednesday) and the midweek event (Wednesday to Friday). Unlock by restarting the Belt once.',false,true,''):['fri','sun','mid'].map(s=>{const win=slotWin(s,now());return [s,win,slotTwist(s,win.id)];}).map(([s,win,ntw])=>{const e=slotEv(s);
@@ -1221,7 +1259,7 @@ function renderRound(){const R=roundOf(P.br.id),v=roundScore(),m=medalFor(R,v);c
    <p class="muted small">Trophy points: ${P.tro.pts} (${troRank()}). Bonus Rounds never change your worlds.</p>
    <button class="ghost wide" id="quitRound">Quit this round (no medal)</button>`;}
 /* ---- golden asteroid ---- */
-function goldCheck(){const g=$('#gold');const t=now();if(!g.hidden)return;if(t>=st.nextGold){g.hidden=false;const y=12+Math.random()*60;g.style.top=y+'%';g.classList.remove('fly');void g.offsetWidth;g.classList.add('fly');
+function goldCheck(){const g=$('#gold');const t=now();if(!g.hidden)return;const shower=P.luck&&P.luck.shower>t;if(!shower&&st.boost&&st.boost.until>t){st.nextGold=Math.max(st.nextGold,st.boost.until+20000);return;}if(t>=st.nextGold){g.hidden=false;const y=12+Math.random()*60;g.style.top=y+'%';g.classList.remove('fly');void g.offsetWidth;g.classList.add('fly');
   setTimeout(()=>{if(!g.hidden){g.hidden=true;st.nextGold=now()+E.goldGap(st);}},11000);}}
 /* ---- starfield ---- */
 function stars(){const c=$('#sky');const dpr=Math.min(2,devicePixelRatio||1);const w=c.width=innerWidth*dpr,h=c.height=innerHeight*dpr;const x=c.getContext('2d');
@@ -1246,7 +1284,7 @@ function welcome(r){const others=worldIds().filter(id=>id!==r.id).length;
   openModal(`<h2>Welcome back</h2><p>${esc(r.name[0].toUpperCase()+r.name.slice(1))} kept working for <b>${fmtT(r.gap/1000)}</b>.</p>${r.v>0?`<div class="bigstat"><span>+${fmt(r.v)}</span><small>${esc(r.cur)}</small></div>`:'<p class="muted">Hire managers so items keep working while you\'re away.</p>'}${others?'<p class="muted small">Your other worlds are saving up too. Collect when you visit them.</p>':''}<div class="mact"><button class="go" id="awayOk">Collect</button></div>`);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){hiddenAt=now();AUDIO.sleep();save();}else if(hiddenAt){const gap=now()-hiddenAt;hiddenAt=0;
   AUDIO.wake();if(gap>2000){const r=redeem(P.cur);last=now();if(r&&r.gap>30000)welcome(r);render(true);save();}}});addEventListener('pagehide',save);
-if(P.season){P.season=false;save();openModal(`<h2>A fresh start</h2><p>Asteroid Belt Idle has been rebalanced, so everyone starts again from the first Pickaxe Bot.</p><ul class="muted"><li>The Belt grows steadily: restarts pay off every time, without running away.</li><li>Items never max out. After each item's milestone list, a new milestone comes every +100.</li><li>Unlock Coffee Empire at 500 Stars, then Deep-Sea Salvage, Wizard's Tower, Candy Factory, Robot Foundry and Dino Park, each at 500 of the world before.</li><li>Weekly events unlock after your first restart, and they're the wild ones.</li><li>Star perks have many more levels. Each costs more than the last, so Stars always have a use.</li></ul><p>Everything starts from zero, including the event bonus and badges. Only your sound settings are kept.</p><div class="mact"><button class="go" id="awayOk">Let's go</button></div>`);}
+if(P.season){P.season=false;save();openModal(`<h2>Version 3: a fresh start</h2><p>Everything starts again from zero, with these changes:</p><ul class="muted"><li><b>Royal Rocks</b> now gets harder as you go, in four chapters, with a new blocker on the way.</li><li><b>Cat Naps</b> puzzles get trickier within each size, with a par time for 3 stars and an expert tier later on.</li><li>Golden bonuses are rarer, and none appear while one is already boosting you.</li><li>Big Star totals are toned down a little past ×20, so worlds don't run away.</li><li>New <b>Achievements</b> on the Worlds tab pay crowns.</li></ul><p>Only your sound settings are kept.</p><div class="mact"><button class="go" id="awayOk">Let's go</button></div>`);}
 else if(!P.n211){P.n211=1;P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0||(P.w.belt.life||0)>1e4)openModal(`<h2>The Arcade is open</h2><p>Tap <b>♛ Arcade</b> at the top right any time.</p><ul class="muted"><li><b>Cat Naps</b>: a logic puzzle. One cat per row, column and colour patch, and cats never touch.</li><li><b>Royal Rocks</b>: match-3 with rockets, bombs, propellers, orbs, crates, ice and chains.</li><li>Win crowns and <b>build a kingdom</b>. Every building gives a gift: a timed boost for any world.</li><li>The newer worlds got hands-on extras: <b>spells</b> in the Tower, <b>orders</b> in Candy, <b>blueprints</b> in the Foundry, <b>expeditions</b> in Dino Park, <b>rush hour</b> in Coffee and <b>sonar</b> in Deep-Sea Salvage. The Belt stays the same old friend.</li></ul><div class="mact"><button class="ghost" id="awayOk">Later</button><button class="go" id="arcGo">Open the Arcade</button></div>`);}
 else if(!P.n210){P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0)openModal(`<h2>Big expansion</h2><p>Four new worlds, a third weekly event and more twists.</p><ul class="muted"><li><b>Wizard's Tower</b>: own 50 of an item to add to the spell circle.</li><li><b>Candy Factory</b>: buying 25 or more at once is 40% cheaper.</li><li><b>Robot Foundry</b>: machines run hot (×3 speed), then cool down.</li><li><b>Dino Park</b>: keep each herd at least as big as the one above for ×2.5.</li><li>Each new world unlocks at 500 of the world before (after Deep-Sea Salvage). Every item has its own milestones and personality.</li><li>New <b>Midweek event</b> from Wednesday to Friday, 7 new twists and 3 new Bonus Rounds.</li></ul><div class="mact"><button class="go" id="awayOk">Nice</button></div>`);}
 else if(awayMsg)welcome(awayMsg);
@@ -1272,7 +1310,7 @@ function qState(){const d=qDay();if(!P.q||P.q.day!==d){let s=(d*2654435761)>>>0;
       const n=q.n[Math.floor(R()*q.n.length)];return {k:q.k,need:n,have:0,done:false,got:false,t:q.t.replace('{n}',n).replace('{s}',n>1?'s':''),tip:QTIP[q.k]};})};}
   P.q.list.forEach(q=>{if(q.k==='act'&&!q.tip){q.t=`Use ${q.need} world actions`;q.tip='The box at the top of Items in Coffee, Deep-Sea Salvage and the newer worlds: rush hour, sonar, spells, orders, blueprints or expeditions.';}else if(!q.tip)q.tip=QTIP[q.k]||'';});
   return P.q;}
-function questBump(k,n){if(!P||!P.w)return;const Q=qState();Q.list.forEach(q=>{if(q.k!==k||q.done)return;q.have=Math.min(q.need,q.have+(n||1));if(q.have>=q.need){q.done=true;toast(`<b>Quest done!</b> ${esc(q.t)} · tap Quests to claim`,'star');AUDIO.play('challenge');}});}
+function questBump(k,n){if(!P||!P.w)return;P.stats=P.stats||{};const base=k.split(':')[0];P.stats[base]=(P.stats[base]||0)+(n||1);const Q=qState();Q.list.forEach(q=>{if(q.k!==k||q.done)return;q.have=Math.min(q.need,q.have+(n||1));if(q.have>=q.need){q.done=true;toast(`<b>Quest done!</b> ${esc(q.t)} · tap Quests to claim`,'star');AUDIO.play('challenge');}});}
 function questsOpen(){const Q=qState();const ok=Q.list.filter(q=>q.got).length;
   openModal(`<h2>Today's quests</h2><p>New quests every day. Each one pays <b>2 crowns</b>; finish all three for a <b>×2 gift for 20 minutes</b>.</p>
    ${Q.list.map((q,i)=>`<div class="qrow${q.got?' got':''}"><div><b>${esc(q.t)}</b>${q.tip?`<small class="qtip">${esc(q.tip)}</small>`:''}<div class="qbar"><i style="width:${q.have/q.need*100}%"></i></div><small>${q.have}/${q.need}</small></div>${q.got?'<span class="qok">✓</span>':`<button class="go small" data-qclaim="${i}" ${q.done?'':'disabled'}>Claim</button>`}</div>`).join('')}
@@ -1312,7 +1350,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('#qpill,#chestpil
   if(b.id==='qpill')questsOpen();else if(b.id==='chestpill')chestOpen();else if(b.id==='merchpill')merchOpen();
   else if(b.id==='hintpill'){if(hintCur){hintCur.go();hintAt=0;save();render(true);}}
   else if(b.dataset.qclaim!=null){const Q=qState(),q=Q.list[+b.dataset.qclaim];if(!q||!q.done||q.got)return;q.got=true;P.arc.cr+=2;P.arc.crEver=(P.arc.crEver||0)+2;AUDIO.play('pick');
-    if(Q.list.every(x=>x.got)&&!Q.all){Q.all=true;P.arc.tok.push({m:2,min:20});toast('<b>All quests done!</b> A ×2 gift is waiting in the Arcade.','gold');}save();questsOpen();}
+    if(Q.list.every(x=>x.got)&&!Q.all){Q.all=true;P.stats=P.stats||{};P.stats.quests=(P.stats.quests||0)+1;P.arc.tok.push({m:2,min:20});toast('<b>All quests done!</b> A ×2 gift is waiting in the Arcade.','gold');}save();questsOpen();}
   else if(b.dataset.merch!=null){const L=P.luck,m=L&&L.merch;if(!m)return;const pct=m.k==='boost'?25:40;st.cash-=st.cash*pct/100;
     if(m.k==='boost')(st.timed=st.timed||[]).push({k:'tx',m:4,left:10*MIN2,txt:'Merchant charm ×4 for 10 minutes'});else{P.arc.cr+=3;P.arc.crEver=(P.arc.crEver||0)+3;}
     L.merch=null;closeModal();save();AUDIO.play('challenge');toast(m.k==='boost'?'<b>Charm bought</b> ×4 for 10 minutes.':'<b>+3 crowns</b> Spend them in the Arcade.','gold');render(true);}});
@@ -1321,6 +1359,19 @@ function dailyRender(){const t=now();luckTick();const Q=qState();const done=Q.li
   const cp=$('#chestpill');cp.hidden=!chestReady();
   const mp=$('#merchpill'),m=P.luck&&P.luck.merch;mp.hidden=!m||!mainWorld();if(m)mp.textContent=`Merchant · ${mmss(m.until-t)}`;
 }
+/* ---- achievements: long-term goals across the whole app, paid in crowns ---- */
+const ACH=[['gold','Catch {n} golden bonuses',[10,50,200]],['buy','Buy {n} items',[1000,10000,100000]],['mgr','Hire {n} managers',[10,40,100]],['restart','Restart {n} times',[5,25,100]],
+  ['pup','Pick {n} power-ups',[25,150,500]],['act','Use {n} world actions',[25,150,500]],['m3','Win {n} Royal Rocks levels',[5,25,60]],['cat','Solve {n} Cat Naps puzzles',[5,25,60]],
+  ['worlds','Unlock {n} worlds',[2,4,7]],['built','Build {n} kingdom buildings',[6,12,18]],['quests','Finish {n} daily quest sets',[3,10,30]],['streak','Reach a {n}-day chest streak',[3,7,14]]];
+const ACH_PAY=[2,4,8];
+const nf=n=>n>=1e6?(Math.round(n/1e5)/10)+'M':n>=1e3?(Math.round(n/100)/10)+'K':String(Math.floor(n));
+function achVal(k){P.stats=P.stats||{};if(k==='worlds')return Object.keys(P.w).length;if(k==='built')return P.arc.built||0;if(k==='streak')return (P.login&&P.login.streak)||0;return P.stats[k]||0;}
+function achList(){P.ach=P.ach||{};const out=[];ACH.forEach(([k,t,tiers])=>tiers.forEach((n,i)=>{const id=k+i;out.push({id,k,i,n,t:t.replace('{n}',nf(n)),have:Math.min(n,achVal(k)),got:!!P.ach[id],pay:ACH_PAY[i]});}));return out;}
+function achReady(){return achList().filter(a=>!a.got&&a.have>=a.n).length;}
+function achOpen(){const L=achList();const done=L.filter(a=>a.got).length;
+  openModal(`<h2>Achievements</h2><p>${done} of ${L.length} done. Each one pays crowns for the Arcade kingdom.</p><div class="achs">${L.filter(a=>!a.got||true).map(a=>`<div class="ach${a.got?' got':''}"><div><b>${esc(a.t)}</b><div class="qbar"><i style="width:${a.have/a.n*100}%"></i></div><small>${nf(a.have)}/${nf(a.n)}</small></div>${a.got?'<span class="qok">✓</span>':`<button class="go small" data-ach="${a.id}" ${a.have>=a.n?'':'disabled'}>+${a.pay} ♛</button>`}</div>`).join('')}</div><div class="mact"><button class="ghost" id="awayOk">Close</button></div>`);}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ach],[data-achopen]');if(!b||b.disabled)return;if(b.dataset.achopen!=null){achOpen();return;}
+  const a=achList().find(x=>x.id===b.dataset.ach);if(!a||a.got||a.have<a.n)return;P.ach[a.id]=1;P.arc.cr+=a.pay;P.arc.crEver=(P.arc.crEver||0)+a.pay;AUDIO.play('challenge');save();const sc=$('#modalCard').scrollTop;achOpen();$('#modalCard').scrollTop=sc;});
 var questsReady=true;
 
 /* ===================== WORLD ACTIONS: each newer world has something hands-on (the Belt stays the steady old friend) ===================== */
@@ -1458,8 +1509,11 @@ ARC.addEventListener('click',e=>{const b=e.target.closest('[data-arc]');if(!b)re
 /* ===== Cat Naps ===== */
 const CAT_COL=['#F7B5C4','#B5D8F7','#C6EBB0','#FBE29A','#D9C3F5','#F9C9A0','#A9E6DD','#F3B3E6','#C9CCD6'];
 function catSize(l){return l<=3?5:l<=10?6:l<=25?7:l<=45?8:9;}
-function catStart(lvl,daily){const N=daily?8:catSize(lvl);const seed=daily?dayId()*104729+11:lvl*7919+13;const pz=catGen(N,seed);
-  cat={lucky:!daily&&((lvl*2654435761)>>>0)%9===4,N,reg:pz.reg,sol:pz.sol,s:[...Array(N)].map(()=>new Array(N).fill(0)),hints:0,t0:now(),lvl,daily,won:false,lock:new Set()};
+/* difficulty climbs inside each size, and from level 71 the puzzles need deeper thinking */
+function catTarget(l){const B=[[1,3,0,0],[4,10,1,8],[11,25,5,20],[26,45,10,28],[46,70,15,42],[71,1e9,62,62]];const b=B.find(x=>l>=x[0]&&l<=x[1]);return b[1]>1e8?b[2]:Math.round(b[2]+(b[3]-b[2])*(l-b[0])/Math.max(1,b[1]-b[0]));}
+function catDailyTarget(){return [62,8,14,20,28,36,45][new Date().getDay()];}
+function catStart(lvl,daily){const N=daily?8:catSize(lvl);const seed=daily?dayId()*104729+11:lvl*7919+13;const pz=catPick(N,seed,daily?catDailyTarget():catTarget(lvl));const par=Math.round(15*N+Math.min(pz.rate,70)*4);
+  cat={par,rate:pz.rate,lucky:!daily&&((lvl*2654435761)>>>0)%9===4,N,reg:pz.reg,sol:pz.sol,s:[...Array(N)].map(()=>new Array(N).fill(0)),hints:0,t0:now(),lvl,daily,won:false,lock:new Set()};
   cat.key=daily?'D'+dayId():'L'+lvl;A.cs=A.cs||{};const sv=A.cs[cat.key];   /* pick up where you left off */
   if(sv&&sv.N===N){cat.s=sv.s;cat.hints=sv.h||0;cat.lock=new Set(sv.lock||[]);cat.t0=now()-(sv.ms||0);}
   for(const k in A.cs)if(k!==cat.key&&!(k[0]==='L'?k==='L'+A.cat:k==='D'+dayId()))delete A.cs[k];
@@ -1467,7 +1521,7 @@ function catStart(lvl,daily){const N=daily?8:catSize(lvl);const seed=daily?dayId
    <p class="rules">Put one sleeping cat in every <b>row</b>, every <b>column</b> and every <b>colour patch</b>. Cats need their space: no two cats touch, not even at the corners.</p>
    <div class="cgrid" id="cgrid" style="--n:${N}">${cat.reg.map((row,r)=>row.map((k,c)=>{const bt=r===0||cat.reg[r-1][c]!==k,bb=r===N-1||cat.reg[r+1][c]!==k,bl=c===0||row[c-1]!==k,br=c===N-1||row[c+1]!==k;
      return `<button class="cc" data-r="${r}" data-c="${c}" style="background:${CAT_COL[k]};border-width:${bt?3:1}px ${br?3:1}px ${bb?3:1}px ${bl?3:1}px" aria-label="Row ${r+1}, column ${c+1}"></button>`;}).join('')).join('')}</div>
-   <div class="cbar"><span id="ctime">0:00</span><span id="ccount">0/${N} cats</span><button class="ghost small" data-arc="hint">Hint</button><button class="ghost small" data-arc="clear">Clear</button></div>
+   <div class="cbar"><span id="ctime">0:00</span><span class="cpar">par ${mmss(par*1000)}</span><span id="ccount">0/${N} cats</span><button class="ghost small" data-arc="hint">Hint</button><button class="ghost small" data-arc="clear">Clear</button></div>
    <p class="muted small">Tap once for a cross (no cat here), twice for a cat, again to clear. Drag across squares to cross out several at once.</p>`;
   catDraw();startLoop(()=>{if(cat&&!cat.won)$('#ctime').textContent=mmss(now()-cat.t0);});
   const g=$('#cgrid');let drag=null;
@@ -1485,10 +1539,10 @@ function catBad(){const N=cat.N,bad=new Set(),cats=[];for(let r=0;r<N;r++)for(le
 let catSaveT=0;function catSaveNow(){if(!cat||cat.won)return;A.cs=A.cs||{};A.cs[cat.key]={N:cat.N,s:cat.s,h:cat.hints,lock:[...cat.lock],ms:now()-cat.t0};clearTimeout(catSaveT);catSaveT=setTimeout(save,400);}
 function catDraw(){catSaveNow();const {bad,cats}=catBad();$$('#cgrid .cc').forEach(el=>{const r=+el.dataset.r,c=+el.dataset.c,v=cat.s[r][c];el.innerHTML=v===2?CAT_SVG:v===1?XMARK:'';el.classList.toggle('bad',bad.has(r+','+c));el.classList.toggle('lk',cat.lock.has(r+','+c));});
   const cc=$('#ccount');if(cc)cc.textContent=`${cats.length}/${cat.N} cats`;}
-function catCheck(){const {bad,cats}=catBad();if(cats.length!==cat.N||bad.size)return;cat.won=true;if(A.cs)delete A.cs[cat.key];const lucky=cat.lucky;const secs=(now()-cat.t0)/1000;const stars=cat.hints===0?3:cat.hints===1?2:1;
+function catCheck(){const {bad,cats}=catBad();if(cats.length!==cat.N||bad.size)return;cat.won=true;if(A.cs)delete A.cs[cat.key];const lucky=cat.lucky;const secs=(now()-cat.t0)/1000;const stars=cat.hints===0&&secs<=cat.par?3:cat.hints<=1?2:1;
   $('#cgrid').classList.add('won');AUDIO.play('challenge');
   let msg;if(cat.daily){A.daily={id:dayId(),done:true};gainCrowns(2);A.tok.push({m:2,min:15});msg=`<p><b>+2 crowns</b> and a <b>×2 gift for 15 minutes</b>.</p>`;}
-  else{gainCrowns(stars);A.cat=cat.lvl+1;msg=`<p><b>+${stars} crown${stars>1?'s':''}</b>${stars<3?' (3 without hints)':''}.</p>`;}
+  else{gainCrowns(stars);A.cat=cat.lvl+1;msg=`<p><b>+${stars} crown${stars>1?'s':''}</b>${stars<3?` (3 for no hints and under par, ${mmss(cat.par*1000)})`:''}.</p>`;}
   A.wins++;questBump('cat');if(lucky){gainCrowns(cat.daily?2:stars);msg+='<p><b>Lucky cat!</b> Crowns doubled.</p>';}save();
   setTimeout(()=>openModal(`<h2>${lucky?'Lucky cat!':'Purr-fect!'}</h2><div class="bigstat"><span>${'★'.repeat(cat.daily?3:stars)}${'☆'.repeat(cat.daily?0:3-stars)}</span><small>Solved in ${mmss(secs*1000)}${cat.hints?` with ${cat.hints} hint${cat.hints>1?'s':''}`:''}</small></div>${msg}
     <div class="mact"><button class="ghost" id="awayOk" data-arc-modal="home">Arcade</button>${cat.daily?'':'<button class="go" data-arc-modal="cat">Next puzzle</button>'}</div>`),700);}
@@ -1512,10 +1566,12 @@ function m3Start(n){const L=M3.level(n);m3={L,b:M3.make(L),busy:false,sel:null,f
    <div class="m3hud"><div class="mv"><b id="m3mv">${L.moves}</b><small>moves</small></div><div class="goals" id="m3goals"></div><button class="ab m3help" data-m3help aria-label="What the specials do">?</button></div>
    <div class="m3wrap"><canvas id="m3c"></canvas></div>
    <p class="muted small">Swap side-by-side gems to make lines of 3 or more. Tap <b>?</b> to see the specials.</p>`;
-  m3Goals();const cv=$('#m3c');m3Size();m3Input(cv);startLoop(m3Frame);}
+  m3Goals();const cv=$('#m3c');m3Size();m3Input(cv);startLoop(m3Frame);
+  A.seenB=A.seenB||{};const NEWB={ice:'<b>New: ice</b> Clear the gem sitting on it to melt it.',chain:'<b>New: chains</b> Chained gems can\'t be swapped. Match them (or blast them) to snap the chain.',stone:'<b>New: stone</b> Matches next to it do nothing. Only rockets, bombs, seekers and orbs break stone.'};
+  const nb=L.goals.map(g=>g.k).find(k=>NEWB[k]&&!A.seenB[k]);if(nb){A.seenB[nb]=1;save();setTimeout(()=>toast(NEWB[nb],'star'),500);}}
 function m3Size(){const cv=$('#m3c');if(!cv)return;const w=Math.min(ARC.clientWidth-32-16,440);const cs=Math.floor(w/M3.COLS);const dpr=Math.min(2,window.devicePixelRatio||1);
   cv.style.width=cs*M3.COLS+'px';cv.style.height=cs*M3.ROWS+'px';cv.width=cs*M3.COLS*dpr;cv.height=cs*M3.ROWS*dpr;m3.cs=cs;m3.dpr=dpr;}
-function goalIcon(k){if(k==='crate')return '<i class="gl crate"></i>';if(k==='ice')return '<i class="gl ice"></i>';if(k==='chain')return '<i class="gl chain"></i>';const c=+k.slice(1);return `<img class="gl" alt="" src="${gemURL(c)}">`;}
+function goalIcon(k){if(k==='stone')return '<i class="gl stone"></i>';if(k==='crate')return '<i class="gl crate"></i>';if(k==='ice')return '<i class="gl ice"></i>';if(k==='chain')return '<i class="gl chain"></i>';const c=+k.slice(1);return `<img class="gl" alt="" src="${gemURL(c)}">`;}
 function m3Goals(){const b=m3.b;$('#m3goals').innerHTML=m3.L.goals.map(g=>{const l=Math.max(0,b.left[g.k]);return `<span class="${l?'':'ok'}">${goalIcon(g.k)}<b>${l?l:'✓'}</b></span>`;}).join('');const mv=$('#m3mv');mv.textContent=b.moves;mv.parentElement.classList.toggle('low',b.moves<=5);}
 function cellAt(cv,e){const r=cv.getBoundingClientRect();return [Math.floor((e.clientY-r.top)/m3.cs),Math.floor((e.clientX-r.left)/m3.cs)];}
 function m3Input(cv){let down=null;
@@ -1552,10 +1608,11 @@ async function m3Win(){const b=m3.b;m3.done=true;m3.busy=true;const left=b.moves
   openModal(`<h2>Level ${m3.L.n} cleared!</h2><div class="bigstat"><span>${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</span><small>${left} move${left===1?'':'s'} to spare</small></div><p><b>+${stars} crown${stars>1?'s':''}</b>. ${stars<3?'Finish with more moves left for 3.':''}</p>
    <div class="mact"><button class="ghost" id="awayOk" data-arc-modal="home">Arcade</button><button class="go" data-arc-modal="m3">Next level</button></div>`);}
 function m3Lose(){m3.done=true;const can=!m3.extra&&A.cr>=2;
-  openModal(`<h2>Out of moves</h2><p>So close! ${m3.L.goals.map(g=>m3.b.left[g.k]>0?`${m3.b.left[g.k]} ${g.k==='crate'?'crates':g.k==='ice'?'ice':g.k==='chain'?'chains':'gems'}`:'').filter(Boolean).join(', ')} still to go.</p>
+  openModal(`<h2>Out of moves</h2><p>So close! ${m3.L.goals.map(g=>m3.b.left[g.k]>0?`${m3.b.left[g.k]} ${g.k==='crate'?'crates':g.k==='stone'?'stones':g.k==='ice'?'ice':g.k==='chain'?'chains':'gems'}`:'').filter(Boolean).join(', ')} still to go.</p>
    <div class="mact"><button class="ghost" id="awayOk" data-arc-modal="home">Give up</button>${can?`<button class="ghost" data-m3extra>+5 moves · 2 ${CROWN}</button>`:''}<button class="go" data-arc-modal="m3">Try again</button></div>`);}
 document.addEventListener('click',e=>{if(!e.target.closest('[data-m3extra]'))return;if(A.cr<2||!m3)return;A.cr-=2;save();m3.extra=true;m3.done=false;m3.b.moves+=5;closeModal();m3Goals();$('.acr b').textContent=A.cr;});
 /* ---- drawing the board ---- */
+function drawStone(ctx,x,y,w){ctx.fillStyle='#8E93A6';rr(ctx,x,y,w,w,w*0.22);ctx.fill();ctx.fillStyle='#A9AEC0';rr(ctx,x+w*0.1,y+w*0.08,w*0.8,w*0.45,w*0.18);ctx.fill();ctx.strokeStyle='#5C6175';ctx.lineWidth=Math.max(1.5,w*0.05);ctx.beginPath();ctx.moveTo(x+w*0.3,y+w*0.2);ctx.lineTo(x+w*0.45,y+w*0.5);ctx.lineTo(x+w*0.35,y+w*0.8);ctx.moveTo(x+w*0.45,y+w*0.5);ctx.lineTo(x+w*0.75,y+w*0.6);ctx.stroke();ctx.strokeStyle='#4A4F62';rr(ctx,x,y,w,w,w*0.22);ctx.stroke();}
 function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function gemPath(ctx,c,cx,cy,s){ctx.beginPath();if(c===0){ctx.moveTo(cx,cy-s);ctx.lineTo(cx+s,cy);ctx.lineTo(cx,cy+s);ctx.lineTo(cx-s,cy);}
   else if(c===1){ctx.arc(cx,cy,s*0.88,0,Math.PI*2);}
@@ -1597,17 +1654,18 @@ function m3Frame(){const cv=$('#m3c');if(!cv||!m3)return;const ctx=cv.getContext
     if(b.chain[r][c]){ctx.strokeStyle='#C9CFE0';ctx.lineWidth=cs*0.08;for(const [ox,oy] of [[-0.22,-0.22],[0,0],[0.22,0.22]]){ctx.beginPath();ctx.ellipse(c*cs+cs/2+ox*cs,r*cs+cs/2+oy*cs,cs*0.13,cs*0.08,Math.PI/4,0,Math.PI*2);ctx.stroke();}
       for(const [ox,oy] of [[0.22,-0.22],[-0.22,0.22]]){ctx.beginPath();ctx.ellipse(c*cs+cs/2+ox*cs,r*cs+cs/2+oy*cs,cs*0.13,cs*0.08,-Math.PI/4,0,Math.PI*2);ctx.stroke();}}}
   ctx.restore();
-  for(let r=0;r<M3.ROWS;r++)for(let c=0;c<M3.COLS;c++){const h=b.crate[r][c];if(!h)continue;const x=c*cs+2,y=r*cs+2,w=cs-4;ctx.fillStyle=h>1?'#8A5A32':'#C98B5E';rr(ctx,x,y,w,w,cs*0.1);ctx.fill();ctx.strokeStyle=h>1?'#5A3A1E':'#8A5A32';ctx.lineWidth=2;ctx.strokeRect(x+w*0.12,y+w*0.12,w*0.76,w*0.76);
-    ctx.beginPath();ctx.moveTo(x+w*0.12,y+w*0.12);ctx.lineTo(x+w*0.88,y+w*0.88);ctx.stroke();if(h>1){ctx.fillStyle='#C9CFE0';ctx.fillRect(x,y+w*0.42,w,w*0.16);}}
+  for(let r=0;r<M3.ROWS;r++)for(let c=0;c<M3.COLS;c++){const h=b.crate[r][c];if(!h)continue;const x=c*cs+2,y=r*cs+2,w=cs-4;if(b.stone[r][c]){drawStone(ctx,x,y,w);continue;}ctx.fillStyle=h>1?'#8A5A32':'#C98B5E';rr(ctx,x,y,w,w,cs*0.1);ctx.fill();ctx.strokeStyle=h>1?'#5A3A1E':'#8A5A32';ctx.lineWidth=2;ctx.strokeRect(x+w*0.12,y+w*0.12,w*0.76,w*0.76);
+    ctx.beginPath();ctx.moveTo(x+w*0.12,y+w*0.12);ctx.lineTo(x+w*0.88,y+w*0.88);ctx.stroke();if(h>1){ctx.fillStyle='#C9CFE0';ctx.fillRect(x,y+w*0.42,w,w*0.16);}if(h>2){ctx.fillRect(x+w*0.42,y,w*0.16,w);}}
   /* effects: each one starts after its own delay so you can follow what a special does */
   const X=c=>c*cs+cs/2,Y=r=>r*cs+cs/2;
   m3.fx=m3.fx.filter(f=>(t-f.t0)/1000<f.end);
   m3.fx.forEach(f=>{const e=(t-f.t0)/1000-f.d;
     if(f.t==='pop'&&f.g){if(e<0)drawGem(ctx,f.g,X(f.c),Y(f.r),cs,1);else if(e<0.3){ctx.globalAlpha=1-e/0.3;drawGem(ctx,f.g,X(f.c),Y(f.r),cs,1+e*1.8);ctx.globalAlpha=1;}return;}
     if(f.t==='ice'&&e<0){ctx.fillStyle='rgba(120,210,255,.45)';rr(ctx,f.c*cs+2,f.r*cs+2,cs-4,cs-4,cs*0.14);ctx.fill();return;}
+    if(f.t==='stone'&&e<0&&!f.left){drawStone(ctx,f.c*cs+2,f.r*cs+2,cs-4);return;}
     if(f.t==='crate'&&e<0&&!f.left){ctx.fillStyle='#C98B5E';rr(ctx,f.c*cs+2,f.r*cs+2,cs-4,cs-4,cs*0.1);ctx.fill();return;}
     if(e<0)return;
-    if(f.t==='crate'||f.t==='ice'||f.t==='chain'){const k=Math.min(1,e/0.45);ctx.fillStyle=f.t==='ice'?`rgba(200,240,255,${1-k})`:f.t==='chain'?`rgba(220,225,235,${1-k})`:`rgba(201,139,94,${1-k})`;for(let i=0;i<6;i++){const a=i*1.05;ctx.fillRect(X(f.c)+Math.cos(a)*k*cs*0.7-3,Y(f.r)+Math.sin(a)*k*cs*0.7-3,6,6);}return;}
+    if(f.t==='crate'||f.t==='ice'||f.t==='chain'||f.t==='stone'){const k=Math.min(1,e/0.45);ctx.fillStyle=f.t==='stone'?`rgba(170,175,190,${1-k})`:f.t==='ice'?`rgba(200,240,255,${1-k})`:f.t==='chain'?`rgba(220,225,235,${1-k})`:`rgba(201,139,94,${1-k})`;for(let i=0;i<6;i++){const a=i*1.05;ctx.fillRect(X(f.c)+Math.cos(a)*k*cs*0.7-3,Y(f.r)+Math.sin(a)*k*cs*0.7-3,6,6);}return;}
     if(f.t==='make'){const k=Math.min(1,e/0.4);ctx.strokeStyle=`rgba(255,255,255,${1-k})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(X(f.c),Y(f.r),cs*(0.3+k*0.6),0,Math.PI*2);ctx.stroke();return;}
     if(f.t==='combo'){const k=Math.min(1,e/0.25),fade=e>1.2?Math.max(0,1-(e-1.2)/0.35):1;ctx.save();ctx.globalAlpha=fade;ctx.translate(cs*M3.COLS/2,cs*M3.ROWS*0.42);ctx.scale(0.6+0.4*k,0.6+0.4*k);
       ctx.font=`700 ${Math.round(cs*0.8)}px Fredoka, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=cs*0.16;ctx.strokeStyle='#1A1030';ctx.strokeText(f.name,0,0);ctx.fillStyle='#FFD24A';ctx.fillText(f.name,0,0);ctx.restore();return;}
@@ -1631,11 +1689,12 @@ function m3Frame(){const cv=$('#m3c');if(!cv||!m3)return;const ctx=cv.getContext
   });}
 const LEGEND=[['h','Rocket','Line up 4. Fires both ways along the row or column, in the direction you swiped.'],['b','Bomb','Make an L or T shape. Blasts everything around it.'],
  ['p','Seeker','Make a 2×2 square. Clears a little cross, then flies off to hit what your goals still need.'],['o','Orb','Line up 5. Zaps every gem of the colour you swap it with.']];
+const LEGEND3='<p class="muted small"><b>Blockers:</b> crates break when you match next to them (some need 2 or 3 hits). Ice melts when you clear the gem on it. Chains lock a gem until it\'s matched. Stone only breaks to specials.</p>';
 const LEGEND2=[['Rocket + Rocket','Star Burst: row, column and both diagonals'],['Rocket + Bomb','Mega Cross: three rows and three columns'],['Bomb + Bomb','Mega Blast: a huge 7×7 blast'],['Seeker + any','The seeker carries the other special to its target'],['Orb + special','Colour Storm: a whole colour turns into that special'],['Orb + Orb','Supernova: clears the whole board']];
 document.addEventListener('click',e=>{if(!e.target.closest('[data-m3help]'))return;
   openModal(`<h2>Specials</h2>${LEGEND.map(([k,n,tx])=>`<div class="lgrow"><canvas class="lgc" data-k="${k}" width="88" height="88"></canvas><div><b>${n}</b><small>${tx}</small></div></div>`).join('')}
    <p><b>Tap</b> a special to set it off, or <b>swap</b> it with any gem. Specials don't count as a colour.</p><h3 class="ah">Swap two specials together</h3><div class="lgcombo">${LEGEND2.map(([a,b2])=>`<div><b>${a}</b><small>${b2}</small></div>`).join('')}</div>
-   <div class="mact"><button class="go" id="awayOk">Got it</button></div>`);
+   ${LEGEND3}<div class="mact"><button class="go" id="awayOk">Got it</button></div>`);
   $$('.lgc').forEach(cv=>{const x=cv.getContext('2d');x.setTransform(2,0,0,2,0,0);drawGem(x,{s:cv.dataset.k,c:0},22,22,44,1);});});
 function startLoop(fn){stopLoop();const go=()=>{fn();raf=requestAnimationFrame(go);};raf=requestAnimationFrame(go);}
 function stopLoop(){if(raf)cancelAnimationFrame(raf);raf=0;lastT=0;}
