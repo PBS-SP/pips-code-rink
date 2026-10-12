@@ -244,11 +244,13 @@ body.arc-on .app,body.arc-on #gold{display:none!important}
 .arcbtn{background:linear-gradient(135deg,#FFD37A,#FF9F5A)!important;color:#2A1024!important;border-color:#FFD37A!important;font-weight:700!important;position:relative}
 .arcbtn.hot::after{content:'';position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#FF5A6A;border:1.5px solid var(--ink)}
 .qtip{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.arcbtn{font-size:14px!important;padding:2px 10px!important}
+@media (max-width:420px){.world{letter-spacing:.08em}}
 </style>
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="app">
   <header class="hud">
-    <div class="world"><span id="wname">World 1 · Asteroid Belt</span><span class="snds"><button class="snd arcbtn" id="arcpill" aria-label="Open the Arcade" title="Arcade">♛ Arcade</button><button class="snd" data-export title="Copy progress code" aria-label="Copy progress code">⧉</button><button class="snd" id="musBtn" aria-pressed="false" title="Music">♪</button><button class="snd" id="sfxBtn" aria-pressed="false" title="Sounds">Fx</button></span></div>
+    <div class="world"><span id="wname">World 1 · Asteroid Belt</span><span class="snds"><button class="snd arcbtn" id="arcpill" aria-label="Open the Arcade" title="Arcade">♛</button><button class="snd" data-export title="Copy progress code" aria-label="Copy progress code">⧉</button><button class="snd" id="musBtn" aria-pressed="false" title="Music">♪</button><button class="snd" id="sfxBtn" aria-pressed="false" title="Sounds">Fx</button></span></div>
     <div><div class="cash"><span id="cash">0</span><small id="curlbl">credits</small></div><div class="ps" id="ps">0/s</div></div>
     <div class="starchip"><b id="stars">0</b><span id="starlbl">Stars</span> <span id="starx">×1.00</span></div>
     <div class="sub"><button class="pill chestpill" id="chestpill" hidden>🎁 Daily chest</button><button class="pill merchpill" id="merchpill" hidden>Merchant</button><button class="pill qpill" id="qpill">Quests 0/3</button><span class="pill" id="pend"></span><span class="pill" id="boost" hidden></span><span class="pill curpill" id="curpill" hidden></span><span class="pill mechpill" id="mechpill" hidden></span><button class="pill colpill" id="colpill" hidden></button><button class="pill evpill" id="evpill" data-world="event" hidden></button><span id="timed" class="timed"></span></div>
@@ -833,7 +835,7 @@ if(typeof module!=='undefined')module.exports={M3};
 
 /* ===================== IDLE WORLDS: the game screen ===================== */
 (function(){
-let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.12.02';
+let E=ECONS.belt,W=E.W;const KEY='belt-idle.v1';const VERSION='V2.12.03';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
 function fmt(v){if(!isFinite(v))return '∞';if(v<1000)return v<10&&v%1?v.toFixed(1):Math.floor(v).toString();const e=Math.floor(Math.log10(v)/3);
@@ -1090,7 +1092,7 @@ function timedGroups(S){const g={};(S.timed||[]).forEach(x=>{const k=x.k;g[k]=g[
 function SNm(){return P.cur==='event'?'Event Stars':W.starName;}
 function render(full){const t=now();if(actsReady&&uiReady)renderAct();if(questsReady&&uiReady)dailyRender();if(uiReady)arcPill();
   $('#cash').textContent=fmt(st.cash);$('#ps').textContent=fmt(E.incomeAll(st))+'/s';
-  const ev=P.cur==='event',br=P.cur==='bonus';$('#stars').textContent=br?P.tro.pts:ev?P.ev.tok:st.stars;$('#starx').textContent=br?troRank():ev?`of ${capOf()}`:'×'+E.starMult(st).toFixed(2);
+  const ev=P.cur==='event',br=P.cur==='bonus';$('#stars').textContent=br?P.tro.pts:ev?P.ev.tok:(st.stars>=1e4?fmt(st.stars):st.stars);const sm=E.starMult(st);$('#starx').textContent=br?troRank():ev?`of ${capOf()}`:'×'+(sm>=1000?fmt(sm):sm.toFixed(2));
   /* timed boosts collapse into one chip per kind: total effect, how many, and the soonest to run out */
   const tg=timedGroups(st);const tk=tg.map(g=>g.k+g.n).join('|');
   if(tk!==timedKey){timedKey=tk;$('#timed').innerHTML=tg.map(g=>`<button class="pill tchip" data-tchip="${g.k}"><b>${g.label}</b>${g.n>1?`<em>${g.n}</em>`:''}<i id="tc_${g.k}"></i></button>`).join('');}
@@ -1248,6 +1250,10 @@ if(P.season){P.season=false;save();openModal(`<h2>A fresh start</h2><p>Asteroid 
 else if(!P.n211){P.n211=1;P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0||(P.w.belt.life||0)>1e4)openModal(`<h2>The Arcade is open</h2><p>Tap <b>♛ Arcade</b> at the top right any time.</p><ul class="muted"><li><b>Cat Naps</b>: a logic puzzle. One cat per row, column and colour patch, and cats never touch.</li><li><b>Royal Rocks</b>: match-3 with rockets, bombs, propellers, orbs, crates, ice and chains.</li><li>Win crowns and <b>build a kingdom</b>. Every building gives a gift: a timed boost for any world.</li><li>The newer worlds got hands-on extras: <b>spells</b> in the Tower, <b>orders</b> in Candy, <b>blueprints</b> in the Foundry, <b>expeditions</b> in Dino Park, <b>rush hour</b> in Coffee and <b>sonar</b> in Deep-Sea Salvage. The Belt stays the same old friend.</li></ul><div class="mact"><button class="ghost" id="awayOk">Later</button><button class="go" id="arcGo">Open the Arcade</button></div>`);}
 else if(!P.n210){P.n210=1;save();if((P.w.belt.runs||0)>0||(P.w.belt.starsEver||0)>0)openModal(`<h2>Big expansion</h2><p>Four new worlds, a third weekly event and more twists.</p><ul class="muted"><li><b>Wizard's Tower</b>: own 50 of an item to add to the spell circle.</li><li><b>Candy Factory</b>: buying 25 or more at once is 40% cheaper.</li><li><b>Robot Foundry</b>: machines run hot (×3 speed), then cool down.</li><li><b>Dino Park</b>: keep each herd at least as big as the one above for ×2.5.</li><li>Each new world unlocks at 500 of the world before (after Deep-Sea Salvage). Every item has its own milestones and personality.</li><li>New <b>Midweek event</b> from Wednesday to Friday, 7 new twists and 3 new Bonus Rounds.</li></ul><div class="mact"><button class="go" id="awayOk">Nice</button></div>`);}
 else if(awayMsg)welcome(awayMsg);
+/* hold a Buy button to keep buying */
+(function(){let hold=0,rep=0;const stop=()=>{clearTimeout(hold);clearInterval(rep);hold=rep=0;};
+  document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-buy]');if(!b)return;stop();b.addEventListener('pointerleave',stop,{once:true});hold=setTimeout(()=>{rep=setInterval(()=>{const x=document.getElementById(b.id);if(!x||x.disabled){stop();return;}x.click();},110);},420);});
+  ['pointerup','pointercancel','scroll'].forEach(ev=>document.addEventListener(ev,stop,{passive:true,capture:true}));})();
 /* ===================== DAILY: quests, the daily chest, hints, and a few things that turn up now and then ===================== */
 function qDay(){const d=new Date();return Math.round(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5);}
 const QPOOL=[{k:'buy',t:'Buy {n} items',n:[150,300,600]},{k:'mgr',t:'Hire {n} managers',n:[2,3,4]},{k:'gold',t:'Catch {n} golden bonuses',n:[3,4,6]},{k:'up',t:'Buy {n} upgrades',n:[3,5,8]},
